@@ -1,0 +1,760 @@
+// ---------- Prisma basics ----------
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums (mapped to Postgres types) ----------
+enum Role {
+  intern
+  hr
+  super_admin
+
+  @@map("role")
+}
+
+enum InternshipStatus {
+  Active
+  Inactive
+
+  @@map("status")
+}
+
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("request_status")
+}
+
+enum DelayUnit {
+  days
+  weeks
+  months
+
+  @@map("delay_unit")
+}
+
+enum DocumentType {
+  CV
+  ID_PASSPORT
+  ERASMUS_FORMS
+  INTERNSHIP_AGREEMENT
+  INSURANCE
+  ACCEPTANCE_LETTER
+  LEARNING_AGREEMENT
+  FINAL_REPORT
+  PROFILE_PICTURE
+  OTHER
+
+  @@map("document_type")
+}
+
+enum DocumentStatus {
+  pending
+  under_review
+  verified
+  rejected
+  expired
+
+  @@map("document_status")
+}
+
+enum VerificationAction {
+  approve
+  reject
+  request_revision
+  upload
+  delete
+
+  @@map("verification_action")
+}
+
+enum NotificationType {
+  document_uploaded
+  document_verified
+  document_rejected
+  document_expired
+  bill_due
+  system_announcement
+  housing_update
+
+  @@map("notification_type")
+}
+
+enum Priority {
+  low
+  medium
+  high
+  urgent
+
+  @@map("priority")
+}
+
+enum SmtpEncryption {
+  NONE
+  STARTTLS
+  TLS
+
+  @@map("smtp_encryption")
+}
+
+enum EmpType {
+  intern
+  employee
+  team_lead
+
+  @@map("emp_type")
+}
+
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+enum RequestKind {
+  EXTRA_HOURS
+  ABSENCE
+}
+
+enum LoginFailReason {
+  RATE_LIMITED
+  MISSING_FIELDS
+  NO_SUCH_USER
+  WRONG_PASSWORD
+  BLOCKED
+  TEMP_ERROR
+}
+
+enum AlertKind {
+  IMPOSSIBLE_TRAVEL
+  NEW_COUNTRY
+  NEW_DEVICE
+  FAILED_STREAK
+  LOCKOUT
+}
+
+enum AlertSeverity {
+  low
+  medium
+  high
+}
+
+// Employee_details
+model InternDetail {
+  internId    String    @id @default(uuid()) @map("intern_id") @db.Uuid
+  userId      Int?      @map("user_id")
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name        String
+  nationality String?   @db.VarChar(25)
+  gender      String?   @db.VarChar(20)
+  birthdate   DateTime? @db.Date
+  phone       String?   @db.VarChar(20)
+  email       String?   @unique @db.VarChar(100)
+
+  // back-relations
+  sosDetails      InternsSosDetail[]
+  internships     InternshipInfo[]
+
+  internDocuments       InternDocument[] // ← was singular; must be array
+  documentVerifications DocumentVerification? // stays 1-to-1 (unique on internId in that model)
+  notifications         Notification?
+
+  @@map("intern_details")
+}
+
+// users
+model User {
+  id                 Int      @id @default(autoincrement())
+  firstName          String   @map("first_name") @db.VarChar(50)
+  surname            String   @db.VarChar(50)
+  companyEmail       String   @unique @map("companyEmail") @db.VarChar(100)
+  password           String   @db.VarChar(255)
+  role               Role
+  empType            EmpType  @default(intern) @map("emp_type")
+  empId              String   @unique @map("emp_id") @db.VarChar(50)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @map("updated_at")
+  mustChangePassword Boolean  @default(true) @map("mustChangePassword")
+  blocked            Boolean  @default(false) @map("blocked")
+
+  // back-relations
+  sessionLogs   SessionLog[]
+  requests      Request[]      @relation("UserRequests")
+  notifications Notification[]
+  internDetails InternDetail[]
+  loginEvents   LoginEvent[]
+  knownDevices  KnownDevice[]
+
+  reminderWhitelist ReminderWhitelist?
+
+  employeeRequests EmployeeRequest[] @relation("EmployeeRequestUser")
+  reviewedRequests EmployeeRequest[] @relation("EmployeeRequestReviewer")
+
+  projectsCreated Project[]       @relation("ProjectCreator")
+  projectMembers  ProjectMember[]
+  tasksAssigned   Task[]          @relation("TaskAssignee")
+  securityAlerts  SecurityAlert[] @relation("UserSecurityAlerts")
+
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+// employee_sos_details
+model InternsSosDetail {
+  id                  Int     @id @default(autoincrement())
+  internId            String? @map("intern_id") @db.Uuid
+  relativePhoneNumber String? @map("relative_phone_number") @db.VarChar(25)
+  relationWithIntern  String? @map("relation_with_intern") @db.VarChar(15)
+
+  // FKs
+  intern InternDetail? @relation(fields: [internId], references: [internId], onDelete: Cascade)
+
+  @@map("interns_sos_details")
+}
+
+// session_logs
+model SessionLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  email     String   @db.VarChar(100)
+  loginTime DateTime @map("login_time")
+  ipAddress String   @map("ip_address") @db.VarChar(45)
+  userAgent String   @map("user_agent") @db.VarChar(255)
+  sessionId String   @map("session_id") @db.VarChar(255)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session_logs")
+}
+
+// departments
+model Department {
+  id             Int    @id @default(autoincrement())
+  departmentName String @unique @map("department_name") @db.VarChar(50)
+
+  positions   Position[]
+  internships InternshipInfo[]
+  requests    Request[]
+
+  @@map("departments")
+}
+
+// positions
+model Position {
+  id           Int    @id @default(autoincrement())
+  name         String @db.VarChar(50)
+  departmentId Int    @map("department_id")
+
+  department  Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  internships InternshipInfo[]
+  requests    Request[]
+
+  @@unique([name, departmentId])
+  @@map("positions")
+}
+
+// internship_info
+model InternshipInfo {
+  id           Int              @id @default(autoincrement())
+  internId     String           @map("intern_id") @db.Uuid
+  departmentId Int?             @map("department_id")
+  positionId   Int?             @map("position_id")
+  startDate    DateTime?        @map("start_date") @db.Date
+  endDate      DateTime?        @map("end_date") @db.Date
+  supervisor   String?          @db.VarChar(100)
+  status       InternshipStatus
+
+  intern     InternDetail @relation(fields: [internId], references: [internId], onDelete: Cascade)
+  department Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  position   Position?    @relation(fields: [positionId], references: [id], onDelete: SetNull)
+
+  @@map("internship_info")
+}
+
+// requests
+model Request {
+  id            Int           @id @default(autoincrement())
+  firstName     String        @map("first_name") @db.VarChar(50)
+  surname       String        @db.VarChar(50)
+  email         String?       @db.VarChar(100)
+  empId         String?       @map("emp_id") @db.VarChar(50)
+  joiningDate   DateTime?     @map("joining_date") @db.Date
+  createdById   Int           @map("created_by_id")
+  birthdate     DateTime?     @db.Date
+  gender        String?       @db.VarChar(20)
+  nationality   String?       @db.VarChar(25)
+  personalEmail String        @map("personal_email") @db.VarChar(100)
+  phone         String?       @db.VarChar(20)
+  departmentId  Int?          @map("department_id")
+  endDate       DateTime?     @map("end_date") @db.Date
+  positionId    Int?          @map("position_id")
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @default(now()) @map("updated_at")
+
+  createdBy  User        @relation("UserRequests", fields: [createdById], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id])
+  position   Position?   @relation(fields: [positionId], references: [id])
+
+  @@map("requests")
+}
+
+model AdminUiConfig {
+  id        Int      @id
+  hrCols    Json
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+// deprovision_policy
+model DeprovisionPolicy {
+  id          Int       @id @default(1)
+  enabled     Boolean   @default(false)
+  delayAmount Int       @default(0) @map("delay_amount")
+  delayUnit   DelayUnit @default(days) @map("delay_unit")
+  updatedAt   DateTime  @default(now()) @map("updated_at")
+  lastRunAt   DateTime? @map("last_run_at")
+  lastDeleted Int?      @default(0) @map("last_deleted")
+
+  // NEW
+  transferTargetEmail String? @map("transfer_target_email")
+
+  @@map("deprovision_policy")
+}
+
+// documents
+model InternDocument {
+  id                       Int            @id @default(autoincrement())
+  internId                 String         @map("intern_id") @db.Uuid
+  documentType             DocumentType   @map("document_type")
+  fileName                 String         @map("file_name") @db.VarChar(255)
+  originalName             String         @map("original_name") @db.VarChar(255)
+  filePath                 String         @map("file_path") @db.VarChar(500)
+  fileSize                 Int            @map("file_size")
+  mimeType                 String         @map("mime_type") @db.VarChar(100)
+  status                   DocumentStatus @default(pending)
+  uploadedAt               DateTime       @default(now()) @map("uploaded_at")
+  verifiedAt               DateTime?      @map("verified_at")
+  rejectedAt               DateTime?      @map("rejected_at")
+  rejectionReason          String?        @map("rejection_reason")
+  notes                    String?
+  isRequired               Boolean        @default(true) @map("is_required")
+  expiryDate               DateTime?      @map("expiry_date") @db.Date
+  expiryReminderLastSentAt DateTime?      @map("expiry_reminder_last_sent_at")
+  expiryReminderCount      Int            @default(0) @map("expiry_reminder_count")
+  version                  Int            @default(1)
+  isActive                 Boolean        @default(true) @map("is_active")
+  createdAt                DateTime       @default(now()) @map("created_at")
+  updatedAt                DateTime       @default(now()) @map("updated_at")
+
+  intern        InternDetail           @relation(fields: [internId], references: [internId], onDelete: Cascade)
+  verifications DocumentVerification[] // ← add this
+
+  @@unique([internId, documentType], name: "intern_document_per_type")
+  @@index([documentType, expiryDate], name: "intern_docs_type_expiry_idx")
+  @@map("intern_documents")
+}
+
+// document_verifications
+model DocumentVerification {
+  id             Int                @id @default(autoincrement())
+  documentId     Int                @map("document_id")
+  internId       String             @unique @map("intern_id") @db.Uuid
+  verifierId     Int?               @map("verifier_id")
+  action         VerificationAction
+  previousStatus DocumentStatus     @map("previous_status")
+  newStatus      DocumentStatus     @map("new_status")
+  comments       String?
+  verifiedAt     DateTime           @default(now()) @map("verified_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  document InternDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  intern   InternDetail   @relation(fields: [internId], references: [internId], onDelete: Cascade)
+  // verifierId is INT without FK in SQL, so keep as scalar
+
+  @@map("document_verifications")
+}
+
+// notifications
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
+  internId  String           @unique @map("intern_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(255)
+  message   String
+  isRead    Boolean          @default(false) @map("is_read")
+  priority  Priority         @default(medium)
+  data      Json?
+  createdAt DateTime         @default(now()) @map("created_at")
+  readAt    DateTime?        @map("read_at")
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  intern InternDetail @relation(fields: [internId], references: [internId], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// smtp_settings
+model SmtpSetting {
+  id         Int            @id @default(1)
+  host       String
+  port       Int
+  encryption SmtpEncryption @default(STARTTLS)
+  user       String         @map("user")
+  pass       String
+  fromName   String         @map("fromName")
+  fromEmail  String         @map("fromEmail")
+  updatedAt  DateTime       @default(now()) @map("updatedAt")
+  updatedBy  Int?           @map("updatedBy")
+
+  @@map("smtp_settings")
+}
+
+model SystemConfig {
+  id                    Int     @id @default(1)
+  companyEmailDomain    String? @map("company_email_domain")
+  googleWorkspaceDomain String? @map("google_workspace_domain")
+  googleAdminSubject    String? @map("google_admin_subject")
+  googleSharedDriveId   String? @map("google_shared_drive_id")
+  googleAllGroup        String? @map("google_all_group")
+
+  googleSheetsSpreadsheetId String? @map("google_sheets_spreadsheet_id")
+  googleSheetsClientEmail   String? @map("google_sheets_client_email")
+  googleSheetsPrivateKey    String? @map("google_sheets_private_key")
+  googleSheetsExtraHours    String? @map("google_sheets_extra_hours_sheet")
+  googleSheetsAbsence       String? @map("google_sheets_absence_sheet")
+
+  maxmindAccountId  String? @map("maxmind_account_id")
+  maxmindEditionIds String? @map("maxmind_edition_ids")
+  geoipDbDir        String? @map("geoip_db_dir")
+
+  updatedAt DateTime @default(now()) @map("updated_at")
+  updatedBy Int?     @map("updated_by")
+
+  @@map("system_config")
+}
+
+model DocumentExpiryPolicy {
+  id           Int          @id @default(autoincrement())
+  documentType DocumentType @unique @map("document_type")
+
+  enabled    Boolean @default(false)
+  daysBefore Int     @default(30) @map("days_before")
+
+  notifyUser Boolean @default(true) @map("notify_user")
+  notifyHr   Boolean @default(true) @map("notify_hr")
+
+  repeatEveryDays Int? @map("repeat_every_days")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("document_expiry_policies")
+}
+
+model DocumentReminderPolicy {
+  id                     Int       @id @default(1)
+  enabled                Boolean   @default(false)
+  everyDays              Int       @default(7)
+  emailEnabled           Boolean   @default(false)
+  lastRunAt              DateTime?
+  lastSent               Int?
+  updatedAt              DateTime  @updatedAt
+  autoPurgeEnabled       Boolean   @default(false)
+  autoPurgeDays          Int       @default(90)
+  lastPurgeAt            DateTime?
+  historyRetentionMonths Int       @default(0)
+}
+
+model DocumentReminderHistory {
+  id               Int      @id @default(autoincrement())
+  sentAt           DateTime @default(now())
+  totalRecipients  Int
+  missingBreakdown Json?
+}
+
+model UserReminderInbox {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  message   String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+  // user   User   @relation(fields: [userId], references: [id])
+}
+
+model ReminderWhitelist {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  skipDocs   Boolean  @default(true) // skip document reminders
+  skipDeprov Boolean  @default(false) // skip deprovision
+  reason     String?
+  createdBy  Int?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reminder_whitelist")
+}
+
+model DocumentDeletionPolicy {
+  id            Int       @id @default(1)
+  enabled       Boolean   @default(false)
+  delayAmount   Int       @default(0)
+  delayUnit     DelayUnit @default(days)
+  updatedAt     DateTime  @updatedAt
+  lastRunAt     DateTime?
+  lastDeleted   Int?      @default(0)
+  includeAvatar Boolean   @default(false)
+
+  @@map("DocumentDeletionPolicy")
+}
+
+// Projects
+model Project {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  status      ProjectStatus @default(NOT_STARTED)
+  dueDate     DateTime?
+  createdById Int? // optional FK
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  createdBy User? @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  members ProjectMember[]
+  tasks   Task[]
+}
+
+// Project members
+model ProjectMember {
+  id        Int @id @default(autoincrement())
+  projectId Int
+  userId    Int
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+// Tasks
+model Task {
+  id               Int                 @id @default(autoincrement())
+  projectId        Int
+  title            String
+  description      String?
+  status           TaskStatus          @default(NOT_STARTED)
+  assigneeId       Int?
+  checklistEnabled Boolean             @default(false)
+  checklistItems   TaskChecklistItem[]
+  dueDate          DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+}
+
+model TaskChecklistItem {
+  id        Int      @id @default(autoincrement())
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title     String
+  done      Boolean  @default(false)
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @db.VarChar(128)
+  expiresAt DateTime
+  usedAt    DateTime?
+  ip        String?   @db.VarChar(45)
+  userAgent String?   @db.VarChar(255)
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tokenHash])
+  @@index([expiresAt])
+}
+
+model EmployeeRequest {
+  id          Int           @id @default(autoincrement())
+  userId      Int           @map("user_id")
+  kind        RequestKind
+  date        DateTime?     @db.Date
+  rangeStart  DateTime?     @db.Date
+  rangeEnd    DateTime?     @db.Date
+  startMin    Int?          @map("start_min")
+  endMin      Int?          @map("end_min")
+  minutes     Int?
+  reason      String?
+  comment     String?
+  status      RequestStatus @default(PENDING)
+  reviewerId  Int?          @map("reviewer_id")
+  reviewNote  String?       @map("review_note")
+  reviewedAt  DateTime?     @map("reviewed_at")
+  submittedAt DateTime      @default(now()) @map("submitted_at")
+
+  // named relations + back-relations exist on User
+  user     User  @relation("EmployeeRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("EmployeeRequestReviewer", fields: [reviewerId], references: [id])
+
+  @@map("employee_requests")
+}
+
+model SecurityAlert {
+  id           Int           @id @default(autoincrement())
+  createdAt    DateTime      @default(now())
+  kind         AlertKind
+  severity     AlertSeverity
+  userId       Int?
+  email        String?
+  ip           String?       @db.VarChar(45)
+  country      String?       @db.VarChar(2)
+  region       String?
+  city         String?
+  deviceId     String?
+  // was: Int? @unique
+  loginEventId Int?
+  details      Json?
+  resolvedAt   DateTime?
+  resolvedBy   Int?
+
+  user       User?       @relation("UserSecurityAlerts", fields: [userId], references: [id])
+  loginEvent LoginEvent? @relation("LoginEventAlert", fields: [loginEventId], references: [id])
+
+  @@unique([loginEventId, kind], name: "security_alert_event_kind_uniq") // optional but recommended
+  @@index([createdAt, kind, severity])
+  @@index([loginEventId])
+}
+
+model LoginEvent {
+  id         Int              @id @default(autoincrement())
+  userId     Int?             @map("user_id")
+  email      String?          @db.VarChar(100)
+  success    Boolean
+  failReason LoginFailReason? @map("fail_reason")
+
+  ip      String  @db.VarChar(45)
+  country String? @db.VarChar(2)
+  region  String? @db.VarChar(100)
+  city    String? @db.VarChar(100)
+
+  ua         String? @db.VarChar(255)
+  browser    String? @db.VarChar(50)
+  os         String? @db.VarChar(50)
+  deviceType String? @map("device_type") @db.VarChar(30)
+
+  deviceId String? @map("device_id") @db.VarChar(64)
+  fpHash   String? @map("fp_hash") @db.VarChar(64)
+
+  tzOffset Int?    @map("tz_offset")
+  language String? @db.VarChar(35) // e.g. en-US
+  screen   String? @db.VarChar(25) // e.g. 1920x1080
+  platform String? @db.VarChar(50)
+
+  rateLimitLimit     Int?      @map("rl_limit")
+  rateLimitRemaining Int?      @map("rl_remaining")
+  rateLimitResetAt   DateTime? @map("rl_reset_at")
+
+  statusCode Int?     @map("status_code")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  lat Float? @map("lat")
+  lon Float? @map("lon")
+
+  user   User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  alerts SecurityAlert[] @relation("LoginEventAlert")
+
+  @@index([email, createdAt], name: "login_events_email_created_idx")
+  @@index([userId, createdAt], name: "login_events_user_created_idx")
+  @@index([ip, createdAt], name: "login_events_ip_created_idx")
+  @@index([deviceId, createdAt], name: "login_events_device_created_idx")
+  @@map("login_events")
+}
+
+model KnownDevice {
+  id       Int     @id @default(autoincrement())
+  userId   Int     @map("user_id")
+  deviceId String  @map("device_id") @db.VarChar(64)
+  fpHash   String? @map("fp_hash") @db.VarChar(64)
+
+  firstSeen   DateTime @default(now()) @map("first_seen")
+  lastSeen    DateTime @default(now()) @map("last_seen")
+  lastIp      String?  @map("last_ip") @db.VarChar(45)
+  lastUa      String?  @map("last_ua") @db.VarChar(255)
+  lastCountry String?  @map("last_country") @db.VarChar(2)
+  lastRegion  String?  @map("last_region") @db.VarChar(100)
+  lastCity    String?  @map("last_city") @db.VarChar(100)
+
+  lastLat Float? @map("last_lat")
+  lastLon Float? @map("last_lon")
+
+  trusted Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId], name: "known_devices_user_device_uniq")
+  @@index([userId], name: "known_devices_user_id_idx")
+  @@map("known_devices")
+}
+
+model EmailTheme {
+  id          Int      @id @default(1)
+  brandColor  String   @default("#4a6cf7") @map("brand_color")
+  headerTitle String?  @map("header_title")
+  logoUrl     String?  @map("logo_url")
+  buttonColor String?  @map("button_color")
+  footerText  String?  @map("footer_text")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy Int?     @map("updated_by")
+
+  @@map("email_theme")
+}
+
+model EmailTemplate {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique @map("key") // e.g. "welcome_credentials"
+  subjectTemplate String   @db.VarChar(255) @map("subject_template")
+  htmlTemplate    String   @db.Text @map("html_template")
+  textTemplate    String?  @db.Text @map("text_template")
+  enabled         Boolean  @default(true) @map("enabled")
+
+  headerTitle String? @map("header_title")
+  logoUrl     String? @map("logo_url")
+
+
+  // Optional metadata for the UI
+  description String? @map("description")
+  variables   Json?   @map("variables")   // e.g. ["recipientName","projectTitle","projectUrl"]
+  sampleData  Json?   @map("sample_data") // e.g. {"recipientName":"Test","projectTitle":"Demo"}
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy Int?     @map("updated_by")
+
+  @@map("email_templates")
+}

@@ -1,0 +1,65 @@
+# --- universal ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+*.log
+*.pid
+*.tgz
+.tmp/
+.temp/
+.cache/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+
+# env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+*.crt
+*.cer
+Keys/
+secrets/
+**/service-account*.json
+**/*credentials*.json
+**/*mailer*.json
+
+# --- frontend (Next.js 14) ---
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/.turbo/
+frontend/.eslintcache
+frontend/.swc/
+frontend/.cache/
+frontend/build/
+frontend/dist/
+frontend/public/uploads/
+frontend/exports/
+frontend/tmp/
+
+# --- backend (Node/Express/Prisma) ---
+backend/dist/
+backend/build/
+backend/coverage/
+backend/logs/
+backend/tmp/
+backend/exports/
+backend/storage/
+backend/uploads/
+backend/geoip/
+backend/geoip/*.mmdb
+
+
+# prisma: ignore local sqlite if ever used
+backend/prisma/*.db
+backend/prisma/*.db-journal

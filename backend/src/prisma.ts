@@ -1,0 +1,15 @@
+// // backend/src/prisma.ts
+// import { PrismaClient } from '@prisma/client';
+
+// const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+// export const prisma =
+//     globalForPrisma.prisma ?? new PrismaClient({ log: ['error', 'warn'] });
+
+// if (!globalForPrisma.prisma) globalForPrisma.prisma = prisma;
+
+// export default prisma;
+
+
+
+export { prisma as default, prisma } from './prisma/client';

@@ -1,0 +1,220 @@
+/* ---- Layout ---- */
+.wrapper {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 80px); /* leaves room for your top nav */
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+  color: #333;
+  gap: 0;
+}
+
+/* ---- Sidebar ---- */
+.navbar {
+  background: #2c3e50;
+  color: #fff;
+  padding: 25px 0;
+  box-shadow: 0 0 20px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.navHeader {
+  padding: 0 25px 25px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 20px;
+}
+
+.navTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navDesc {
+  color: #bdc3c7;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.navItems {
+  display: flex;
+  flex-direction: column;
+}
+
+.navItem {
+  padding: 18px 25px;
+  cursor: pointer;
+  transition: all .3s ease;
+  border-left: 4px solid transparent;
+}
+
+.navItem:hover { background: rgba(255,255,255,0.05); }
+
+.active {
+  background: rgba(255,255,255,0.1);
+  border-left-color: #3498db;
+}
+
+.itemTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.itemDesc {
+  color: #95a5a6;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnPrimary { background: #3498db; color: #fff; }
+.btnPrimary:hover { background: #2980b9; }
+
+.btnSecondary { background: rgba(255,255,255,0.1); color: #fff; }
+.btnSecondary:hover { background: rgba(255,255,255,0.2); }
+
+.btnSuccess { background: #2ecc71; color: #fff; }
+.btnSuccess:hover { background: #27ae60; }
+
+/* ---- Content ---- */
+.content {
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.contentHeader { margin-bottom: 30px; }
+
+.contentTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.contentDesc {
+  color: #7f8c8d;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Status pill on the right card header */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pillOn  { background: #e8f6ef; color: #2ecc71; }
+.pillOff { background: #fbebee; color: #e74c3c; }
+
+/* ---- Optional right-side stat cards shell (kept minimal for now) ---- */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .wrapper { grid-template-columns: 1fr; }
+  .navbar { width: 100%; padding: 15px; }
+}
+
+/* controls */
+.fieldRow {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.select {
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  background: #fff;
+  min-width: 120px;
+}
+
+.info {
+  margin-top: 12px;
+  padding: 12px;
+  background: #e8f4fc;
+  border-left: 4px solid #3498db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+
+.inlineRow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start; /* keep text close to the box */
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.inlineRowLabel {
+  font-size: 14px;
+  color: #374151;
+  user-select: none;
+}
+
+.toggle {
+  accent-color: #4a6cf7; /* optional: brand color */
+  margin: 0;
+}
+
+
+
+.tableCard { margin-top: 24px; }
+.table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.th { padding: 12px; text-align: left; border-bottom: 2px solid #eee; background: #f8f9fa; }
+.td { padding: 12px; border-bottom: 1px solid #eee; }
+
+.statusBar{margin-top:16px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.06)}
+.statusGrid{display:grid;gap:20px;padding:20px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.statusItem{display:flex;align-items:center;gap:12px}
+.statusIcon{display:inline-flex;height:32px;width:32px;align-items:center;justify-content:center;border-radius:8px;font-size:14px}
+.iconSky{background:#e0f2fe;color:#0369a1}
+.iconAmber{background:#fef3c7;color:#b45309}
+.iconEmerald{background:#d1fae5;color:#047857}
+.iconGray{background:#f3f4f6;color:#374151}
+.statusLabel{font-size:14px;font-weight:500;color:#374151}
+.statusValue{font-size:14px;color:#6b7280}
+.badge{display:inline-flex;align-items:center;border-radius:9999px;padding:4px 10px;font-size:12px;font-weight:600}
+.badgeActive{background:#d1fae5;color:#065f46}
+.badgeInactive{background:#fee2e2;color:#b91c1c}

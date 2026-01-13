@@ -1,0 +1,150 @@
+html, body, #__next { height: 100%; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
+
+/* ---------- Sidebar + Content ---------- */
+/* === Sidebar + Toggle (hidden by default) === */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 280px;
+  background: linear-gradient(180deg,#2c3e50 0%, #3498db 100%);
+  color: #fff;
+  overflow-y: auto;
+  box-shadow: 0 0 20px rgba(0,0,0,.10);
+  transform: translateX(-100%);
+  transition: transform .28s ease;
+  z-index: 1000;
+}
+.sidebar .logo { padding: 14px 25px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.sidebar .logo h1 { font-size: 20px; margin: 0; }
+.nav-section { margin-top: 10px; }
+.nav-title { padding: 10px 25px; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: rgba(255,255,255,.7); }
+.nav-item { display: block; padding: 12px 25px 12px 35px; color: #fff; text-decoration: none; }
+.nav-item:hover { background: rgba(255,255,255,.10); }
+.nav-item.active { background: rgba(255,255,255,.16); }
+.nav-item.has-children { cursor: pointer; position: relative; }
+.nav-item .chevron { position: absolute; right: 20px; }
+.nav-children { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
+.nav-children.open { max-height: 600px; }
+.backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 900;
+  opacity: 1; animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* Desktop expanded (not collapsed) */
+.sidebar:not(.collapsed) { transform: translateX(0); }
+
+/* Mobile behaviour: slide in when .open */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+}
+
+/* Content shift when desktop is collapsed (hidden) */
+
+
+/* Floating toggle – shows only when sidebar hidden */
+.menu-toggle {
+  position: fixed; top: 18px; left: 18px;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: #3498db; color: #fff; border: none; cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0,0,0,.16);
+  display: grid; place-items: center;
+  z-index: 950;
+  opacity: 1; transition: opacity .2s ease, transform .2s ease;
+}
+.menu-toggle.hidden { opacity: 0; pointer-events: none; transform: scale(.96); }
+
+.logo{ padding:0 25px 18px; border-bottom:1px solid rgba(255,255,255,.15); margin-bottom:14px; }
+.logo h1{ font-size:22px; margin:0; font-weight:700; }
+
+.nav-section{ margin-bottom:6px; }
+.nav-title{ padding:10px 25px; font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:rgba(255,255,255,.7); font-weight:600; }
+.nav-item{
+  padding:12px 25px 12px 35px; display:block; color:#fff; text-decoration:none;
+  transition:background .2s,color .2s; position:relative; border:none; background:transparent; cursor:pointer;
+}
+.nav-item:hover{ background:rgba(255,255,255,.10); }
+.nav-item.active{ background:rgba(255,255,255,.16); }
+.has-children{ cursor:pointer; }
+.chevron{ position:absolute; right:25px; }
+.nav-children{ max-height:0; overflow:hidden; transition:max-height .3s ease; }
+.nav-children.open{ max-height:500px; }
+.nav-children .nav-item{ padding-left:60px; color:rgba(255,255,255,.9); }
+.nav-children .nav-item:hover{ color:#fff; }
+
+/* Content wrapper (optional if your pages use it) */
+.content{ margin-left:0; padding:30px; min-height:100vh; background:#f5f7fa; }
+/* ---------- Toggle button ---------- */
+.menu-toggle{
+  position:fixed; top:16px; left:16px; z-index:1200;
+  width:48px; height:48px; border-radius:50%; border:none;
+  background:#3498db; color:#fff; font-size:22px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.18); cursor:pointer;
+}
+.menu-toggle:active{ transform:translateY(1px); }
+.menu-toggle.hidden{ display:none; } /* hidden when sidebar is open */
+
+/* Backdrop for mobile click-off */
+.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:1050; }
+
+/* Desktop collapse state */
+body.nav-collapsed .sidebar{ transform:translateX(-280px); }
+
+
+/* ---------- Responsive ---------- */
+@media (max-width:900px){
+  .sidebar{ transform:translateX(-100%); }
+  .sidebar.open{ transform:translateX(0); }
+  .content{ margin-left:0; padding:20px; }
+  body.nav-collapsed .content{ margin-left:0; } /* no shift on mobile */
+}
+
+/* --- Sidebar user chip --- */
+.logo .user-chip{
+  display:flex; align-items:center; gap:10px; padding:12px 0;
+  color:#fff; text-decoration:none;
+}
+.logo .user-chip .avatar{
+  width:32px; height:32px; border-radius:50%;
+  object-fit:cover; background:rgba(255,255,255,.2);
+}
+.logo .user-chip .name{
+  font-weight:700; letter-spacing:.2px;
+  max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+/* === Overlay sidebar click-through fix === */
+.sidebar { z-index: 1200 !important; }            /* ensure nav is above the backdrop */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 1100;                                  /* below .sidebar */
+}
+
+/* On desktop, don't cover the sidebar area with the backdrop */
+@media (min-width: 901px) {
+  .backdrop { left: 280px; width: calc(100vw - 280px); }
+}
+
+/* Ensure open state class is correct */
+.sidebar.open { transform: translateX(0) !important; }
+
+
+
+/* Hide sidebar scrollbar, keep scroll functional */
+.sidebar{
+  overflow-y:auto;          /* keep scrolling */
+  -ms-overflow-style:none;  /* IE/Edge */
+  scrollbar-width:none;     /* Firefox */
+}
+.sidebar::-webkit-scrollbar{ width:0; height:0; } /* Chrome/Safari */
+
+
+/* Simple form inputs for admin pages */
+.input{
+  width:100%; padding:10px 12px; border:1px solid #d0d7de;
+  border-radius:8px; background:#fff; color:#111; outline: none;
+}
+.input:focus{ border-color:#3498db; box-shadow:0 0 0 3px rgba(52,152,219,.15); }

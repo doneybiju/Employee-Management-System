@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "everyDays": 3,
+  "emailEnabled": true,
+  "lastRunAt": null,
+  "lastSent": 0
+}

@@ -1,0 +1,19 @@
+{
+  "saCols": [
+    "name",
+    "department",
+    "companyEmail"
+  ],
+  "hrCols": [
+    "companyEmail",
+    "position",
+    "department",
+    "nationality",
+    "startDate",
+    "endDate",
+    "supervisor",
+    "empID"
+  ],
+  "version": 28,
+  "updatedAt": "2025-09-03T10:46:48.644Z"
+}

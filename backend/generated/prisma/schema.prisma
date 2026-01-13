@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+///----------------------------------------------------------------
+/// Models
+///----------------------------------------------------------------
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  password       String
+  role           Role     @default(INTERN)
+  firstName      String
+  surname        String
+  department     String
+  position       String
+  employeeId     String   @unique
+  joiningDate    DateTime
+  leavingDate    DateTime
+  secondaryEmail String
+  phoneNumber    String? // optional
+  nationality    String
+
+  // relation to Institution
+  institution   Institution? @relation(fields: [institutionId], references: [id])
+  institutionId Int?
+
+  // …any other relations (tasks, documents, etc.)…
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Institution {
+  id   Int    @id @default(autoincrement())
+  name String
+  type String // e.g. "University", "School", etc.
+
+  // back-relation: all users belonging to this institution
+  users User[]
+}
+
+///----------------------------------------------------------------
+/// Enums
+///----------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  INTERN
+}
