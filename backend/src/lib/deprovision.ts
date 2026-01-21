@@ -30,38 +30,62 @@ const REQUIRED_DOC_TYPES: DocumentType[] = [
 ];
 
 // Delete intern’s profile picture (from InternDocument: PROFILE_PICTURE)
-async function deleteInternProfilePicture(internId: string) {
+async function deleteInternProfilePicture(internId: string | string[]) {
+  const internIds = Array.isArray(internId) ? internId : [internId];
+  if (!internIds.length) return 0;
+
   const pics = await prisma.internDocument.findMany({
-    where: { internId, isActive: true, documentType: 'PROFILE_PICTURE' as DocumentType },
+    where: { internId: { in: internIds }, isActive: true, documentType: 'PROFILE_PICTURE' as DocumentType },
     select: { id: true, filePath: true },
   });
-  let driveDeleted = 0;
-  for (const p of pics) {
-    try { await deleteDriveFileByAny(p.filePath || ''); driveDeleted += 1; } catch {}
+  if (!pics.length) return 0;
+
+  const paths = pics.map(p => p.filePath).filter((p): p is string => !!p);
+  const settled = await Promise.allSettled(paths.map(p => deleteDriveFileByAny(p)));
+  const driveDeleted = settled.filter(r => r.status === 'fulfilled' && r.value).length;
+
+  if (pics.length) {
+    await prisma.internDocument.deleteMany({ where: { id: { in: pics.map(p => p.id) } } });
   }
-  if (pics.length) await prisma.internDocument.deleteMany({ where: { id: { in: pics.map(p => p.id) } } });
+
   return driveDeleted;
 }
 
 // Best-effort: delete a user’s avatar if you store a user-level image
-async function deleteUserAvatarByUserId(userId: number) {
-  const u = await prisma.user.findUnique({ where: { id: userId } }) as any;
-  if (!u) return false;
+async function deleteUserAvatarByUserId(userId: number | number[]) {
+  const userIds = Array.isArray(userId) ? userId : [userId];
+  if (!userIds.length) return 0;
 
-  const token = [
-    u.avatarFileId, u.avatarPath,
-    u.profileImageId, u.profileImagePath,
-    u.profilePhotoId, u.profilePhotoPath,
-  ].find((v: any) => typeof v === 'string' && v.trim());
+  const users = await prisma.user.findMany({ where: { id: { in: userIds } } }) as any[];
+  if (!users.length) return 0;
 
-  if (!token) return false;
-
-  try { await deleteDriveFileByAny(token); } catch {}
+  const tokens: string[] = [];
+  const fieldsToNull: string[] = [
+    'avatarFileId', 'avatarPath', 'profileImageId', 'profileImagePath', 'profilePhotoId', 'profilePhotoPath'
+  ];
   const data: any = {};
-  ['avatarFileId','avatarPath','profileImageId','profileImagePath','profilePhotoId','profilePhotoPath']
-    .forEach(k => { if (k in u) data[k] = null; });
-  try { if (Object.keys(data).length) await prisma.user.update({ where: { id: userId }, data }); } catch {}
-  return true;
+  for (const f of fieldsToNull) data[f] = null;
+
+  for (const u of users) {
+    const token = fieldsToNull.map(f => u[f]).find(v => typeof v === 'string' && v.trim());
+    if (token) tokens.push(token);
+  }
+
+  const settled = await Promise.allSettled(tokens.map(t => deleteDriveFileByAny(t)));
+  const deletedCount = settled.filter(r => r.status === 'fulfilled' && r.value).length;
+
+  // build a list of all fields that exist on the model to avoid prisma errors
+  const userModelFields = prisma.user.fields;
+  const validFields: any = {};
+  for(const f of fieldsToNull) {
+    if (f in userModelFields) validFields[f] = null;
+  }
+
+  if (Object.keys(validFields).length) {
+    await prisma.user.updateMany({ where: { id: { in: userIds } }, data: validFields });
+  }
+
+  return deletedCount;
 }
 
 
@@ -255,38 +279,44 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
     byIntern.set(d.internId, arr);
   }
 
-  let deletedDocs = 0, driveDeleted = 0, processedInterns = 0, skippedNoDocs = 0, avatarDeleted = 0;
+  const docIdsToDelete: number[] = docs.map(d => d.id);
+  const filePathsToDelete: string[] = docs.map(d => d.filePath).filter((p): p is string => !!p);
 
-  for (const e of eligible) {
-    processedInterns += 1;
-    const list = byIntern.get(e.internId) || [];
-    if (!list.length) { skippedNoDocs += 1; }
+  const driveSettled = await Promise.allSettled(filePathsToDelete.map(p => deleteDriveFileByAny(p)));
+  const driveDeleted = driveSettled.filter(r => r.status === 'fulfilled' && r.value).length;
 
-    for (const doc of list) {
-      try { await deleteDriveFileByAny(doc.filePath || ''); driveDeleted += 1; } catch {}
-      await prisma.internDocument.delete({ where: { id: doc.id } });
-      deletedDocs += 1;
+  let dbDeleted = 0;
+  if (docIdsToDelete.length) {
+    const { count } = await prisma.internDocument.deleteMany({ where: { id: { in: docIdsToDelete } } });
+    dbDeleted = count;
+  }
+
+  let avatarDeleted = 0;
+  if (opts.includeAvatar) {
+    const internIdsWithAvatars = eligible.map(e => e.internId);
+    const userIdsWithAvatars = eligible.map(e => e.userId).filter((id): id is number => id !== null);
+
+    if (internIdsWithAvatars.length) {
+      avatarDeleted += await deleteInternProfilePicture(internIdsWithAvatars);
     }
-
-    // optional: also remove profile picture & user avatar
-    if (opts.includeAvatar) {
-      try { avatarDeleted += await deleteInternProfilePicture(e.internId); } catch {}
-      if (e.userId) { try { await deleteUserAvatarByUserId(e.userId); } catch {} }
+    if (userIdsWithAvatars.length) {
+      // Note: this assumes deleteUserAvatarByUserId is also converted to bulk
+      await deleteUserAvatarByUserId(userIdsWithAvatars);
     }
   }
 
   await prisma.documentDeletionPolicy.update({
     where: { id: 1 },
-    data: { lastRunAt: new Date(), lastDeleted: deletedDocs }
+    data: { lastRunAt: new Date(), lastDeleted: dbDeleted }
   });
 
   return {
     ok: true,
-    processedInterns,
-    deletedDocs,
-    driveDeleted,
+    processedInterns: eligible.length,
+    deletedDocs: dbDeleted,
+    driveDeleted: driveDeleted,
     avatarDeleted,
-    skippedNoDocs,
+    skippedNoDocs: eligible.length - byIntern.size,
   };
 }
 
