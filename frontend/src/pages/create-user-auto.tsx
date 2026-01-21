@@ -30,7 +30,8 @@ function previewEmail(first: string, sur: string, deptName?: string) {
   const s0 = (clean(sur)[0] || '');
   const d2 = deptName ? clean(deptName).slice(0, 2) : '';
   if (!f || !s0 || !d2) return `—@${DOMAIN}`;
-  return `${f}.${s0}${d2}xxxxx@${DOMAIN}`; // placeholder 5 digits
+  const rand = Math.floor(10000 + Math.random() * 90000).toString();
+  return `${f}.${s0}${d2}${rand}@${DOMAIN}`;
 }
 
 
