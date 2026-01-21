@@ -52,6 +52,7 @@ function PageInner() {
   const onChange = (k: keyof Form, v: any) => setForm({ ...form, [k]: v });
 
   async function save() {
+    if (!form) return;
   setSaving(true); setMsg(null);
   // add this helper inside save()
     const resolveEnc = (enc: Form['encryption'], port: number | ''): 'NONE'|'STARTTLS'|'TLS' => {
