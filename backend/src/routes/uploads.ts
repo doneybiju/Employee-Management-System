@@ -6,6 +6,7 @@ import { authorize } from '../middleware/authorize';
 import prisma from '../prisma';
 import { uploadToDrive, streamDownload, deleteDriveFile } from '../google/drive';
 import { extractDriveId } from '../google/deletion';
+import { logDocumentAction } from '../lib/documentLogger';
 
 const DRIVE_ID = process.env.GOOGLE_SHARED_DRIVE_ID;
 const router = Router();
@@ -228,6 +229,25 @@ const up = await uploadToDrive({
             },
           });
 
+      // Log the action (replace if existing, upload if new)
+      const internDetail = await prisma.internDetail.findUnique({
+        where: { internId },
+        select: { name: true, userId: true },
+      });
+
+      await logDocumentAction({
+        action: existing ? 'replace' : 'upload',
+        documentType: kind,
+        fileName: file.originalname || `document_${kind}.pdf`,
+        fileId: up.fileId,
+        internId,
+        internName: internDetail?.name || null,
+        userId: internDetail?.userId || null,
+        performedBy: actor.id,
+        expiryDate: expiryDateToSet === undefined ? null : expiryDateToSet,
+        req,
+      });
+
       return res.json({
         fileId: up.fileId,
         url,
@@ -307,12 +327,33 @@ router.delete(
       });
       if (!doc) return res.json({ ok: true, deleted: 0, driveDeleted: false });
 
+      // Get intern info for logging
+      const internDetail = await prisma.internDetail.findUnique({
+        where: { internId },
+        select: { name: true, userId: true },
+      });
+
       // try Drive delete (tolerate if already gone)
       const fileId = extractDriveId(doc.filePath || '') || '';
       const driveDeleted = fileId ? await deleteDriveFile(fileId) : true;
 
       // delete row
       await prisma.internDocument.delete({ where: { id: doc.id } });
+
+      // Log the delete action
+      const actor = (req as any).user as { id: number };
+      await logDocumentAction({
+        action: 'delete',
+        documentType: kind,
+        fileName: doc.fileName || doc.originalName || `document_${kind}`,
+        fileId: fileId || null,
+        internId,
+        internName: internDetail?.name || null,
+        userId: internDetail?.userId || null,
+        performedBy: actor.id,
+        expiryDate: doc.expiryDate || null,
+        req,
+      });
 
       return res.json({ ok: true, deleted: 1, driveDeleted });
     } catch (e: any) {
@@ -336,6 +377,12 @@ router.delete(
         where: { internId, documentType: { in: required as any }, isActive: true },
       });
 
+      // Get intern info for logging
+      const internDetail = await prisma.internDetail.findUnique({
+        where: { internId },
+        select: { name: true, userId: true },
+      });
+
       let driveDeleted = 0;
       for (const d of docs) {
         const fileId = extractDriveId(d.filePath || '') || '';
@@ -346,6 +393,24 @@ router.delete(
 
       if (docs.length) {
         await prisma.internDocument.deleteMany({ where: { id: { in: docs.map(d => d.id) } } });
+      }
+
+      // Log all delete actions
+      const actor = (req as any).user as { id: number };
+      for (const d of docs) {
+        const docType = Object.keys(KIND_TO_ENUM).find(k => KIND_TO_ENUM[k as keyof typeof KIND_TO_ENUM] === d.documentType) || 'unknown';
+        await logDocumentAction({
+          action: 'delete',
+          documentType: docType,
+          fileName: d.fileName || d.originalName || `document_${docType}`,
+          fileId: extractDriveId(d.filePath || '') || null,
+          internId,
+          internName: internDetail?.name || null,
+          userId: internDetail?.userId || null,
+          performedBy: actor.id,
+          expiryDate: d.expiryDate || null,
+          req,
+        });
       }
 
       return res.json({ ok: true, deleted: docs.length, driveDeleted });

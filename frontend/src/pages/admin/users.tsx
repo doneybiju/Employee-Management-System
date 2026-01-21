@@ -138,6 +138,12 @@ const [editPosId,  setEditPosId]  = useState<number | null>(null);
   // details modal
   const [view, setView] = useState<Row | null>(null);
   const [viewDetail, setViewDetail] = useState<any | null>(null);
+  
+  // Update log modal
+  const [showUpdateLog, setShowUpdateLog] = useState(false);
+  const [updateLogs, setUpdateLogs] = useState<any[]>([]);
+  const [updateLogUser, setUpdateLogUser] = useState<Row | null>(null);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
 
   // ========== load rows ==========
@@ -387,6 +393,29 @@ const handleDelete = async (r: Row) => {
 
 
 /* ===== Edit Modal (updated) ===== */
+const openUpdateLog = async (r: Row) => {
+  setUpdateLogUser(r);
+  setShowUpdateLog(true);
+  setLoadingLogs(true);
+  
+  try {
+    const params = new URLSearchParams();
+    if (r.userId) params.append('userId', String(r.userId));
+    if (r.internId) params.append('internId', r.internId);
+    params.append('limit', '100');
+    
+    const response = await fetchWithAuth(`/api/logs/user-updates?${params}`);
+    if (!response.ok) throw new Error('Failed to fetch logs');
+    const data = await response.json();
+    setUpdateLogs(data.logs || []);
+  } catch (err) {
+    console.error('Failed to fetch update logs:', err);
+    setUpdateLogs([]);
+  } finally {
+    setLoadingLogs(false);
+  }
+};
+
 const openEdit = (r: Row, opts?: { forDelete?: boolean }) => {
   setPendingDelete(opts?.forDelete ? r : null);
   setEdit(r);
@@ -579,6 +608,7 @@ const openDetails = async (r: Row) => {
       <td>
         <div style={{ display:'flex', gap:10 }}>
           <button title="Edit" onClick={() => openEdit(r)} style={{ background:'none', border:'none', cursor:'pointer' }}>✏️</button>
+          <button title="Update History" onClick={() => openUpdateLog(r)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'16px' }}>📋</button>
           {r.userId != null && user?.role === 'super_admin' && (
 
   r.blocked ? (
@@ -1013,6 +1043,86 @@ const valFor = (id: ColId): string => {
     </>
   );
 })()}
+          </div>
+        </div>
+      )}
+
+      {/* Update Log Modal */}
+      {showUpdateLog && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999 }}>
+          <div style={{ background:'white', borderRadius:12, width:'90%', maxWidth:900, maxHeight:'80vh', overflow:'auto', padding:24 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+              <h2 style={{ margin:0, fontSize:20, fontWeight:600 }}>
+                Update History: {updateLogUser?.name || 'User'}
+              </h2>
+              <button onClick={() => setShowUpdateLog(false)} style={{ background:'none', border:'none', fontSize:24, cursor:'pointer' }}>×</button>
+            </div>
+
+            {loadingLogs ? (
+              <div style={{ textAlign:'center', padding:40 }}>Loading...</div>
+            ) : updateLogs.length === 0 ? (
+              <div style={{ textAlign:'center', padding:40, color:'#6b7280' }}>No update history found</div>
+            ) : (
+              <div style={{ overflowX:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:14 }}>
+                  <thead>
+                    <tr style={{ borderBottom:'2px solid #e5e7eb', textAlign:'left' }}>
+                      <th style={{ padding:12, fontWeight:600 }}>Date & Time</th>
+                      <th style={{ padding:12, fontWeight:600 }}>Field</th>
+                      <th style={{ padding:12, fontWeight:600 }}>Old Value</th>
+                      <th style={{ padding:12, fontWeight:600 }}>New Value</th>
+                      <th style={{ padding:12, fontWeight:600 }}>Updated By</th>
+                      <th style={{ padding:12, fontWeight:600 }}>IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {updateLogs.map((log) => (
+                      <tr key={log.id} style={{ borderBottom:'1px solid #f3f4f6' }}>
+                        <td style={{ padding:12, color:'#4b5563', fontSize:13, whiteSpace:'nowrap' }}>
+                          {new Date(log.updatedAt).toLocaleString()}
+                        </td>
+                        <td style={{ padding:12 }}>
+                          <span style={{ fontWeight:600, color:'#1f2937' }}>{log.fieldName}</span>
+                        </td>
+                        <td style={{ padding:12, color:'#dc2626', maxWidth:200, wordBreak:'break-word' }}>
+                          {log.oldValue || <span style={{ color:'#9ca3af' }}>—</span>}
+                        </td>
+                        <td style={{ padding:12, color:'#059669', maxWidth:200, wordBreak:'break-word' }}>
+                          {log.newValue || <span style={{ color:'#9ca3af' }}>—</span>}
+                        </td>
+                        <td style={{ padding:12 }}>
+                          <div style={{ fontWeight:500, color:'#1f2937' }}>{log.updatedByName}</div>
+                          {log.updatedByRole && (
+                            <div style={{ fontSize:12, color:'#6b7280', marginTop:2 }}>
+                              <span style={{ padding:'2px 6px', background:'#e5e7eb', borderRadius:4, marginRight:4 }}>
+                                {log.updatedByRole}
+                              </span>
+                              {log.updatedByEmpType && (
+                                <span style={{ padding:'2px 6px', background:'#dbeafe', borderRadius:4 }}>
+                                  {log.updatedByEmpType.replace('_', ' ')}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding:12, fontFamily:'monospace', fontSize:12, color:'#6b7280' }}>
+                          {log.ip || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{ marginTop:20, display:'flex', justifyContent:'flex-end' }}>
+              <button
+                onClick={() => setShowUpdateLog(false)}
+                style={{ padding:'10px 20px', background:'#2d8cf0', color:'white', border:'none', borderRadius:8, cursor:'pointer', fontWeight:500 }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

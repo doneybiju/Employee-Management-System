@@ -111,7 +111,20 @@ router.get('/login-events', async (req: Request, res: Response) => {
 
   const [total, rawItems] = await Promise.all([
     prisma.loginEvent.count({ where }),
-    prisma.loginEvent.findMany({ where, orderBy, skip, take }),
+    prisma.loginEvent.findMany({ 
+      where, 
+      orderBy, 
+      skip, 
+      take,
+      include: {
+        alerts: {
+          select: {
+            kind: true,
+            severity: true,
+          }
+        }
+      }
+    }),
   ]);
 
   const items = await addNewFlags(rawItems);

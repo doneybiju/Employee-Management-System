@@ -168,6 +168,20 @@ const siteTempPassword = generatePassword(12);
         sys.companyEmailDomain ||
         DEFAULT_DOMAIN;
 
+      // Capture creation tracking info
+      const createdByUserId = (req as any)?.user?.id ?? null;
+      const creatorUser = createdByUserId 
+        ? await prisma.user.findUnique({
+            where: { id: createdByUserId },
+            select: { role: true, empType: true }
+          })
+        : null;
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() 
+        || (req.headers['x-real-ip'] as string) 
+        || req.socket?.remoteAddress 
+        || null;
+      const userAgent = req.headers['user-agent'] || null;
+
       await prisma.$transaction(async (tx) => {
         const { email: genEmail, empId: genEmpId } = await genEmailAndEmpId(
           tx,
@@ -188,6 +202,12 @@ const siteTempPassword = generatePassword(12);
             role: 'intern',
             empId,
             empType,
+            createdBy: createdByUserId,
+            createdByRole: creatorUser?.role || null,
+            createdByEmpType: creatorUser?.empType || null,
+            creationIp: ip?.substring(0, 45) || null,
+            creationUserAgent: userAgent?.substring(0, 255) || null,
+            creationMethod: 'google_workspace',
           },
           select: { id: true },
         });

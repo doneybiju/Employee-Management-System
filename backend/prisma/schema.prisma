@@ -25,7 +25,6 @@ enum InternshipStatus {
   @@map("status")
 }
 
-
 enum RequestStatus {
   PENDING
   APPROVED
@@ -169,8 +168,8 @@ model InternDetail {
   email       String?   @unique @db.VarChar(100)
 
   // back-relations
-  sosDetails      InternsSosDetail[]
-  internships     InternshipInfo[]
+  sosDetails  InternsSosDetail[]
+  internships InternshipInfo[]
 
   internDocuments       InternDocument[] // ← was singular; must be array
   documentVerifications DocumentVerification? // stays 1-to-1 (unique on internId in that model)
@@ -193,6 +192,14 @@ model User {
   updatedAt          DateTime @default(now()) @map("updated_at")
   mustChangePassword Boolean  @default(true) @map("mustChangePassword")
   blocked            Boolean  @default(false) @map("blocked")
+  
+  // Account creation tracking
+  createdBy            Int?     @map("created_by")
+  createdByRole        Role?    @map("created_by_role")
+  createdByEmpType     EmpType? @map("created_by_emp_type")
+  creationIp           String?  @map("creation_ip") @db.VarChar(45)
+  creationUserAgent    String?  @map("creation_user_agent") @db.VarChar(255)
+  creationMethod       String?  @map("creation_method") @db.VarChar(50) // 'google_workspace', 'csv_import', 'manual'
 
   // back-relations
   sessionLogs   SessionLog[]
@@ -213,7 +220,11 @@ model User {
   securityAlerts  SecurityAlert[] @relation("UserSecurityAlerts")
 
   passwordResetTokens PasswordResetToken[]
+  updateLogs          UserUpdateLog[] @relation("UserUpdateLogs")
+  updatedUsers        UserUpdateLog[] @relation("UserUpdates")
+  documentActions     DocumentLog[]   @relation("DocumentActions")
 
+  @@index([createdBy], name: "user_created_by_idx")
   @@map("users")
 }
 
@@ -723,12 +734,12 @@ model KnownDevice {
 }
 
 model EmailTheme {
-  id          Int      @id @default(1)
-  brandColor  String   @default("#4a6cf7") @map("brand_color")
-  headerTitle String?  @map("header_title")
-  logoUrl     String?  @map("logo_url")
-  buttonColor String?  @map("button_color")
-  footerText  String?  @map("footer_text")
+  id          Int     @id @default(1)
+  brandColor  String  @default("#4a6cf7") @map("brand_color")
+  headerTitle String? @map("header_title")
+  logoUrl     String? @map("logo_url")
+  buttonColor String? @map("button_color")
+  footerText  String? @map("footer_text")
 
   updatedAt DateTime @updatedAt @map("updated_at")
   updatedBy Int?     @map("updated_by")
@@ -737,20 +748,19 @@ model EmailTheme {
 }
 
 model EmailTemplate {
-  id              Int      @id @default(autoincrement())
-  key             String   @unique @map("key") // e.g. "welcome_credentials"
-  subjectTemplate String   @db.VarChar(255) @map("subject_template")
-  htmlTemplate    String   @db.Text @map("html_template")
-  textTemplate    String?  @db.Text @map("text_template")
-  enabled         Boolean  @default(true) @map("enabled")
+  id              Int     @id @default(autoincrement())
+  key             String  @unique @map("key") // e.g. "welcome_credentials"
+  subjectTemplate String  @map("subject_template") @db.VarChar(255)
+  htmlTemplate    String  @map("html_template") @db.Text
+  textTemplate    String? @map("text_template") @db.Text
+  enabled         Boolean @default(true) @map("enabled")
 
   headerTitle String? @map("header_title")
   logoUrl     String? @map("logo_url")
 
-
   // Optional metadata for the UI
   description String? @map("description")
-  variables   Json?   @map("variables")   // e.g. ["recipientName","projectTitle","projectUrl"]
+  variables   Json?   @map("variables") // e.g. ["recipientName","projectTitle","projectUrl"]
   sampleData  Json?   @map("sample_data") // e.g. {"recipientName":"Test","projectTitle":"Demo"}
 
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -758,3 +768,50 @@ model EmailTemplate {
 
   @@map("email_templates")
 }
+
+model UserUpdateLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     @map("user_id")
+  internId      String?  @map("intern_id") @db.Uuid
+  updatedBy     Int      @map("updated_by")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+  fieldName     String   @map("field_name") @db.VarChar(100)
+  oldValue      String?  @map("old_value") @db.Text
+  newValue      String?  @map("new_value") @db.Text
+  ip            String?  @db.VarChar(45)
+  userAgent     String?  @map("user_agent") @db.VarChar(255)
+
+  user          User?    @relation("UserUpdateLogs", fields: [userId], references: [id], onDelete: Cascade)
+  updater       User     @relation("UserUpdates", fields: [updatedBy], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "user_update_log_user_idx")
+  @@index([internId], name: "user_update_log_intern_idx")
+  @@index([updatedBy], name: "user_update_log_updater_idx")
+  @@index([updatedAt], name: "user_update_log_updated_idx")
+  @@map("user_update_logs")
+}
+
+model DocumentLog {
+  id            Int      @id @default(autoincrement())
+  action        String   @db.VarChar(20) // 'upload', 'delete', or 'replace'
+  documentType  String   @map("document_type") @db.VarChar(50) // acceptance_letter, passport_id, etc.
+  fileName      String   @map("file_name") @db.VarChar(255)
+  fileId        String?  @map("file_id") @db.VarChar(255) // Google Drive file ID
+  internId      String   @map("intern_id") @db.Uuid
+  internName    String?  @map("intern_name") @db.VarChar(200)
+  userId        Int?     @map("user_id") // The intern's user ID if they uploaded themselves
+  performedBy   Int      @map("performed_by") // Admin who uploaded/deleted (or self)
+  performedAt   DateTime @default(now()) @map("performed_at")
+  ip            String?  @db.VarChar(45)
+  userAgent     String?  @map("user_agent") @db.VarChar(255)
+  expiryDate    DateTime? @map("expiry_date") // For passport expiry tracking
+
+  performer     User     @relation("DocumentActions", fields: [performedBy], references: [id], onDelete: Cascade)
+
+  @@index([internId], name: "document_log_intern_idx")
+  @@index([performedBy], name: "document_log_performer_idx")
+  @@index([performedAt], name: "document_log_performed_idx")
+  @@index([action], name: "document_log_action_idx")
+  @@map("document_logs")
+}
+

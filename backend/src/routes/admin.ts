@@ -2,6 +2,7 @@
   import { Router } from 'express';
   import type { Request, Response } from 'express';
   import prisma from '../prisma';
+  import { logDocumentAction } from '../lib/documentLogger';
   import { authorize } from '../middleware/authorize';
   import { getMailer, sendMail, sendTemplateMail } from '../lib/mailer';
   import { randomBytes, createHash } from 'crypto';
@@ -984,8 +985,23 @@ if (iid) {
 
         const rows = await prisma.internDocument.findMany({
           where: { internId, documentType, isActive: true },
-          select: { id: true, filePath: true },
+          select: { id: true, filePath: true, fileName: true, originalName: true, expiryDate: true },
         });
+
+        // Get intern info for logging
+        const internDetail = await prisma.internDetail.findUnique({
+          where: { internId },
+          select: { name: true, userId: true },
+        });
+
+        // Map document type to kind for logging
+        const docTypeToKind: Record<string, string> = {
+          'ACCEPTANCE_LETTER': 'acceptance_letter',
+          'LEARNING_AGREEMENT': 'learning_agreement',
+          'ID_PASSPORT': 'passport_id',
+          'CV': 'cv',
+        };
+        const kind = docTypeToKind[documentType] || documentType.toLowerCase();
 
         // Attempt Drive deletes (best-effort)
         await Promise.allSettled(rows.map(r => safeDeleteDriveByFilePath(r.filePath)));
@@ -994,6 +1010,24 @@ if (iid) {
         const del = await prisma.internDocument.deleteMany({
           where: { id: { in: rows.map(r => r.id) } },
         });
+
+        // Log deletion for each document
+        const actor = (req as any).user as { id: number };
+        for (const row of rows) {
+          const fileId = extractDriveId(row.filePath || '') || null;
+          await logDocumentAction({
+            action: 'delete',
+            documentType: kind,
+            fileName: row.fileName || row.originalName || `document_${kind}`,
+            fileId,
+            internId,
+            internName: internDetail?.name || null,
+            userId: internDetail?.userId || null,
+            performedBy: actor.id,
+            expiryDate: row.expiryDate || null,
+            req,
+          });
+        }
 
         return res.json({ ok: true, deleted: del.count });
       } catch (e: any) {
@@ -1018,14 +1052,47 @@ if (iid) {
             isActive: true,
             documentType: { in: ALLOWED_DOC_TYPES as any },
           },
-          select: { id: true, filePath: true },
+          select: { id: true, filePath: true, fileName: true, originalName: true, documentType: true, expiryDate: true },
         });
+
+        // Get intern info for logging
+        const internDetail = await prisma.internDetail.findUnique({
+          where: { internId },
+          select: { name: true, userId: true },
+        });
+
+        // Map document type to kind for logging
+        const docTypeToKind: Record<string, string> = {
+          'ACCEPTANCE_LETTER': 'acceptance_letter',
+          'LEARNING_AGREEMENT': 'learning_agreement',
+          'ID_PASSPORT': 'passport_id',
+          'CV': 'cv',
+        };
 
         await Promise.allSettled(rows.map(r => safeDeleteDriveByFilePath(r.filePath)));
 
         const del = await prisma.internDocument.deleteMany({
           where: { id: { in: rows.map(r => r.id) } },
         });
+
+        // Log deletion for each document
+        const actor = (req as any).user as { id: number };
+        for (const row of rows) {
+          const kind = docTypeToKind[row.documentType] || row.documentType.toLowerCase();
+          const fileId = extractDriveId(row.filePath || '') || null;
+          await logDocumentAction({
+            action: 'delete',
+            documentType: kind,
+            fileName: row.fileName || row.originalName || `document_${kind}`,
+            fileId,
+            internId,
+            internName: internDetail?.name || null,
+            userId: internDetail?.userId || null,
+            performedBy: actor.id,
+            expiryDate: row.expiryDate || null,
+            req,
+          });
+        }
 
         return res.json({ ok: true, deleted: del.count });
       } catch (e: any) {
@@ -1720,6 +1787,20 @@ if (missingRequired.length) {
       const createdForSetup: Array<{ userId: number; email: string; name: string }> = [];
 
 
+      // Capture creation tracking info
+      const createdByUserId = (req as any)?.user?.id ?? null;
+      const creatorUser = createdByUserId 
+        ? await prisma.user.findUnique({
+            where: { id: createdByUserId },
+            select: { role: true, empType: true }
+          })
+        : null;
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() 
+        || (req.headers['x-real-ip'] as string) 
+        || req.socket?.remoteAddress 
+        || null;
+      const userAgent = req.headers['user-agent'] || null;
+
       await prisma.$transaction(async (tx) => {
         // Cache for Department / Position names
         const deptCache = new Map<string, number>(); // key: lowercased name
@@ -1943,6 +2024,12 @@ if (existingUser) {
               empId,
               mustChangePassword: true,
               blocked: false,
+              createdBy: createdByUserId,
+              createdByRole: creatorUser?.role || null,
+              createdByEmpType: creatorUser?.empType || null,
+              creationIp: ip?.substring(0, 45) || null,
+              creationUserAgent: userAgent?.substring(0, 255) || null,
+              creationMethod: 'csv_import',
             },
             select: { id: true },
           });

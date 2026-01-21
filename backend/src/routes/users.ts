@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import prisma from '../prisma';
+import { logUserUpdates } from '../lib/userUpdateLogger';
 import { Prisma } from '@prisma/client';
 import { authorize } from '../middleware/authorize';
 import { InternshipStatus } from '@prisma/client';
@@ -595,6 +596,193 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   empType?: 'intern' | 'employee' | 'team_lead' | undefined;
 };
 
+  const updatedBy = (req as any)?.user?.id;
+  if (!updatedBy) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Fetch old values for logging
+  const oldInternship = await prisma.internshipInfo.findFirst({
+    where: { internId },
+    orderBy: { id: 'desc' },
+  });
+  const oldDetail = await prisma.internDetail.findUnique({
+    where: { internId },
+  });
+  const oldUser = userId ? await prisma.user.findUnique({ where: { id: Number(userId) } }) : null;
+
+  // Prepare department/position names for logging
+  let oldDeptName = null, newDeptName = null, oldPosName = null, newPosName = null;
+  if (oldInternship?.departmentId) {
+    const dept = await prisma.department.findUnique({ where: { id: oldInternship.departmentId } });
+    oldDeptName = dept?.departmentName;
+  }
+  if (departmentId) {
+    const dept = await prisma.department.findUnique({ where: { id: departmentId } });
+    newDeptName = dept?.departmentName;
+  }
+  if (oldInternship?.positionId) {
+    const pos = await prisma.position.findUnique({ where: { id: oldInternship.positionId } });
+    oldPosName = pos?.name;
+  }
+  if (positionId) {
+    const pos = await prisma.position.findUnique({ where: { id: positionId } });
+    newPosName = pos?.name;
+  }
+
+  // Collect all changes for logging
+  const changes: Array<{
+    userId?: number | null;
+    internId?: string | null;
+    updatedBy: number;
+    fieldName: string;
+    oldValue: any;
+    newValue: any;
+  }> = [];
+
+  // Log internship changes
+  if (startDate !== undefined && oldInternship?.startDate?.toISOString().slice(0, 10) !== startDate) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Start Date',
+      oldValue: oldInternship?.startDate?.toISOString().slice(0, 10) || null,
+      newValue: startDate,
+    });
+  }
+  if (endDate !== undefined && oldInternship?.endDate?.toISOString().slice(0, 10) !== endDate) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'End Date',
+      oldValue: oldInternship?.endDate?.toISOString().slice(0, 10) || null,
+      newValue: endDate,
+    });
+  }
+  if (supervisor !== undefined && oldInternship?.supervisor !== supervisor) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Supervisor',
+      oldValue: oldInternship?.supervisor || null,
+      newValue: supervisor,
+    });
+  }
+  if (departmentId !== undefined && oldInternship?.departmentId !== departmentId) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Department',
+      oldValue: oldDeptName || oldInternship?.departmentId,
+      newValue: newDeptName || departmentId,
+    });
+  }
+  if (positionId !== undefined && oldInternship?.positionId !== positionId) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Position',
+      oldValue: oldPosName || oldInternship?.positionId,
+      newValue: newPosName || positionId,
+    });
+  }
+
+  // Log intern detail changes
+  if (phone !== undefined && oldDetail?.phone !== phone) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Phone',
+      oldValue: oldDetail?.phone || null,
+      newValue: phone,
+    });
+  }
+  if (personalEmail !== undefined && oldDetail?.email !== personalEmail) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Personal Email',
+      oldValue: oldDetail?.email || null,
+      newValue: personalEmail,
+    });
+  }
+  if (nationality !== undefined && oldDetail?.nationality !== nationality) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Country',
+      oldValue: oldDetail?.nationality || null,
+      newValue: nationality,
+    });
+  }
+  if (gender !== undefined && oldDetail?.gender !== gender) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Gender',
+      oldValue: oldDetail?.gender || null,
+      newValue: gender,
+    });
+  }
+  if (birthdate !== undefined && oldDetail?.birthdate?.toISOString().slice(0, 10) !== birthdate) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Birthday',
+      oldValue: oldDetail?.birthdate?.toISOString().slice(0, 10) || null,
+      newValue: birthdate,
+    });
+  }
+
+  // Log user changes (name, role, empType)
+  if (name && oldUser) {
+    const oldName = `${oldUser.firstName} ${oldUser.surname}`.trim();
+    if (oldName !== name) {
+      changes.push({
+        userId: userId || null,
+        internId,
+        updatedBy,
+        fieldName: 'Name',
+        oldValue: oldName,
+        newValue: name,
+      });
+    }
+  }
+  if (role && oldUser?.role !== role) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Role',
+      oldValue: oldUser?.role || null,
+      newValue: role,
+    });
+  }
+  if (empType && oldUser?.empType !== empType) {
+    changes.push({
+      userId: userId || null,
+      internId,
+      updatedBy,
+      fieldName: 'Emp Type',
+      oldValue: oldUser?.empType || null,
+      newValue: empType,
+    });
+  }
+
+  // Log all changes
+  if (changes.length > 0) {
+    await logUserUpdates(changes, req);
+  }
 
   // Update latest internship row(s) for this internId
   await prisma.internshipInfo.updateMany({

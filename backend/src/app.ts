@@ -42,6 +42,7 @@ import docCleanupRouter from './routes/doc-cleanup';
 
 import securityRouter from './routes/security';
 import emailAdminRouter from './routes/email';
+import logsRouter from './routes/logs';
 
 
 const app = express();
@@ -185,6 +186,13 @@ app.use(
   forcePasswordChange as any,
   ...authorize('super_admin'),
   securityRouter
+);
+
+app.use(
+  '/api/logs',
+  ensureAuthenticated as any,
+  forcePasswordChange as any,
+  logsRouter
 );
 
 

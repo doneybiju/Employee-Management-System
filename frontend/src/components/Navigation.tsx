@@ -148,7 +148,7 @@ export default function Navigation() {
               <NavLink href="/admin/deprovision" label="Cron / Deprovision" />
               <NavLink href="/admin/smtp" label="SMTP Settings" />
               <NavLink href="/admin/email-templates" label="Email Templates" />
-              <NavLink href="/admin/security" label="Security (Logs)" />  
+              <NavLink href="/admin/logs" label="Logs" />  
             </div>
           </div>
         )}
