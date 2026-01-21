@@ -36,9 +36,9 @@ async function deleteInternProfilePicture(internId: string) {
     select: { id: true, filePath: true },
   });
   let driveDeleted = 0;
-  for (const p of pics) {
+  await Promise.all(pics.map(async p => {
     try { await deleteDriveFileByAny(p.filePath || ''); driveDeleted += 1; } catch {}
-  }
+  }));
   if (pics.length) await prisma.internDocument.deleteMany({ where: { id: { in: pics.map(p => p.id) } } });
   return driveDeleted;
 }
@@ -147,9 +147,7 @@ export async function deleteDocsForIntern({ internId, types = REQUIRED_DOC_TYPES
   const where = { internId, ...(types === 'all' ? {} : { documentType: { in: types } }) };
   const docs = await prisma.internDocument.findMany({ where, select: { id: true, filePath: true } });
 
-  for (const d of docs) {
-    try { await deleteDriveFileByAny(d.filePath); } catch { /* ignore per-file failure */ }
-  }
+  await Promise.all(docs.map(d => deleteDriveFileByAny(d.filePath).catch(() => {})));
 
   // remove records after deletion
   const delRes = await prisma.internDocument.deleteMany({ where });
@@ -262,11 +260,11 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
     const list = byIntern.get(e.internId) || [];
     if (!list.length) { skippedNoDocs += 1; }
 
-    for (const doc of list) {
+    await Promise.all(list.map(async doc => {
       try { await deleteDriveFileByAny(doc.filePath || ''); driveDeleted += 1; } catch {}
       await prisma.internDocument.delete({ where: { id: doc.id } });
       deletedDocs += 1;
-    }
+    }));
 
     // optional: also remove profile picture & user avatar
     if (opts.includeAvatar) {
