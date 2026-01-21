@@ -29,17 +29,17 @@ const REQUIRED_DOC_TYPES: DocumentType[] = [
   'CV',
 ];
 
-// Delete intern’s profile picture (from InternDocument: PROFILE_PICTURE)
-async function deleteInternProfilePicture(internId: string) {
-  const pics = await prisma.internDocument.findMany({
-    where: { internId, isActive: true, documentType: 'PROFILE_PICTURE' as DocumentType },
+// Delete employee’s profile picture (from EmployeeDocument: PROFILE_PICTURE)
+async function deleteEmployeeProfilePicture(employeeId: string) {
+  const pics = await prisma.employeeDocument.findMany({
+    where: { employeeId, isActive: true, documentType: 'PROFILE_PICTURE' as DocumentType },
     select: { id: true, filePath: true },
   });
   let driveDeleted = 0;
   for (const p of pics) {
     try { await deleteDriveFileByAny(p.filePath || ''); driveDeleted += 1; } catch {}
   }
-  if (pics.length) await prisma.internDocument.deleteMany({ where: { id: { in: pics.map(p => p.id) } } });
+  if (pics.length) await prisma.employeeDocument.deleteMany({ where: { id: { in: pics.map(p => p.id) } } });
   return driveDeleted;
 }
 
@@ -141,18 +141,18 @@ function isWhitelisted(userId?: number | null, email?: string | null, wl?: Depro
 
 
 export type DocDeleteParams =
-  { internId: string; types?: DocumentType[] | 'all' };
+  { employeeId: string; types?: DocumentType[] | 'all' };
 
-export async function deleteDocsForIntern({ internId, types = REQUIRED_DOC_TYPES }: DocDeleteParams) {
-  const where = { internId, ...(types === 'all' ? {} : { documentType: { in: types } }) };
-  const docs = await prisma.internDocument.findMany({ where, select: { id: true, filePath: true } });
+export async function deleteDocsForEmployee({ employeeId, types = REQUIRED_DOC_TYPES }: DocDeleteParams) {
+  const where = { employeeId, ...(types === 'all' ? {} : { documentType: { in: types } }) };
+  const docs = await prisma.employeeDocument.findMany({ where, select: { id: true, filePath: true } });
 
   for (const d of docs) {
     try { await deleteDriveFileByAny(d.filePath); } catch { /* ignore per-file failure */ }
   }
 
   // remove records after deletion
-  const delRes = await prisma.internDocument.deleteMany({ where });
+  const delRes = await prisma.employeeDocument.deleteMany({ where });
   return { deletedDb: delRes.count, attempted: docs.length };
 }
 
@@ -168,7 +168,7 @@ function addUnit(d: Date, amount: number, unit: DelayUnit) {
 }
 
 /**
- * Deletes docs for interns where (endDate + delay) <= now.
+ * Deletes docs for employees where (endDate + delay) <= now.
  * Options:
  *  - ignoreDelay: if true, use endDate directly (skip policy delay)
  *  - includeAvatar: if true, also delete PROFILE_PICTURE + best-effort user avatar
@@ -185,7 +185,7 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
 
   const now = new Date();
 
-  // ------- whitelist (skipDocs) -> internIds to skip -------
+  // ------- whitelist (skipDocs) -> employeeIds to skip -------
   const wl = await prisma.reminderWhitelist.findMany({
   where: { OR: [{ skipDocs: true }, { skipDeprov: true }] }, // honor deprov whitelist too
   select: { userId: true },
@@ -193,26 +193,26 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
 
   const blockedUserIds = new Set(wl.map(w => w.userId));
 
-  const details = await prisma.internDetail.findMany({
-    select: { internId: true, userId: true },
+  const details = await prisma.employeeDetail.findMany({
+    select: { employeeId: true, userId: true },
   });
-  const blockedInterns = new Set(
-    details.filter(d => d.userId && blockedUserIds.has(d.userId)).map(d => d.internId)
+  const blockedEmployees = new Set(
+    details.filter(d => d.userId && blockedUserIds.has(d.userId)).map(d => d.employeeId)
   );
 
-  // ------- latest internship row per intern with endDate -------
-  const rows = await prisma.internshipInfo.findMany({
+  // ------- latest employment row per employee with endDate -------
+  const rows = await prisma.employeeInfo.findMany({
     where: { endDate: { not: null } },
-    orderBy: [{ internId: 'asc' }, { startDate: 'desc' }],
-    select: { internId: true, endDate: true, intern: { select: { userId: true } } },
+    orderBy: [{ employeeId: 'asc' }, { startDate: 'desc' }],
+    select: { employeeId: true, endDate: true, employee: { select: { userId: true } } },
   });
 
   const seen = new Set<string>();
-  const latest: Array<{ internId: string; endDate: Date; userId: number | null }> = [];
+  const latest: Array<{ employeeId: string; endDate: Date; userId: number | null }> = [];
   for (const r of rows) {
-    if (!seen.has(r.internId)) {
-      seen.add(r.internId);
-      latest.push({ internId: r.internId, endDate: r.endDate!, userId: r.intern?.userId ?? null });
+    if (!seen.has(r.employeeId)) {
+      seen.add(r.employeeId);
+      latest.push({ employeeId: r.employeeId, endDate: r.endDate!, userId: r.employee?.userId ?? null });
     }
   }
 
@@ -226,7 +226,7 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
   }
 
   const eligible = latest.filter(r => {
-    if (blockedInterns.has(r.internId)) return false;
+    if (blockedEmployees.has(r.employeeId)) return false;
     const when = opts.ignoreDelay ? r.endDate : addUnit(r.endDate, policy.delayAmount, policy.delayUnit);
     return when <= now;
   });
@@ -235,42 +235,42 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
     await prisma.documentDeletionPolicy.update({
       where: { id: 1 }, data: { lastRunAt: new Date(), lastDeleted: 0 }
     });
-    return { deletedDocs: 0, driveDeleted: 0, processedInterns: 0, skippedNoDocs: eligible.length };
+    return { deletedDocs: 0, driveDeleted: 0, processedEmployees: 0, skippedNoDocs: eligible.length };
   }
 
   // ------- preload active docs (required only) -------
-  const docs = await prisma.internDocument.findMany({
+  const docs = await prisma.employeeDocument.findMany({
     where: {
-      internId: { in: eligible.map(e => e.internId) },
+      employeeId: { in: eligible.map(e => e.employeeId) },
       isActive: true,
       documentType: { in: REQUIRED_DOC_TYPES as any },
     },
-    select: { id: true, filePath: true, internId: true },
+    select: { id: true, filePath: true, employeeId: true },
   });
 
-  const byIntern = new Map<string, { id: number; filePath: string | null }[]>();
+  const byEmployee = new Map<string, { id: number; filePath: string | null }[]>();
   for (const d of docs) {
-    const arr = byIntern.get(d.internId) || [];
+    const arr = byEmployee.get(d.employeeId) || [];
     arr.push({ id: d.id, filePath: d.filePath });
-    byIntern.set(d.internId, arr);
+    byEmployee.set(d.employeeId, arr);
   }
 
-  let deletedDocs = 0, driveDeleted = 0, processedInterns = 0, skippedNoDocs = 0, avatarDeleted = 0;
+  let deletedDocs = 0, driveDeleted = 0, processedEmployees = 0, skippedNoDocs = 0, avatarDeleted = 0;
 
   for (const e of eligible) {
-    processedInterns += 1;
-    const list = byIntern.get(e.internId) || [];
+    processedEmployees += 1;
+    const list = byEmployee.get(e.employeeId) || [];
     if (!list.length) { skippedNoDocs += 1; }
 
     for (const doc of list) {
       try { await deleteDriveFileByAny(doc.filePath || ''); driveDeleted += 1; } catch {}
-      await prisma.internDocument.delete({ where: { id: doc.id } });
+      await prisma.employeeDocument.delete({ where: { id: doc.id } });
       deletedDocs += 1;
     }
 
     // optional: also remove profile picture & user avatar
     if (opts.includeAvatar) {
-      try { avatarDeleted += await deleteInternProfilePicture(e.internId); } catch {}
+      try { avatarDeleted += await deleteEmployeeProfilePicture(e.employeeId); } catch {}
       if (e.userId) { try { await deleteUserAvatarByUserId(e.userId); } catch {} }
     }
   }
@@ -282,7 +282,7 @@ export async function runDocumentDeletionCycle(opts: { ignoreDelay?: boolean; in
 
   return {
     ok: true,
-    processedInterns,
+    processedEmployees,
     deletedDocs,
     driveDeleted,
     avatarDeleted,
@@ -298,11 +298,11 @@ export async function upcomingDocDeletions(windowDays: number, delayAmount: numb
   const start = new Date();
   const end = new Date(); end.setDate(end.getDate() + windowDays);
 
-  const list = await prisma.internshipInfo.findMany({
+  const list = await prisma.employeeInfo.findMany({
     where: { endDate: { not: null } },
     select: {
-      internId: true, endDate: true,
-      intern: {
+      employeeId: true, endDate: true,
+      employee: {
         select: {
           name: true, nationality: true, phone: true, email: true,
           user: { select: { firstName: true, surname: true, companyEmail: true } }
@@ -314,13 +314,13 @@ export async function upcomingDocDeletions(windowDays: number, delayAmount: numb
   const items = list.map(l => {
     const scheduled = addUnit(l.endDate!, delayAmount, delayUnit);
     return {
-      internId: l.internId,
-      firstName: l.intern?.user?.firstName ?? null,
-      surname:   l.intern?.user?.surname ?? null,
+      employeeId: l.employeeId,
+      firstName: l.employee?.user?.firstName ?? null,
+      surname:   l.employee?.user?.surname ?? null,
       department: null,
       endDate: l.endDate!.toISOString(),
       scheduledDelete: scheduled.toISOString(),
-      email: l.intern?.user?.companyEmail ?? l.intern?.email ?? null,
+      email: l.employee?.user?.companyEmail ?? l.employee?.email ?? null,
     };
   }).filter(x => {
     const d = new Date(x.scheduledDelete);
@@ -339,7 +339,7 @@ function cutoffFromPolicy(pol: PolicyRow) {
 
 /** List interns due for deprovision with their user + email */
 /** List interns due for deprovision with their user + email (whitelist-aware) */
-/** List interns due for deprovision with their user + email (whitelist-aware) */
+/** List employees due for deprovision with their user + email (whitelist-aware) */
 async function listDueCandidates() {
   const pol = await getPolicyDb();
   const cutoff = cutoffFromPolicy(pol);
@@ -352,14 +352,14 @@ async function listDueCandidates() {
     })).map(w => w.userId)
   );
 
-  // Pick internships ended on/before cutoff; pull intern->user->companyEmail
-  const rows = await prisma.internshipInfo.findMany({
+  // Pick employments ended on/before cutoff; pull employee->user->companyEmail
+  const rows = await prisma.employeeInfo.findMany({
     where: { endDate: { lte: cutoff } },
     orderBy: { endDate: 'asc' },
     select: {
-      internId: true,
+      employeeId: true,
       endDate: true,
-      intern: {
+      employee: {
         select: {
           userId: true,
           user: { select: { id: true, companyEmail: true, role: true } },
@@ -370,12 +370,12 @@ async function listDueCandidates() {
 
   // Only those that still have a portal user (role intern) get deprovisioned
   return rows
-    .filter(r => r.intern?.user?.id && !!(r.intern.user.companyEmail || '').trim())
-    .filter(r => !blocked.has(r.intern!.user!.id)) // ← exclude whitelist
+    .filter(r => r.employee?.user?.id && !!(r.employee.user.companyEmail || '').trim())
+    .filter(r => !blocked.has(r.employee!.user!.id)) // ← exclude whitelist
     .map(r => ({
-      internId: r.internId,
-      userId: r.intern!.user!.id,
-      companyEmail: (r.intern!.user!.companyEmail || '').trim(),
+      employeeId: r.employeeId,
+      userId: r.employee!.user!.id,
+      companyEmail: (r.employee!.user!.companyEmail || '').trim(),
       endDate: r.endDate || null,
     }));
 }
@@ -400,12 +400,12 @@ export async function getUpcoming(windowDays = 7) {
   );
 
   // Pull all candidates with endDate; compute scheduledDelete = endDate + delay
-  const list = await prisma.internshipInfo.findMany({
+  const list = await prisma.employeeInfo.findMany({
     where: { endDate: { not: null } },
     orderBy: { endDate: 'asc' },
     include: {
       department: { select: { departmentName: true } },
-      intern: {
+      employee: {
         select: {
           name: true,
           user: { select: { id: true, companyEmail: true } },
@@ -419,13 +419,13 @@ export async function getUpcoming(windowDays = 7) {
       const end = x.endDate!;
       const scheduled = addDays(end, delayDays);
       return {
-        internId: x.internId,
-        name: x.intern?.name ?? null,
+        employeeId: x.employeeId,
+        name: x.employee?.name ?? null,
         department: x.department?.departmentName ?? null,
         endDate: end.toISOString(),
         scheduledDelete: scheduled.toISOString(),
-        email: x.intern?.user?.companyEmail ?? null,
-        userId: x.intern?.user?.id ?? null,
+        email: x.employee?.user?.companyEmail ?? null,
+        userId: x.employee?.user?.id ?? null,
       };
     })
     .filter(i => i.email && i.userId != null && !blocked.has(i.userId!));
@@ -457,12 +457,12 @@ export async function runDeprovisionOnce() {
     return { ok: true, deletedCount: 0, google: { attempted: 0, succeeded: 0, failed: 0 } };
   }
 
-  const internIds = Array.from(new Set(due.map(d => d.internId)));
+  const employeeIds = Array.from(new Set(due.map(d => d.employeeId)));
   const userIds   = Array.from(new Set(due.map(d => d.userId)));
 
   const [inact, delUsers] = await prisma.$transaction([
-    prisma.internshipInfo.updateMany({
-      where: { internId: { in: internIds }, status: { not: $Enums.InternshipStatus.Inactive } },
+    prisma.employeeInfo.updateMany({
+      where: { employeeId: { in: employeeIds }, status: { not: $Enums.InternshipStatus.Inactive } },
       data:  { status: $Enums.InternshipStatus.Inactive },
     }),
     prisma.user.deleteMany({
@@ -516,7 +516,7 @@ const due = (opts.skipUserIds && opts.skipUserIds.length)
     });
   }
 
-  const internIds = Array.from(new Set(due.map(d => d.internId)));
+  const employeeIds = Array.from(new Set(due.map(d => d.employeeId)));
 const userIds   = Array.from(new Set(due.map(d => d.userId)));
 
 let deletedCount = 0;
@@ -525,13 +525,13 @@ let detached = 0;
 
 if (due.length) {
   const [inact, nulled, delUsers] = await prisma.$transaction([
-    prisma.internshipInfo.updateMany({
-      where: { internId: { in: internIds }, status: { not: $Enums.InternshipStatus.Inactive } },
+    prisma.employeeInfo.updateMany({
+      where: { employeeId: { in: employeeIds }, status: { not: $Enums.InternshipStatus.Inactive } },
       data:  { status: $Enums.InternshipStatus.Inactive },
     }),
 
-    // IMPORTANT: detach intern from portal user so "inactive" stays consistent
-    prisma.internDetail.updateMany({
+    // IMPORTANT: detach employee from portal user so "inactive" stays consistent
+    prisma.employeeDetail.updateMany({
       where: { userId: { in: userIds } },
       data:  { userId: null },
     }),
@@ -568,17 +568,17 @@ if (due.length) {
 // Deprovision a single user immediately if due.
 // "Due" if: (a) policy says it's due  OR  (b) endDate <= (today - 1 day)
 export async function deprovisionIfDueForUserId(userId: number) {
-  // resolve intern + latest endDate + email
-  const detail = await prisma.internDetail.findFirst({
+  // resolve employee + latest endDate + email
+  const detail = await prisma.employeeDetail.findFirst({
     where: { userId },
-    select: { internId: true, userId: true, user: { select: { id: true, companyEmail: true } } },
+    select: { employeeId: true, userId: true, user: { select: { id: true, companyEmail: true } } },
   });
-  if (!detail?.internId) return { ok: true, skipped: 'no_intern' as const };
+  if (!detail?.employeeId) return { ok: true, skipped: 'no_employee' as const };
 
-  const latest = await prisma.internshipInfo.findFirst({
-    where: { internId: detail.internId, endDate: { not: null } },
+  const latest = await prisma.employeeInfo.findFirst({
+    where: { employeeId: detail.employeeId, endDate: { not: null } },
     orderBy: { startDate: 'desc' },
-    select: { endDate: true, internId: true },
+    select: { endDate: true, employeeId: true },
   });
   if (!latest?.endDate) return { ok: true, skipped: 'no_end_date' as const };
 
@@ -615,10 +615,10 @@ export async function deprovisionIfDueForUserId(userId: number) {
     }
   } catch { /* ignore */ }
 
-  // DB: mark internships inactive and delete portal user
+  // DB: mark employments inactive and delete portal user
   const [inact, delUser] = await prisma.$transaction([
-    prisma.internshipInfo.updateMany({
-      where: { internId: detail.internId, status: { not: $Enums.InternshipStatus.Inactive } },
+    prisma.employeeInfo.updateMany({
+      where: { employeeId: detail.employeeId, status: { not: $Enums.InternshipStatus.Inactive } },
       data:  { status: $Enums.InternshipStatus.Inactive },
     }),
     prisma.user.deleteMany({ where: { id: userId } }),
@@ -635,7 +635,7 @@ export async function deprovisionIfDueForUserId(userId: number) {
     internshipsInactivated: inact.count,
     googleOk,
     email,
-    internId: detail.internId,
+    employeeId: detail.employeeId,
   };
 }
 

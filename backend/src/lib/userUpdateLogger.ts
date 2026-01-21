@@ -3,7 +3,7 @@ import type { Request } from 'express';
 
 interface LogUpdateOptions {
   userId?: number | null;
-  internId?: string | null;
+  employeeId?: string | null;
   updatedBy: number;
   fieldName: string;
   oldValue: any;
@@ -15,7 +15,7 @@ interface LogUpdateOptions {
  * Helper to log user field updates
  */
 export async function logUserUpdate(options: LogUpdateOptions) {
-  const { userId, internId, updatedBy, fieldName, oldValue, newValue, req } = options;
+  const { userId, employeeId, updatedBy, fieldName, oldValue, newValue, req } = options;
 
   // Skip if values are the same
   if (oldValue === newValue) return;
@@ -36,7 +36,7 @@ export async function logUserUpdate(options: LogUpdateOptions) {
   await prisma.userUpdateLog.create({
     data: {
       userId,
-      internId,
+      employeeId,
       updatedBy,
       fieldName,
       oldValue: oldStr,
@@ -73,7 +73,7 @@ export async function logUserUpdates(
 
     logsToCreate.push({
       userId: update.userId,
-      internId: update.internId,
+      employeeId: update.employeeId,
       updatedBy: update.updatedBy,
       fieldName: update.fieldName,
       oldValue: oldStr,

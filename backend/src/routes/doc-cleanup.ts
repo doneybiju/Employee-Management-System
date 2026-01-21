@@ -71,15 +71,15 @@ router.get('/upcoming', ensureAuthenticated, authorize('super_admin'), async (re
   });
   const wlSet = new Set(wl.map(w => w.userId));
 
-  // Latest internship endDate per intern
-  const latest = await prisma.internshipInfo.findMany({
+  // Latest employment endDate per employee
+  const latest = await prisma.employeeInfo.findMany({
     where: { endDate: { not: null } },
     orderBy: { endDate: 'desc' },
-    distinct: ['internId'],
+    distinct: ['employeeId'],
     include: {
-      intern: {
+      employee: {
         select: {
-          internId: true,
+          employeeId: true,
           name: true,
           email: true,
           userId: true,
@@ -92,7 +92,7 @@ router.get('/upcoming', ensureAuthenticated, authorize('super_admin'), async (re
   // compute delete date + filter within window
   const candidates = latest
     .filter(r => {
-      const uid = r.intern?.userId ?? null;
+      const uid = r.employee?.userId ?? null;
       return !(uid && wlSet.has(uid));
     })
     .map(r => {
@@ -102,33 +102,33 @@ router.get('/upcoming', ensureAuthenticated, authorize('super_admin'), async (re
     })
     .filter(x => x.deleteAt >= now && x.deleteAt <= windowEnd);
 
-  const internIds = candidates.map(x => x.r.internId);
+  const employeeIds = candidates.map(x => x.r.employeeId);
 
-  // count active docs per intern (and whether profile picture exists)
-  const docs = internIds.length
-    ? await prisma.internDocument.findMany({
-        where: { internId: { in: internIds }, isActive: true },
-        select: { internId: true, documentType: true },
+  // count active docs per employee (and whether profile picture exists)
+  const docs = employeeIds.length
+    ? await prisma.employeeDocument.findMany({
+        where: { employeeId: { in: employeeIds }, isActive: true },
+        select: { employeeId: true, documentType: true },
       })
     : [];
 
-  const byIntern = new Map<string, { docs: number; hasProfilePicture: boolean }>();
+  const byEmployee = new Map<string, { docs: number; hasProfilePicture: boolean }>();
   for (const d of docs) {
-    const cur = byIntern.get(d.internId) ?? { docs: 0, hasProfilePicture: false };
+    const cur = byEmployee.get(d.employeeId) ?? { docs: 0, hasProfilePicture: false };
     if (d.documentType === 'PROFILE_PICTURE') cur.hasProfilePicture = true;
     else cur.docs += 1;
-    byIntern.set(d.internId, cur);
+    byEmployee.set(d.employeeId, cur);
   }
 
   const items = candidates
     .map(x => {
-      const intern = x.r.intern;
-      const counts = byIntern.get(x.r.internId) ?? { docs: 0, hasProfilePicture: false };
+      const employee = x.r.employee;
+      const counts = byEmployee.get(x.r.employeeId) ?? { docs: 0, hasProfilePicture: false };
 
       return {
-        internId: x.r.internId,
-        name: intern?.name ?? `Intern ${x.r.internId}`,
-        email: intern?.user?.companyEmail ?? intern?.email ?? null,
+        employeeId: x.r.employeeId,
+        name: employee?.name ?? `Employee ${x.r.employeeId}`,
+        email: employee?.user?.companyEmail ?? employee?.email ?? null,
         endDate: x.endDate.toISOString(),
         deleteAt: x.deleteAt.toISOString(),
         docsCount: counts.docs,

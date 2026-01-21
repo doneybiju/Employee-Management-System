@@ -24,7 +24,7 @@ const router = Router();
 type StatusLabel = string;
 
 async function getInternStatusLabels() {
-  const rows = await prisma.internshipInfo.findMany({
+  const rows = await prisma.employeeInfo.findMany({
     select: { status: true },
     distinct: ['status'],
     take: 20,
@@ -41,18 +41,18 @@ function chooseInactive(labels: StatusLabel[]): StatusLabel {
   const fallback = labels.find(v => v !== active);
   return fallback ?? 'inactive';
 }
-async function setInternInactive(internId: string) {
+async function setInternInactive(employeeId: string) {
   const labels = await getInternStatusLabels();
   const target = chooseInactive(labels);
-  const upd = await prisma.internshipInfo.updateMany({
-    where: { internId },
+  const upd = await prisma.employeeInfo.updateMany({
+    where: { employeeId },
     data: { status: target as any },
   });
   return { target, count: upd.count };
 }
-async function isInternActive(internId: string) {
-  const latest = await prisma.internshipInfo.findFirst({
-    where: { internId },
+async function isInternActive(employeeId: string) {
+  const latest = await prisma.employeeInfo.findFirst({
+    where: { employeeId },
     orderBy: { id: 'desc' },
     select: { status: true },
   });
@@ -91,11 +91,11 @@ function toLowerStatus(s: string | null | undefined) {
  */
 async function buildRows() {
   // Latest internship row per intern
-  const latest = await prisma.internshipInfo.findMany({
+  const latest = await prisma.employeeInfo.findMany({
     orderBy: { id: 'desc' },
     select: {
       id: true,
-      internId: true,             // UUID string
+      employeeId: true,             // UUID string
       departmentId: true,
       positionId: true,
       startDate: true,
@@ -105,9 +105,9 @@ async function buildRows() {
     },
   });
 
-  // Index by internId (keep the most recent only)
+  // Index by employeeId (keep the most recent only)
   const byIntern = new Map<string, (typeof latest)[number]>();
-  for (const row of latest) if (!byIntern.has(row.internId)) byIntern.set(row.internId, row);
+  for (const row of latest) if (!byIntern.has(row.employeeId)) byIntern.set(row.employeeId, row);
   const li = Array.from(byIntern.values());
 
   // Batch fetch department + position names
@@ -127,13 +127,13 @@ async function buildRows() {
   const posName = new Map(poss.map((p) => [p.id, p.name]));
 
   // Fetch intern details (full rows to avoid TS select errors across schema variants)
-const internIds = li.map((r) => r.internId);
-const details = internIds.length
-  ? await prisma.internDetail.findMany({
-      where: { internId: { in: internIds } },
+const employeeIds = li.map((r) => r.employeeId);
+const details = employeeIds.length
+  ? await prisma.employeeDetail.findMany({
+      where: { employeeId: { in: employeeIds } },
     })
   : [];
-const detailsByIntern = new Map(details.map((d: any) => [d.internId, d]));
+const detailsByIntern = new Map(details.map((d: any) => [d.employeeId, d]));
 
 // ---- Try to link interns -> portal users ----
 
@@ -141,13 +141,13 @@ const detailsByIntern = new Map(details.map((d: any) => [d.internId, d]));
 let notifByIntern = new Map<string, number>();
 try {
   const notifLinks = await prisma.notification.findMany({
-    where: { internId: { in: internIds } },
-    select: { internId: true, userId: true },
+    where: { employeeId: { in: employeeIds } },
+    select: { employeeId: true, userId: true },
   });
   notifByIntern = new Map(
     notifLinks
       .filter((n: any) => Number.isFinite(n.userId))
-      .map((n: any) => [n.internId, Number(n.userId)])
+      .map((n: any) => [n.employeeId, Number(n.userId)])
   );
 } catch { /* notifications table may not exist; ignore */ }
 
@@ -194,10 +194,10 @@ const usersByFull = new Map<string, typeof users[0]>(
 // So we will not look up portal users here. Keep companyEmail/empId null.
 // Compose rows
 const rows = li.map((it) => {
-  const det: any = detailsByIntern.get(it.internId);
+  const det: any = detailsByIntern.get(it.employeeId);
 
   // prefer notifications link -> user
-  const linkedUserId = notifByIntern.get(it.internId);
+  const linkedUserId = notifByIntern.get(it.employeeId);
   let u = linkedUserId ? usersById.get(linkedUserId) : undefined;
 
   // fallback: name match
@@ -210,14 +210,14 @@ const rows = li.map((it) => {
 
   return {
     userId: u?.id ?? null,
-    internId: it.internId,
+    employeeId: it.employeeId,
     role: (u?.role as 'intern'|'hr'|'super_admin') ?? 'intern',
     name,
     department: it.departmentId ? depName.get(it.departmentId) ?? null : null,
     position:   it.positionId   ? posName.get(it.positionId)   ?? null : null,
     companyEmail: u?.companyEmail ?? null,
     phone: det?.phone ?? null,
-    employeeId: u?.empId ?? null,
+    empId: u?.empId ?? null,
     joiningDate: it.startDate ? it.startDate.toISOString() : null,
     leavingDate: it.endDate ? it.endDate.toISOString() : null,
     personalEmail: det?.email ?? '',
@@ -271,10 +271,10 @@ router.get( '/admin/users/:userId/detail', ...authorize('hr','super_admin'), enf
     // 2) find the intern_detail row for this user:
     //    (a) direct FK via user_id
     //    (b) fallback: match intern_details.email == users.companyEmail
-    let det = await prisma.internDetail.findFirst({
+    let det = await prisma.employeeDetail.findFirst({
       where: { userId: u.id },
       select: {
-        internId: true,
+        employeeId: true,
         phone: true,
         nationality: true,
         gender: true,
@@ -283,10 +283,10 @@ router.get( '/admin/users/:userId/detail', ...authorize('hr','super_admin'), enf
       },
     });
     if (!det && u.companyEmail) {
-      det = await prisma.internDetail.findFirst({
+      det = await prisma.employeeDetail.findFirst({
         where: { email: u.companyEmail },
         select: {
-          internId: true,
+          employeeId: true,
           phone: true,
           nationality: true,
           gender: true,
@@ -300,10 +300,10 @@ router.get( '/admin/users/:userId/detail', ...authorize('hr','super_admin'), enf
     if (!det) {
       const full = `${(u.firstName || '').trim()} ${(u.surname || '').trim()}`.trim();
       if (full) {
-        det = await prisma.internDetail.findFirst({
+        det = await prisma.employeeDetail.findFirst({
           where: { name: { equals: full, mode: 'insensitive' } as any },
           select: {
-            internId: true,
+            employeeId: true,
             phone: true,
             nationality: true,
             gender: true,
@@ -315,13 +315,13 @@ router.get( '/admin/users/:userId/detail', ...authorize('hr','super_admin'), enf
     }
 
 
-    // 3) latest internship + SOS using internId (works even if user→detail FK is missing)
+    // 3) latest internship + SOS using employeeId (works even if user→detail FK is missing)
     let latest: { startDate: Date | null; endDate: Date | null; supervisor: string | null } | null = null;
     let sos: { relation: string | null; phone: string | null } | null = null;
 
-    if (det?.internId) {
-      const info = await prisma.internshipInfo.findFirst({
-        where: { internId: det.internId },
+    if (det?.employeeId) {
+      const info = await prisma.employeeInfo.findFirst({
+        where: { employeeId: det.employeeId },
         orderBy: { startDate: 'desc' },
         select: { startDate: true, endDate: true, supervisor: true },
       });
@@ -331,16 +331,16 @@ router.get( '/admin/users/:userId/detail', ...authorize('hr','super_admin'), enf
         supervisor: info.supervisor ?? null,
       } : null;
 
-      const sosRow = await prisma.internsSosDetail.findFirst({
-        where: { internId: det.internId },
+      const sosRow = await prisma.employeeSosDetail.findFirst({
+        where: { employeeId: det.employeeId },
         orderBy: { id: 'desc' },
         select: {
           relativePhoneNumber: true,
-          relationWithIntern: true,
+          relationWithEmployee: true,
         },
       });
       sos = sosRow ? {
-        relation: sosRow.relationWithIntern ?? null,
+        relation: sosRow.relationWithEmployee ?? null,
         phone: sosRow.relativePhoneNumber ?? null,
       } : null;
     }
@@ -370,19 +370,19 @@ router.get( '/admin/users/:userId/detail', ...authorize('hr','super_admin'), enf
 );
 
 /**
- * GET /api/users/admin/users/detail-by-intern/:internId
- * Returns the same shape, looked up by internId (UUID) only.
+ * GET /api/users/admin/users/detail-by-intern/:employeeId
+ * Returns the same shape, looked up by employeeId (UUID) only.
  */
 router.get(
-  '/admin/users/detail-by-intern/:internId', 
+  '/admin/users/detail-by-intern/:employeeId',
   ...authorize('hr','super_admin'), enforceNotBlocked,
   async (req: Request, res: Response) => {
-    const internId = String(req.params.internId || '');
-    if (!internId) return res.status(400).json({ error: 'invalid internId' });
+    const employeeId = String(req.params.employeeId || '');
+    if (!employeeId) return res.status(400).json({ error: 'invalid employeeId' });
 
-    // intern detail by internId
-    const det = await prisma.internDetail.findUnique({
-      where: { internId },
+    // intern detail by employeeId
+    const det = await prisma.employeeDetail.findUnique({
+      where: { employeeId },
       select: {
         userId: true,
         phone: true,
@@ -390,7 +390,7 @@ router.get(
         gender: true,
         birthdate: true,
         email: true,
-        internId: true,
+        employeeId: true,
       },
     });
 
@@ -405,17 +405,17 @@ router.get(
     }
 
     // latest internship
-    const info = await prisma.internshipInfo.findFirst({
-      where: { internId },
+    const info = await prisma.employeeInfo.findFirst({
+      where: { employeeId },
       orderBy: { startDate: 'desc' },
       select: { startDate: true, endDate: true, supervisor: true },
     });
 
     // SOS
-    const sosRow = await prisma.internsSosDetail.findFirst({
-      where: { internId },
+    const sosRow = await prisma.employeeSosDetail.findFirst({
+      where: { employeeId },
       orderBy: { id: 'desc' },
-      select: { relativePhoneNumber: true, relationWithIntern: true },
+      select: { relativePhoneNumber: true, relationWithEmployee: true },
     });
 
     return res.json({
@@ -436,7 +436,7 @@ router.get(
       supervisor: info?.supervisor ?? null,
 
       sos: sosRow ? {
-        relation: sosRow.relationWithIntern ?? null,
+        relation: sosRow.relationWithEmployee ?? null,
         phone: sosRow.relativePhoneNumber ?? null,
       } : null,
     });
@@ -449,7 +449,7 @@ router.get(
 
 /**
  * POST /api/users/admin/users/deactivate
- * Body: { userId?: number|null, internId?: string|null, companyEmail?: string|null }
+ * Body: { userId?: number|null, employeeId?: string|null, companyEmail?: string|null }
  * Action: delete login (users table) if userId present, set internship status to Inactive.
  * Google Workspace removal handled elsewhere if needed.
  */
@@ -459,7 +459,7 @@ router.post(
   ...authorize('hr','super_admin'), enforceNotBlocked,
   async (req, res, next) => {
     try {
-      const { userId, email, companyEmail, internId } = req.body || {};
+      const { userId, email, companyEmail, employeeId } = req.body || {};
 
       // Resolve portal user if we can
       let portalUser: { id: number; companyEmail: string } | null = null;
@@ -483,34 +483,34 @@ router.post(
         if (u) portalUser = u;
       }
 
-      // Decide which internId to use for status updates
-      let targetInternId: string | null = typeof internId === 'string' ? internId : null;
+      // Decide which employeeId to use for status updates
+      let targetInternId: string | null = typeof employeeId === 'string' ? employeeId : null;
 
       if (!targetInternId && portalUser) {
-        const d = await prisma.internDetail.findFirst({
+        const d = await prisma.employeeDetail.findFirst({
           where: { userId: portalUser.id },
-          select: { internId: true },
+          select: { employeeId: true },
         });
-        targetInternId = d?.internId ?? targetInternId;
+        targetInternId = d?.employeeId ?? targetInternId;
       }
 
 
 
       if (!targetInternId && portalUser?.companyEmail) {
-        const d = await prisma.internDetail.findFirst({
+        const d = await prisma.employeeDetail.findFirst({
           where: { email: portalUser.companyEmail },
-          select: { internId: true },
+          select: { employeeId: true },
         });
-        targetInternId = d?.internId ?? null;
+        targetInternId = d?.employeeId ?? null;
       }
 
       // 1) Inactivate internships even if there is no portal user
       // 1) Inactivate internships even if there is no portal user
 let inactivated = 0;
 if (targetInternId) {
-  const r = await prisma.internshipInfo.updateMany({
+  const r = await prisma.employeeInfo.updateMany({
     where: {
-      internId: targetInternId,
+      employeeId: targetInternId,
       status: InternshipStatus.Active,      // was "Active"
     },
     data: {
@@ -570,11 +570,11 @@ router.put('/admin/users', ...authorize('hr','super_admin'),enforceNotBlocked, a
 
 
 /**
- * PUT /api/users/admin/users/intern/:internId
+ * PUT /api/users/admin/users/intern/:employeeId
  * Update internship info + intern detail fields. Optional role change if userId present.
  */
-router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), enforceNotBlocked, async (req: Request, res: Response) => {
-  const internId = req.params.internId; // UUID string
+router.put('/admin/users/intern/:employeeId', ...authorize('hr', 'super_admin'), enforceNotBlocked, async (req: Request, res: Response) => {
+  const employeeId = req.params.employeeId; // UUID string
   const {
   startDate, endDate, supervisor, departmentId, positionId,
   phone, personalEmail, nationality, gender, birthdate,
@@ -602,12 +602,12 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   }
 
   // Fetch old values for logging
-  const oldInternship = await prisma.internshipInfo.findFirst({
-    where: { internId },
+  const oldInternship = await prisma.employeeInfo.findFirst({
+    where: { employeeId },
     orderBy: { id: 'desc' },
   });
-  const oldDetail = await prisma.internDetail.findUnique({
-    where: { internId },
+  const oldDetail = await prisma.employeeDetail.findUnique({
+    where: { employeeId },
   });
   const oldUser = userId ? await prisma.user.findUnique({ where: { id: Number(userId) } }) : null;
 
@@ -633,7 +633,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   // Collect all changes for logging
   const changes: Array<{
     userId?: number | null;
-    internId?: string | null;
+    employeeId?: string | null;
     updatedBy: number;
     fieldName: string;
     oldValue: any;
@@ -644,7 +644,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (startDate !== undefined && oldInternship?.startDate?.toISOString().slice(0, 10) !== startDate) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Start Date',
       oldValue: oldInternship?.startDate?.toISOString().slice(0, 10) || null,
@@ -654,7 +654,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (endDate !== undefined && oldInternship?.endDate?.toISOString().slice(0, 10) !== endDate) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'End Date',
       oldValue: oldInternship?.endDate?.toISOString().slice(0, 10) || null,
@@ -664,7 +664,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (supervisor !== undefined && oldInternship?.supervisor !== supervisor) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Supervisor',
       oldValue: oldInternship?.supervisor || null,
@@ -674,7 +674,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (departmentId !== undefined && oldInternship?.departmentId !== departmentId) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Department',
       oldValue: oldDeptName || oldInternship?.departmentId,
@@ -684,7 +684,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (positionId !== undefined && oldInternship?.positionId !== positionId) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Position',
       oldValue: oldPosName || oldInternship?.positionId,
@@ -696,7 +696,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (phone !== undefined && oldDetail?.phone !== phone) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Phone',
       oldValue: oldDetail?.phone || null,
@@ -706,7 +706,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (personalEmail !== undefined && oldDetail?.email !== personalEmail) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Personal Email',
       oldValue: oldDetail?.email || null,
@@ -716,7 +716,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (nationality !== undefined && oldDetail?.nationality !== nationality) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Country',
       oldValue: oldDetail?.nationality || null,
@@ -726,7 +726,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (gender !== undefined && oldDetail?.gender !== gender) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Gender',
       oldValue: oldDetail?.gender || null,
@@ -736,7 +736,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (birthdate !== undefined && oldDetail?.birthdate?.toISOString().slice(0, 10) !== birthdate) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Birthday',
       oldValue: oldDetail?.birthdate?.toISOString().slice(0, 10) || null,
@@ -750,7 +750,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
     if (oldName !== name) {
       changes.push({
         userId: userId || null,
-        internId,
+        employeeId,
         updatedBy,
         fieldName: 'Name',
         oldValue: oldName,
@@ -761,7 +761,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (role && oldUser?.role !== role) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Role',
       oldValue: oldUser?.role || null,
@@ -771,7 +771,7 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   if (empType && oldUser?.empType !== empType) {
     changes.push({
       userId: userId || null,
-      internId,
+      employeeId,
       updatedBy,
       fieldName: 'Emp Type',
       oldValue: oldUser?.empType || null,
@@ -784,9 +784,9 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
     await logUserUpdates(changes, req);
   }
 
-  // Update latest internship row(s) for this internId
-  await prisma.internshipInfo.updateMany({
-    where: { internId },
+  // Update latest internship row(s) for this employeeId
+  await prisma.employeeInfo.updateMany({
+    where: { employeeId },
     data: {
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
@@ -797,8 +797,8 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
   });
 
   // Update intern detail
-  await prisma.internDetail.updateMany({
-  where: { internId },
+  await prisma.employeeDetail.updateMany({
+  where: { employeeId },
   data: {
     phone: phone ?? null,
     email: personalEmail ?? null,   // map request field → DB column
@@ -835,20 +835,20 @@ router.put('/admin/users/intern/:internId', ...authorize('hr', 'super_admin'), e
 });
 
 /**
- * DELETE /api/users/admin/users/intern/:internId
+ * DELETE /api/users/admin/users/intern/:employeeId
  * Hard-delete inactive intern record (detail + internships).
  */
-router.delete('/admin/users/intern/:internId', ...authorize('super_admin'), enforceNotBlocked, async (req: Request, res: Response) => {
-  const internId = req.params.internId; // UUID string
+router.delete('/admin/users/intern/:employeeId', ...authorize('super_admin'), enforceNotBlocked, async (req: Request, res: Response) => {
+  const employeeId = req.params.employeeId; // UUID string
   // Only proceed if internships are inactive
-    if (await isInternActive(internId)) {
+    if (await isInternActive(employeeId)) {
       return res.status(400).json({ error: 'Internship is active' });
     }
 
 
 
-  await prisma.internDetail.deleteMany({ where: { internId } });
-  await prisma.internshipInfo.deleteMany({ where: { internId } });
+  await prisma.employeeDetail.deleteMany({ where: { employeeId } });
+  await prisma.employeeInfo.deleteMany({ where: { employeeId } });
   res.json({ ok: true });
 
 });
@@ -912,11 +912,11 @@ router.get('/me/summary', ensureAuthenticated as any, enforceNotBlocked, async (
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
     // intern detail for this portal user
-    const detail = await prisma.internDetail.findFirst({
+    const detail = await prisma.employeeDetail.findFirst({
       where: { userId },
-      select: { internId: true },
+      select: { employeeId: true },
     });
-    if (!detail?.internId) {
+    if (!detail?.employeeId) {
       // not an intern
       return res.json({
         status: null, startDate: null, endDate: null,
@@ -925,8 +925,8 @@ router.get('/me/summary', ensureAuthenticated as any, enforceNotBlocked, async (
     }
 
     // latest internship row
-    const info = await prisma.internshipInfo.findFirst({
-      where: { internId: detail.internId },
+    const info = await prisma.employeeInfo.findFirst({
+      where: { employeeId: detail.employeeId },
       orderBy: { startDate: 'desc' },
       include: {
         department: { select: { departmentName: true } },
@@ -1051,7 +1051,7 @@ router.patch('/:id/restore', ensureAuthenticated, async (req, res) => {
 
   try {
     const { sendAccessRestoredNotice } = await import('../lib/mailer');
-    if (u.companyEmail) await sendAccessRestoredNotice({ to: u.companyEmail });
+    if (u.companyEmail) await sendAccessRestoredNotice(u.companyEmail);
   } catch {}
 
   return res.json({ ok: true });

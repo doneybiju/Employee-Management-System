@@ -276,7 +276,7 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
     ];
 
     // latest active position
-    const intern = await prisma.internDetail.findFirst({
+    const intern = await prisma.employeeDetail.findFirst({
       where: { userId: reqRow.user.id },
       include: {
         internships: {

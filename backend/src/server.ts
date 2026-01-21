@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import cron from 'node-cron';
 import app from './app';
-import { refreshInternStatuses } from './lib/status';
+import { refreshEmployeeStatuses } from './lib/status';
 import * as deprovision from './lib/deprovision';
 import fetch from 'node-fetch';
 
@@ -24,8 +24,8 @@ function scheduleDailyJobs() {
 
 async function runDaily() {
   try {
-    console.log('Daily: refreshing intern statuses…');
-    const res = await refreshInternStatuses();
+    console.log('Daily: refreshing employee statuses…');
+    const res = await refreshEmployeeStatuses();
     console.log(res);
   } catch (e) {
     console.error('Daily jobs failed:', e);
@@ -36,8 +36,8 @@ app.listen(PORT, async () => {
   console.log(`API listening on http://localhost:${PORT}`);
 
   try {
-    console.log('Boot: refreshing intern statuses…');
-    const res = await refreshInternStatuses();
+    console.log('Boot: refreshing employee statuses…');
+    const res = await refreshEmployeeStatuses();
     console.log(res);
   } catch (e) {
     console.error('Boot jobs failed:', e);

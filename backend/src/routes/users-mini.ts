@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/', ensureAuthenticated, async (_req, res) => {
   const users = await prisma.user.findMany({
-    select: { id: true, firstName: true, surname: true, companyEmail: true, role: true, teamLead: true },
+    select: { id: true, firstName: true, surname: true, companyEmail: true, role: true, empType: true },
     orderBy: [{ surname: 'asc' }, { firstName: 'asc' }],
   });
   res.json(users);
