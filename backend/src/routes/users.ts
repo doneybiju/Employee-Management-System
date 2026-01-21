@@ -184,8 +184,8 @@ const users = await prisma.user.findMany({
   },
   select: { id: true, firstName: true, surname: true, companyEmail: true, empId: true, role: true, blocked: true },
 });
-const usersById   = new Map(users.map((u) => [u.id, u]));
-const usersByFull = new Map(
+const usersById = new Map<number, typeof users[0]>(users.map((u) => [u.id, u]));
+const usersByFull = new Map<string, typeof users[0]>(
   users.map((u) => [`${(u.firstName||'').trim().toLowerCase()} ${(u.surname||'').trim().toLowerCase()}`, u])
 );
 
@@ -1001,7 +1001,7 @@ router.patch('/:id/block', ensureAuthenticated as any, async (req, res) => {
   // notify only
   try {
     const { sendAccessRevokedNotice } = await import('../lib/mailer');
-    if (u.companyEmail) await sendAccessRevokedNotice({ to: u.companyEmail });
+    if (u.companyEmail) await sendAccessRevokedNotice(u.companyEmail);
   } catch {}
 
   res.json({ ok: true });
@@ -1026,7 +1026,7 @@ router.patch('/:id/unblock', ensureAuthenticated, async (req, res) => {
   // notify
   try {
     const { sendAccessRestoredNotice } = await import('../lib/mailer');
-    if (u.companyEmail) await sendAccessRestoredNotice({ to: u.companyEmail });
+    if (u.companyEmail) await sendAccessRestoredNotice(u.companyEmail);
   } catch {}
 
   res.json({ ok: true });
@@ -1084,7 +1084,7 @@ router.post('/admin/revoke', ...authorize('super_admin'),enforceNotBlocked, asyn
   // Notify
   try {
     const { sendAccessRevokedNotice } = await import('../lib/mailer');
-    if (u.companyEmail) await sendAccessRevokedNotice({ to: u.companyEmail });
+    if (u.companyEmail) await sendAccessRevokedNotice(u.companyEmail);
   } catch {}
 
   return res.json({ ok: true, portal: { blockedUsers: 1 } });
@@ -1122,7 +1122,7 @@ router.post('/admin/restore', ...authorize('super_admin'), async (req, res) => {
   // Notify
   try {
     const { sendAccessRestoredNotice } = await import('../lib/mailer');
-    if (u.companyEmail) await sendAccessRestoredNotice({ to: u.companyEmail });
+    if (u.companyEmail) await sendAccessRestoredNotice(u.companyEmail);
   } catch {}
 
   return res.json({ ok: true, portal: { unblockedUsers: 1 } });

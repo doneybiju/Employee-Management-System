@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 
-type AllowedRole = 'intern' | 'hr' | 'super_admin';
+type AllowedRole = 'employee' | 'hr' | 'super_admin';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

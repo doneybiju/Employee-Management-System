@@ -76,7 +76,7 @@ export default function LoginEventsPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['super_admin']}>
+    <ProtectedRoute roles={['super_admin']}>
       <div className="login-events-page">
         <div className="header-section">
           <button className="back-button" onClick={() => router.push('/admin/logs')}>
