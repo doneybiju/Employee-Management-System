@@ -1,0 +1,15 @@
+# Environment Variables for NextAuth Google SSO
+
+# Google OAuth Credentials
+# Obtain these from the Google Cloud Console (APIs & Services -> Credentials)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# NextAuth Configuration
+# You can generate a secret using `openssl rand -base64 32` or just a random string
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000 # Update this for production
+
+# Database Connection (Already exists for Prisma)
+# Ensure this matches the one used by your backend
+DATABASE_URL="postgresql://user:password@localhost:5432/mydb?schema=public"
