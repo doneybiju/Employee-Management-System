@@ -49,12 +49,13 @@
     "@types/passport-local": "^1.0.38",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "seed": "ts-node-dev --respawn --transpile-only prisma/seed.ts",
-    "geoip:update": "node node_modules/geoip-lite/scripts/updatedb.js"
+    "geoip:update": "node node_modules/geoip-lite/scripts/updatedb.js",
+    "lint": "eslint src --ext .ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
