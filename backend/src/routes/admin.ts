@@ -1749,7 +1749,7 @@ if (missingRequired.length) {
 
         const parts = trimmed.split(/[./-]/);
         if (parts.length === 3) {
-          let [a, b, c] = parts;
+          const [a, b, c] = parts;
 
           if (a.length === 4) {
             // YYYY-MM-DD

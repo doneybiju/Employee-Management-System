@@ -282,7 +282,7 @@ router.post(
         try {
           const ok = await (await import('../google/drive')).deleteDriveFile(prevId);
           if (!ok) console.warn('[admin-docs] previous file not deleted or not ours:', prevId);
-        } catch (e) {
+        } catch (e: any) {
           console.warn('[admin-docs] delete old file failed (ignored):', e);
         }
       }
