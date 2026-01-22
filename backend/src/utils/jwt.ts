@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const SECRET = process.env.JWT_SECRET as string;
 
-export type JwtRole = 'intern' | 'hr' | 'super_admin';
+export type JwtRole = 'intern' | 'hr' | 'super_admin' | 'employee';
 export type EmpType = 'intern' | 'employee' | 'team_lead';
 
 export type Payload = {
