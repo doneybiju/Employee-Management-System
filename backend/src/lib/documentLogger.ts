@@ -6,8 +6,8 @@ interface LogDocumentActionOptions {
   documentType: string;
   fileName: string;
   fileId?: string | null;
-  internId: string;
-  internName?: string | null;
+  employeeId: string;
+  employeeName?: string | null;
   userId?: number | null;
   performedBy: number;
   expiryDate?: Date | null;
@@ -23,8 +23,8 @@ export async function logDocumentAction(options: LogDocumentActionOptions) {
     documentType,
     fileName,
     fileId,
-    internId,
-    internName,
+    employeeId,
+    employeeName,
     userId,
     performedBy,
     expiryDate,
@@ -43,8 +43,8 @@ export async function logDocumentAction(options: LogDocumentActionOptions) {
       documentType,
       fileName,
       fileId: fileId || null,
-      internId,
-      internName: internName || null,
+      employeeId,
+      employeeName: employeeName || null,
       userId: userId || null,
       performedBy,
       expiryDate: expiryDate || null,

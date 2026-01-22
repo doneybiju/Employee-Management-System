@@ -45,7 +45,7 @@ export default function LogsGatewayPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['super_admin']}>
+      <ProtectedRoute roles={['super_admin']}>
       <div className="logs-gateway-page">
         <div className="header-section">
           <h1>System Logs</h1>

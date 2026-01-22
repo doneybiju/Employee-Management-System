@@ -2,6 +2,7 @@
 import { Router, Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import bcrypt from 'bcrypt';
+import passport from 'passport';
 
 import { UAParser } from 'ua-parser-js';
 import { geoLookup } from '../lib/geoip';
@@ -10,8 +11,31 @@ import { signJwt } from '../utils/jwt';
 import ensureAuthenticated from '../middleware/ensureAuthenticated';
 import { recordAlertsForLogin } from '../lib/alerts';
 
+import '../config/passport-google';
 
 const router = Router();
+
+// GET /api/auth/google
+router.get(
+  '/google',
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
+);
+
+// GET /api/auth/google/callback
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: 'http://localhost:3000/login?error=unauthorized',
+  }),
+  (req, res) => {
+    // The strategy returns { token } in req.user
+    const { token } = req.user as { token: string };
+
+    // Redirect to frontend
+    res.redirect(`http://localhost:3000/auth-success?token=${token}`);
+  }
+);
 
 /** ---- Login limiter: 3 failed attempts / 15 minutes (per IP+email) ---- */
 const MAX_LOGIN_ATTEMPTS = 3;

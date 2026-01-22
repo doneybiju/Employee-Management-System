@@ -171,10 +171,10 @@ async function runRemindersOnce() {
   const users = await prisma.user.findMany({
     select: {
       id: true, firstName: true, surname: true, companyEmail: true, role: true,
-      internDetails: {
+      employeeDetails: {
         select: {
-          internId: true,
-          internDocuments: { select: { documentType: true, status: true, isActive: true } },
+          employeeId: true,
+          employeeDocuments: { select: { documentType: true, status: true, isActive: true } },
         },
         take: 1,
       },
@@ -192,11 +192,11 @@ async function runRemindersOnce() {
 
   for (const u of users) {
     if (blockedDocs.has(u.id)) continue;
-    const det = u.internDetails[0];
+    const det = u.employeeDetails[0];
     if (!det) continue;
 
     const uploaded = new Set(
-      det.internDocuments
+      det.employeeDocuments
         .filter(d => d.isActive && d.status !== 'rejected')
         .map(d => d.documentType)
     );

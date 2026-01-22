@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import ensureAuthenticated from '../middleware/ensureAuthenticated';
 import { authorize } from '../middleware/authorize';
-import { loadAdminSummary, loadInternDashboardByUserId } from '../lib/status';
+import { loadAdminSummary, loadEmployeeDashboardByUserId } from '../lib/status';
 
 import prisma from '../prisma';
 
@@ -17,7 +17,7 @@ router.get('/me', ensureAuthenticated, async (req, res) => {
     const userId = Number((req as any).user?.id);
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
-    const data = await loadInternDashboardByUserId(userId);
+    const data = await loadEmployeeDashboardByUserId(userId);
     return res.json(data);
   } catch (e: any) {
     return res.status(500).json({ error: e?.message || 'failed' });
@@ -49,15 +49,15 @@ router.get(
   ...authorize('hr', 'super_admin'),
   async (_req, res) => {
     try {
-      // latest row per internId where status is Active
-      const rows = await prisma.internshipInfo.findMany({
+      // latest row per employeeId where status is Active
+      const rows = await prisma.employeeInfo.findMany({
         where: { status: 'Active' },
-        orderBy: [{ internId: 'asc' }, { startDate: 'desc' }],
-        select: { internId: true, startDate: true, endDate: true },
+        orderBy: [{ employeeId: 'asc' }, { startDate: 'desc' }],
+        select: { employeeId: true, startDate: true, endDate: true },
       });
 
       const latest = new Map<string, { startDate: Date | null; endDate: Date | null }>();
-      for (const r of rows) if (!latest.has(r.internId)) latest.set(r.internId, r);
+      for (const r of rows) if (!latest.has(r.employeeId)) latest.set(r.employeeId, r);
 
       const today = new Date();
       let count = 0;
@@ -90,11 +90,11 @@ router.get('/deadlines', ensureAuthenticated as any, async (req, res) => {
 
     const items: Array<{ kind: 'task' | 'internship_end' | 'document_expiry'; title: string; dueDate: string; subtitle?: string }> = [];
 
-    // find the user's intern profile and latest internship
-    const me = await prisma.internDetail.findFirst({
+    // find the user's employee profile and latest employment
+    const me = await prisma.employeeDetail.findFirst({
       where: { userId },
       select: {
-        internId: true,
+        employeeId: true,
         internships: {
           orderBy: { startDate: 'desc' },
           take: 1,
@@ -103,7 +103,7 @@ router.get('/deadlines', ensureAuthenticated as any, async (req, res) => {
       },
     });
 
-    // Internship end
+    // Employment end
     const internshipEnd = me?.internships?.[0]?.endDate || null;
     if (internshipEnd && internshipEnd > now && internshipEnd <= end) {
       items.push({
@@ -137,11 +137,11 @@ router.get('/deadlines', ensureAuthenticated as any, async (req, res) => {
       });
     }
 
-    // Document expiries for this intern
-    if (me?.internId) {
-      const docs = await prisma.internDocument.findMany({
+    // Document expiries for this employee
+    if (me?.employeeId) {
+      const docs = await prisma.employeeDocument.findMany({
         where: {
-          internId: me.internId,
+          employeeId: me.employeeId,
           isActive: true,
           expiryDate: { not: null, gte: now, lte: end },
         },

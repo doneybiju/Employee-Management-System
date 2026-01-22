@@ -98,33 +98,33 @@ const up = await uploadToDrive({
     // =========================
     // Optional DB save (Phase 1)
     // =========================
-    // HR/super_admin should pass internId in multipart fields.
-    // Interns can upload without internId; we’ll auto-resolve from their userId.
+    // HR/super_admin should pass employeeId in multipart fields.
+    // Interns can upload without employeeId; we’ll auto-resolve from their userId.
     const actor = (req as any).user as { id: number; role: 'intern' | 'hr' | 'super_admin' };
 
     const requestedInternId =
-      typeof (req.body?.internId) === 'string' ? req.body.internId.trim() : '';
+      typeof (req.body?.employeeId) === 'string' ? req.body.employeeId.trim() : '';
 
-    let internId = requestedInternId;
+    let employeeId = requestedInternId;
     let myInternId: string | null = null;
 
     if (actor?.role === 'intern') {
-      const me = await prisma.internDetail.findFirst({
+      const me = await prisma.employeeDetail.findFirst({
         where: { userId: actor.id },
-        select: { internId: true },
+        select: { employeeId: true },
       });
-      myInternId = me?.internId ?? null;
+      myInternId = me?.employeeId ?? null;
 
       if (!myInternId) {
         return res.status(400).json({ error: 'no_intern_profile' });
       }
 
-      // Prevent interns from uploading under someone else’s internId
+      // Prevent interns from uploading under someone else’s employeeId
       if (requestedInternId && requestedInternId !== myInternId) {
         return res.status(403).json({ error: 'forbidden_intern_id' });
       }
 
-      internId = myInternId;
+      employeeId = myInternId;
     }
 
     // Accept expiryDate/expiresAt only for passport_id
@@ -159,8 +159,8 @@ const up = await uploadToDrive({
       return res.status(400).json({ error: 'expiry_not_supported_for_kind' });
     }
 
-    // Only save to DB if we know internId
-    if (internId) {
+    // Only save to DB if we know employeeId
+    if (employeeId) {
       const docType =
         kind === 'cv'
           ? 'CV'
@@ -171,8 +171,8 @@ const up = await uploadToDrive({
           : 'LEARNING_AGREEMENT';
 
       // Find any existing row (even if isActive=false) to avoid unique constraint issues
-      const existing = await prisma.internDocument.findFirst({
-        where: { internId, documentType: docType as any },
+      const existing = await prisma.employeeDocument.findFirst({
+        where: { employeeId, documentType: docType as any },
       });
 
       // If replacing an existing doc, try deleting the old Drive file
@@ -214,24 +214,24 @@ const up = await uploadToDrive({
       }
 
       const saved = existing
-        ? await prisma.internDocument.update({
+        ? await prisma.employeeDocument.update({
             where: { id: existing.id },
             data: {
               ...commonData,
               version: { increment: 1 },
             },
           })
-        : await prisma.internDocument.create({
+        : await prisma.employeeDocument.create({
             data: {
-              internId,
+              employeeId,
               documentType: docType as any,
               ...commonData,
             },
           });
 
       // Log the action (replace if existing, upload if new)
-      const internDetail = await prisma.internDetail.findUnique({
-        where: { internId },
+      const employeeDetail = await prisma.employeeDetail.findUnique({
+        where: { employeeId },
         select: { name: true, userId: true },
       });
 
@@ -240,9 +240,9 @@ const up = await uploadToDrive({
         documentType: kind,
         fileName: file.originalname || `document_${kind}.pdf`,
         fileId: up.fileId,
-        internId,
-        internName: internDetail?.name || null,
-        userId: internDetail?.userId || null,
+        employeeId,
+        employeeName: employeeDetail?.name || null,
+        userId: employeeDetail?.userId || null,
         performedBy: actor.id,
         expiryDate: expiryDateToSet === undefined ? null : expiryDateToSet,
         req,
@@ -254,7 +254,7 @@ const up = await uploadToDrive({
         originalName: file.originalname,
         mimeType: file.mimetype,
         fileSize: file.size,
-        internDocument: saved,
+        employeeDocument: saved,
       });
     }
 
@@ -310,26 +310,26 @@ const KIND_TO_ENUM: Record<string, 'CV'|'ID_PASSPORT'|'ACCEPTANCE_LETTER'|'LEARN
 };
 
 // DELETE a single doc for an intern
-// DELETE /api/uploads/drive/document/:internId/:kind
+// DELETE /api/uploads/drive/document/:employeeId/:kind
 router.delete(
-  '/drive/document/:internId/:kind',
+  '/drive/document/:employeeId/:kind',
   ensureAuthenticated as any,
   ...authorize('hr', 'super_admin'),
   async (req, res) => {
     try {
-      const internId = String(req.params.internId);
+      const employeeId = String(req.params.employeeId);
       const kind = String(req.params.kind || '').toLowerCase();
       const enumType = KIND_TO_ENUM[kind];
       if (!enumType) return res.status(400).json({ error: 'invalid_kind' });
 
-      const doc = await prisma.internDocument.findFirst({
-        where: { internId, documentType: enumType as any, isActive: true },
+      const doc = await prisma.employeeDocument.findFirst({
+        where: { employeeId, documentType: enumType as any, isActive: true },
       });
       if (!doc) return res.json({ ok: true, deleted: 0, driveDeleted: false });
 
       // Get intern info for logging
-      const internDetail = await prisma.internDetail.findUnique({
-        where: { internId },
+      const employeeDetail = await prisma.employeeDetail.findUnique({
+        where: { employeeId },
         select: { name: true, userId: true },
       });
 
@@ -338,7 +338,7 @@ router.delete(
       const driveDeleted = fileId ? await deleteDriveFile(fileId) : true;
 
       // delete row
-      await prisma.internDocument.delete({ where: { id: doc.id } });
+      await prisma.employeeDocument.delete({ where: { id: doc.id } });
 
       // Log the delete action
       const actor = (req as any).user as { id: number };
@@ -347,9 +347,9 @@ router.delete(
         documentType: kind,
         fileName: doc.fileName || doc.originalName || `document_${kind}`,
         fileId: fileId || null,
-        internId,
-        internName: internDetail?.name || null,
-        userId: internDetail?.userId || null,
+        employeeId,
+        employeeName: employeeDetail?.name || null,
+        userId: employeeDetail?.userId || null,
         performedBy: actor.id,
         expiryDate: doc.expiryDate || null,
         req,
@@ -363,23 +363,23 @@ router.delete(
 );
 
 // DELETE all 4 required docs for an intern
-// DELETE /api/uploads/drive/documents/:internId/all
+// DELETE /api/uploads/drive/documents/:employeeId/all
 router.delete(
-  '/drive/documents/:internId/all',
+  '/drive/documents/:employeeId/all',
   ensureAuthenticated as any,
   ...authorize('hr', 'super_admin'),
   async (req, res) => {
     try {
-      const internId = String(req.params.internId);
+      const employeeId = String(req.params.employeeId);
       const required = Object.values(KIND_TO_ENUM);
 
-      const docs = await prisma.internDocument.findMany({
-        where: { internId, documentType: { in: required as any }, isActive: true },
+      const docs = await prisma.employeeDocument.findMany({
+        where: { employeeId, documentType: { in: required as any }, isActive: true },
       });
 
       // Get intern info for logging
-      const internDetail = await prisma.internDetail.findUnique({
-        where: { internId },
+      const employeeDetail = await prisma.employeeDetail.findUnique({
+        where: { employeeId },
         select: { name: true, userId: true },
       });
 
@@ -392,7 +392,7 @@ router.delete(
       }
 
       if (docs.length) {
-        await prisma.internDocument.deleteMany({ where: { id: { in: docs.map(d => d.id) } } });
+        await prisma.employeeDocument.deleteMany({ where: { id: { in: docs.map(d => d.id) } } });
       }
 
       // Log all delete actions
@@ -404,9 +404,9 @@ router.delete(
           documentType: docType,
           fileName: d.fileName || d.originalName || `document_${docType}`,
           fileId: extractDriveId(d.filePath || '') || null,
-          internId,
-          internName: internDetail?.name || null,
-          userId: internDetail?.userId || null,
+          employeeId,
+          employeeName: employeeDetail?.name || null,
+          userId: employeeDetail?.userId || null,
           performedBy: actor.id,
           expiryDate: d.expiryDate || null,
           req,

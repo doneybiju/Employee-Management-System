@@ -1,6 +1,8 @@
-import { Router, Request, Response } from 'express';
-import { prisma } from '../prisma/client';
+
+import { Router, Request, Response } from "express";
+import prisma from '../prisma';
 import { streamDownload } from '../google/drive';
+
 
 const router = Router();
 
@@ -23,9 +25,9 @@ router.get('/drive/file/:id', async (req: Request, res: Response) => {
  * Returns minimal information + a public proxy URL for the avatar (if present).
  */
 router.get('/interns', async (_req: Request, res: Response) => {
-  const rows = await prisma.internshipInfo.findMany({
+  const rows = await prisma.employeeInfo.findMany({
     include: {
-      intern: { include: { documents: true } },
+      employee: { include: { employeeDocuments: true } },
       department: true,
       position: true,
     },
@@ -35,7 +37,7 @@ router.get('/interns', async (_req: Request, res: Response) => {
   const now = Date.now();
 
   type PublicRow = {
-    internId: number;
+    employeeId: string;
     name: string;
     firstName: string;
     surname: string;
@@ -51,11 +53,12 @@ router.get('/interns', async (_req: Request, res: Response) => {
   };
 
   const items: PublicRow[] = rows.map((r) => {
-    const doc = r.intern.documents || null;
+    const docs = r.employee.employeeDocuments || [];
+    const avatarDoc = docs.find(d => d.documentType === 'PROFILE_PICTURE' && d.isActive);
 
     // We store avatar as '/api/uploads/drive/file/<id>?name=...'
     // For public, rewrite to '/api/public/drive/file/<id>?name=...'
-    const stored = doc?.profilePicture || '';
+    const stored = avatarDoc?.filePath || '';
     const avatarUrl = stored.includes('/api/uploads/drive/file/')
       ? stored.replace('/api/uploads/drive/file/', '/api/public/drive/file/')
       : '';
@@ -65,15 +68,15 @@ router.get('/interns', async (_req: Request, res: Response) => {
       end === null || end > now ? 'current' : 'alumni';
 
     return {
-      internId: r.internId,
-      name: r.intern.name,
-      firstName: r.intern.name, // single-name field in schema
-      surname: '',              // no separate surname in InternDetail
+      employeeId: r.employeeId,
+      name: r.employee.name,
+      firstName: r.employee.name, // single-name field in schema
+      surname: '',              // no separate surname in EmployeeDetail
       department: r.department?.departmentName ?? null,
       position: r.position?.name ?? null,
-      nationality: r.intern.nationality ?? null,
-      phone: r.intern.phone ?? null,
-      email: r.intern.personalEmail ?? null,
+      nationality: r.employee.nationality ?? null,
+      phone: r.employee.phone ?? null,
+      email: r.employee.email ?? null,
       startDate: r.startDate ? r.startDate.toISOString() : null,
       endDate: r.endDate ? r.endDate.toISOString() : null,
       status,

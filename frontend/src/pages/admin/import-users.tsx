@@ -887,7 +887,6 @@ const res = await commitEmployeeImport(file, mappingToSend, { companyEmailMode }
                 fontSize: '0.875rem',
                 fontWeight: 600,
                 transition: 'all 0.2s ease',
-                ':hover': { backgroundColor: '#2563eb' }
               }}
             >
               Import Another File

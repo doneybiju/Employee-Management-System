@@ -12,6 +12,7 @@ datasource db {
 // ---------- Enums (mapped to Postgres types) ----------
 enum Role {
   intern
+  employee // Added as per migration
   hr
   super_admin
 
@@ -155,9 +156,9 @@ enum AlertSeverity {
   high
 }
 
-// Employee_details
-model InternDetail {
-  internId    String    @id @default(uuid()) @map("intern_id") @db.Uuid
+// Employee_details (Refactored from InternDetail)
+model EmployeeDetail {
+  employeeId  String    @id @default(uuid()) @map("employee_id") @db.Uuid
   userId      Int?      @map("user_id")
   user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   name        String
@@ -168,14 +169,14 @@ model InternDetail {
   email       String?   @unique @db.VarChar(100)
 
   // back-relations
-  sosDetails  InternsSosDetail[]
-  internships InternshipInfo[]
+  sosDetails   EmployeeSosDetail[]
+  internships  EmployeeInfo[] // You might want to rename this Model to 'EmploymentInfo' later, but sticking to 'EmployeeInfo' for now based on your prompt
 
-  internDocuments       InternDocument[] // ← was singular; must be array
-  documentVerifications DocumentVerification? // stays 1-to-1 (unique on internId in that model)
+  employeeDocuments     EmployeeDocument[] 
+  documentVerifications DocumentVerification? 
   notifications         Notification?
 
-  @@map("intern_details")
+  @@map("employee_details")
 }
 
 // users
@@ -199,15 +200,15 @@ model User {
   createdByEmpType     EmpType? @map("created_by_emp_type")
   creationIp           String?  @map("creation_ip") @db.VarChar(45)
   creationUserAgent    String?  @map("creation_user_agent") @db.VarChar(255)
-  creationMethod       String?  @map("creation_method") @db.VarChar(50) // 'google_workspace', 'csv_import', 'manual'
+  creationMethod       String?  @map("creation_method") @db.VarChar(50) 
 
   // back-relations
-  sessionLogs   SessionLog[]
-  requests      Request[]      @relation("UserRequests")
-  notifications Notification[]
-  internDetails InternDetail[]
-  loginEvents   LoginEvent[]
-  knownDevices  KnownDevice[]
+  sessionLogs     SessionLog[]
+  requests        Request[]      @relation("UserRequests")
+  notifications   Notification[]
+  employeeDetails EmployeeDetail[] // Renamed from internDetails
+  loginEvents     LoginEvent[]
+  knownDevices    KnownDevice[]
 
   reminderWhitelist ReminderWhitelist?
 
@@ -228,17 +229,17 @@ model User {
   @@map("users")
 }
 
-// employee_sos_details
-model InternsSosDetail {
-  id                  Int     @id @default(autoincrement())
-  internId            String? @map("intern_id") @db.Uuid
-  relativePhoneNumber String? @map("relative_phone_number") @db.VarChar(25)
-  relationWithIntern  String? @map("relation_with_intern") @db.VarChar(15)
+// employee_sos_details (Refactored from InternsSosDetail)
+model EmployeeSosDetail {
+  id                   Int     @id @default(autoincrement())
+  employeeId           String? @map("employee_id") @db.Uuid
+  relativePhoneNumber  String? @map("relative_phone_number") @db.VarChar(25)
+  relationWithEmployee String? @map("relation_with_employee") @db.VarChar(15) // Updated column name map
 
   // FKs
-  intern InternDetail? @relation(fields: [internId], references: [internId], onDelete: Cascade)
+  employee EmployeeDetail? @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
 
-  @@map("interns_sos_details")
+  @@map("employee_sos_details")
 }
 
 // session_logs
@@ -262,7 +263,7 @@ model Department {
   departmentName String @unique @map("department_name") @db.VarChar(50)
 
   positions   Position[]
-  internships InternshipInfo[]
+  internships EmployeeInfo[] // Updated type
   requests    Request[]
 
   @@map("departments")
@@ -274,18 +275,18 @@ model Position {
   name         String @db.VarChar(50)
   departmentId Int    @map("department_id")
 
-  department  Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  internships InternshipInfo[]
+  department  Department     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  internships EmployeeInfo[] // Updated type
   requests    Request[]
 
   @@unique([name, departmentId])
   @@map("positions")
 }
 
-// internship_info
-model InternshipInfo {
+// employee_info (Refactored from InternshipInfo)
+model EmployeeInfo {
   id           Int              @id @default(autoincrement())
-  internId     String           @map("intern_id") @db.Uuid
+  employeeId   String           @map("employee_id") @db.Uuid
   departmentId Int?             @map("department_id")
   positionId   Int?             @map("position_id")
   startDate    DateTime?        @map("start_date") @db.Date
@@ -293,11 +294,11 @@ model InternshipInfo {
   supervisor   String?          @db.VarChar(100)
   status       InternshipStatus
 
-  intern     InternDetail @relation(fields: [internId], references: [internId], onDelete: Cascade)
-  department Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  position   Position?    @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  employee   EmployeeDetail @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
+  department Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  position   Position?      @relation(fields: [positionId], references: [id], onDelete: SetNull)
 
-  @@map("internship_info")
+  @@map("employee_info")
 }
 
 // requests
@@ -337,24 +338,22 @@ model AdminUiConfig {
 
 // deprovision_policy
 model DeprovisionPolicy {
-  id          Int       @id @default(1)
-  enabled     Boolean   @default(false)
-  delayAmount Int       @default(0) @map("delay_amount")
-  delayUnit   DelayUnit @default(days) @map("delay_unit")
-  updatedAt   DateTime  @default(now()) @map("updated_at")
-  lastRunAt   DateTime? @map("last_run_at")
-  lastDeleted Int?      @default(0) @map("last_deleted")
-
-  // NEW
-  transferTargetEmail String? @map("transfer_target_email")
+  id                  Int       @id @default(1)
+  enabled             Boolean   @default(false)
+  delayAmount         Int       @default(0) @map("delay_amount")
+  delayUnit           DelayUnit @default(days) @map("delay_unit")
+  updatedAt           DateTime  @default(now()) @map("updated_at")
+  lastRunAt           DateTime? @map("last_run_at")
+  lastDeleted         Int?      @default(0) @map("last_deleted")
+  transferTargetEmail String?   @map("transfer_target_email")
 
   @@map("deprovision_policy")
 }
 
-// documents
-model InternDocument {
+// employee_documents (Refactored from InternDocument)
+model EmployeeDocument {
   id                       Int            @id @default(autoincrement())
-  internId                 String         @map("intern_id") @db.Uuid
+  employeeId               String         @map("employee_id") @db.Uuid
   documentType             DocumentType   @map("document_type")
   fileName                 String         @map("file_name") @db.VarChar(255)
   originalName             String         @map("original_name") @db.VarChar(255)
@@ -376,19 +375,19 @@ model InternDocument {
   createdAt                DateTime       @default(now()) @map("created_at")
   updatedAt                DateTime       @default(now()) @map("updated_at")
 
-  intern        InternDetail           @relation(fields: [internId], references: [internId], onDelete: Cascade)
-  verifications DocumentVerification[] // ← add this
+  employee      EmployeeDetail         @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
+  verifications DocumentVerification[] 
 
-  @@unique([internId, documentType], name: "intern_document_per_type")
-  @@index([documentType, expiryDate], name: "intern_docs_type_expiry_idx")
-  @@map("intern_documents")
+  @@unique([employeeId, documentType], name: "employee_document_per_type")
+  @@index([documentType, expiryDate], name: "employee_docs_type_expiry_idx")
+  @@map("employee_documents")
 }
 
 // document_verifications
 model DocumentVerification {
   id             Int                @id @default(autoincrement())
   documentId     Int                @map("document_id")
-  internId       String             @unique @map("intern_id") @db.Uuid
+  employeeId     String             @unique @map("employee_id") @db.Uuid
   verifierId     Int?               @map("verifier_id")
   action         VerificationAction
   previousStatus DocumentStatus     @map("previous_status")
@@ -397,29 +396,28 @@ model DocumentVerification {
   verifiedAt     DateTime           @default(now()) @map("verified_at")
   createdAt      DateTime           @default(now()) @map("created_at")
 
-  document InternDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  intern   InternDetail   @relation(fields: [internId], references: [internId], onDelete: Cascade)
-  // verifierId is INT without FK in SQL, so keep as scalar
+  document EmployeeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  employee EmployeeDetail   @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
 
   @@map("document_verifications")
 }
 
 // notifications
 model Notification {
-  id        Int              @id @default(autoincrement())
-  userId    Int              @map("user_id")
-  internId  String           @unique @map("intern_id") @db.Uuid
-  type      NotificationType
-  title     String           @db.VarChar(255)
-  message   String
-  isRead    Boolean          @default(false) @map("is_read")
-  priority  Priority         @default(medium)
-  data      Json?
-  createdAt DateTime         @default(now()) @map("created_at")
-  readAt    DateTime?        @map("read_at")
+  id         Int              @id @default(autoincrement())
+  userId     Int              @map("user_id")
+  employeeId String           @unique @map("employee_id") @db.Uuid
+  type       NotificationType
+  title      String           @db.VarChar(255)
+  message    String
+  isRead     Boolean          @default(false) @map("is_read")
+  priority   Priority         @default(medium)
+  data       Json?
+  createdAt  DateTime         @default(now()) @map("created_at")
+  readAt     DateTime?        @map("read_at")
 
-  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  intern InternDetail @relation(fields: [internId], references: [internId], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employee EmployeeDetail @relation(fields: [employeeId], references: [employeeId], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -441,22 +439,20 @@ model SmtpSetting {
 }
 
 model SystemConfig {
-  id                    Int     @id @default(1)
-  companyEmailDomain    String? @map("company_email_domain")
-  googleWorkspaceDomain String? @map("google_workspace_domain")
-  googleAdminSubject    String? @map("google_admin_subject")
-  googleSharedDriveId   String? @map("google_shared_drive_id")
-  googleAllGroup        String? @map("google_all_group")
-
+  id                        Int     @id @default(1)
+  companyEmailDomain        String? @map("company_email_domain")
+  googleWorkspaceDomain     String? @map("google_workspace_domain")
+  googleAdminSubject        String? @map("google_admin_subject")
+  googleSharedDriveId       String? @map("google_shared_drive_id")
+  googleAllGroup            String? @map("google_all_group")
   googleSheetsSpreadsheetId String? @map("google_sheets_spreadsheet_id")
   googleSheetsClientEmail   String? @map("google_sheets_client_email")
   googleSheetsPrivateKey    String? @map("google_sheets_private_key")
   googleSheetsExtraHours    String? @map("google_sheets_extra_hours_sheet")
   googleSheetsAbsence       String? @map("google_sheets_absence_sheet")
-
-  maxmindAccountId  String? @map("maxmind_account_id")
-  maxmindEditionIds String? @map("maxmind_edition_ids")
-  geoipDbDir        String? @map("geoip_db_dir")
+  maxmindAccountId          String? @map("maxmind_account_id")
+  maxmindEditionIds         String? @map("maxmind_edition_ids")
+  geoipDbDir                String? @map("geoip_db_dir")
 
   updatedAt DateTime @default(now()) @map("updated_at")
   updatedBy Int?     @map("updated_by")
@@ -467,16 +463,12 @@ model SystemConfig {
 model DocumentExpiryPolicy {
   id           Int          @id @default(autoincrement())
   documentType DocumentType @unique @map("document_type")
-
-  enabled    Boolean @default(false)
-  daysBefore Int     @default(30) @map("days_before")
-
-  notifyUser Boolean @default(true) @map("notify_user")
-  notifyHr   Boolean @default(true) @map("notify_hr")
-
-  repeatEveryDays Int? @map("repeat_every_days")
-
-  updatedAt DateTime @updatedAt @map("updated_at")
+  enabled      Boolean      @default(false)
+  daysBefore   Int          @default(30) @map("days_before")
+  notifyUser   Boolean      @default(true) @map("notify_user")
+  notifyHr     Boolean      @default(true) @map("notify_hr")
+  repeatEveryDays Int?      @map("repeat_every_days")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
   @@map("document_expiry_policies")
 }
@@ -508,14 +500,13 @@ model UserReminderInbox {
   message   String
   createdAt DateTime  @default(now())
   readAt    DateTime?
-  // user   User   @relation(fields: [userId], references: [id])
 }
 
 model ReminderWhitelist {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
-  skipDocs   Boolean  @default(true) // skip document reminders
-  skipDeprov Boolean  @default(false) // skip deprovision
+  skipDocs   Boolean  @default(true) 
+  skipDeprov Boolean  @default(false) 
   reason     String?
   createdBy  Int?
   createdAt  DateTime @default(now())
@@ -545,7 +536,7 @@ model Project {
   description String?
   status      ProjectStatus @default(NOT_STARTED)
   dueDate     DateTime?
-  createdById Int? // optional FK
+  createdById Int?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -569,7 +560,7 @@ model ProjectMember {
 
 // Tasks
 model Task {
-  id               Int                 @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   projectId        Int
   title            String
   description      String?
@@ -596,7 +587,7 @@ model TaskChecklistItem {
 }
 
 model PasswordResetToken {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
   tokenHash String    @db.VarChar(128)
   expiresAt DateTime
@@ -629,7 +620,6 @@ model EmployeeRequest {
   reviewedAt  DateTime?     @map("reviewed_at")
   submittedAt DateTime      @default(now()) @map("submitted_at")
 
-  // named relations + back-relations exist on User
   user     User  @relation("EmployeeRequestUser", fields: [userId], references: [id], onDelete: Cascade)
   reviewer User? @relation("EmployeeRequestReviewer", fields: [reviewerId], references: [id])
 
@@ -648,7 +638,6 @@ model SecurityAlert {
   region       String?
   city         String?
   deviceId     String?
-  // was: Int? @unique
   loginEventId Int?
   details      Json?
   resolvedAt   DateTime?
@@ -657,7 +646,7 @@ model SecurityAlert {
   user       User?       @relation("UserSecurityAlerts", fields: [userId], references: [id])
   loginEvent LoginEvent? @relation("LoginEventAlert", fields: [loginEventId], references: [id])
 
-  @@unique([loginEventId, kind], name: "security_alert_event_kind_uniq") // optional but recommended
+  @@unique([loginEventId, kind], name: "security_alert_event_kind_uniq") 
   @@index([createdAt, kind, severity])
   @@index([loginEventId])
 }
@@ -668,24 +657,20 @@ model LoginEvent {
   email      String?          @db.VarChar(100)
   success    Boolean
   failReason LoginFailReason? @map("fail_reason")
-
-  ip      String  @db.VarChar(45)
-  country String? @db.VarChar(2)
-  region  String? @db.VarChar(100)
-  city    String? @db.VarChar(100)
-
+  ip         String  @db.VarChar(45)
+  country    String? @db.VarChar(2)
+  region     String? @db.VarChar(100)
+  city       String? @db.VarChar(100)
   ua         String? @db.VarChar(255)
   browser    String? @db.VarChar(50)
   os         String? @db.VarChar(50)
   deviceType String? @map("device_type") @db.VarChar(30)
-
-  deviceId String? @map("device_id") @db.VarChar(64)
-  fpHash   String? @map("fp_hash") @db.VarChar(64)
-
-  tzOffset Int?    @map("tz_offset")
-  language String? @db.VarChar(35) // e.g. en-US
-  screen   String? @db.VarChar(25) // e.g. 1920x1080
-  platform String? @db.VarChar(50)
+  deviceId   String? @map("device_id") @db.VarChar(64)
+  fpHash     String? @map("fp_hash") @db.VarChar(64)
+  tzOffset   Int?    @map("tz_offset")
+  language   String? @db.VarChar(35) 
+  screen     String? @db.VarChar(25) 
+  platform   String? @db.VarChar(50)
 
   rateLimitLimit     Int?      @map("rl_limit")
   rateLimitRemaining Int?      @map("rl_remaining")
@@ -749,19 +734,16 @@ model EmailTheme {
 
 model EmailTemplate {
   id              Int     @id @default(autoincrement())
-  key             String  @unique @map("key") // e.g. "welcome_credentials"
+  key             String  @unique @map("key") 
   subjectTemplate String  @map("subject_template") @db.VarChar(255)
   htmlTemplate    String  @map("html_template") @db.Text
   textTemplate    String? @map("text_template") @db.Text
   enabled         Boolean @default(true) @map("enabled")
-
-  headerTitle String? @map("header_title")
-  logoUrl     String? @map("logo_url")
-
-  // Optional metadata for the UI
-  description String? @map("description")
-  variables   Json?   @map("variables") // e.g. ["recipientName","projectTitle","projectUrl"]
-  sampleData  Json?   @map("sample_data") // e.g. {"recipientName":"Test","projectTitle":"Demo"}
+  headerTitle     String? @map("header_title")
+  logoUrl         String? @map("logo_url")
+  description     String? @map("description")
+  variables       Json?   @map("variables") 
+  sampleData      Json?   @map("sample_data") 
 
   updatedAt DateTime @updatedAt @map("updated_at")
   updatedBy Int?     @map("updated_by")
@@ -772,7 +754,7 @@ model EmailTemplate {
 model UserUpdateLog {
   id            Int      @id @default(autoincrement())
   userId        Int?     @map("user_id")
-  internId      String?  @map("intern_id") @db.Uuid
+  employeeId    String?  @map("employee_id") @db.Uuid // Updated field name
   updatedBy     Int      @map("updated_by")
   updatedAt     DateTime @default(now()) @map("updated_at")
   fieldName     String   @map("field_name") @db.VarChar(100)
@@ -785,7 +767,7 @@ model UserUpdateLog {
   updater       User     @relation("UserUpdates", fields: [updatedBy], references: [id], onDelete: Cascade)
 
   @@index([userId], name: "user_update_log_user_idx")
-  @@index([internId], name: "user_update_log_intern_idx")
+  @@index([employeeId], name: "user_update_log_employee_idx")
   @@index([updatedBy], name: "user_update_log_updater_idx")
   @@index([updatedAt], name: "user_update_log_updated_idx")
   @@map("user_update_logs")
@@ -793,25 +775,24 @@ model UserUpdateLog {
 
 model DocumentLog {
   id            Int      @id @default(autoincrement())
-  action        String   @db.VarChar(20) // 'upload', 'delete', or 'replace'
-  documentType  String   @map("document_type") @db.VarChar(50) // acceptance_letter, passport_id, etc.
+  action        String   @db.VarChar(20) 
+  documentType  String   @map("document_type") @db.VarChar(50) 
   fileName      String   @map("file_name") @db.VarChar(255)
-  fileId        String?  @map("file_id") @db.VarChar(255) // Google Drive file ID
-  internId      String   @map("intern_id") @db.Uuid
-  internName    String?  @map("intern_name") @db.VarChar(200)
-  userId        Int?     @map("user_id") // The intern's user ID if they uploaded themselves
-  performedBy   Int      @map("performed_by") // Admin who uploaded/deleted (or self)
+  fileId        String?  @map("file_id") @db.VarChar(255) 
+  employeeId    String   @map("employee_id") @db.Uuid // Updated field name
+  employeeName  String?  @map("employee_name") @db.VarChar(200) // Updated field name
+  userId        Int?     @map("user_id") 
+  performedBy   Int      @map("performed_by") 
   performedAt   DateTime @default(now()) @map("performed_at")
   ip            String?  @db.VarChar(45)
   userAgent     String?  @map("user_agent") @db.VarChar(255)
-  expiryDate    DateTime? @map("expiry_date") // For passport expiry tracking
+  expiryDate    DateTime? @map("expiry_date") 
 
   performer     User     @relation("DocumentActions", fields: [performedBy], references: [id], onDelete: Cascade)
 
-  @@index([internId], name: "document_log_intern_idx")
+  @@index([employeeId], name: "document_log_employee_idx")
   @@index([performedBy], name: "document_log_performer_idx")
   @@index([performedAt], name: "document_log_performed_idx")
   @@index([action], name: "document_log_action_idx")
   @@map("document_logs")
 }
-

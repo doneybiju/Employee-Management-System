@@ -65,7 +65,7 @@ export default function UserCreationLogsPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['super_admin']}>
+    <ProtectedRoute roles={['super_admin']}>
       <div className="user-creation-page">
         <div className="header-section">
           <button className="back-button" onClick={() => router.push('/admin/logs')}>
