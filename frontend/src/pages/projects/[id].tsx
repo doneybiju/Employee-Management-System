@@ -944,7 +944,7 @@ const projectProgress = computeProgress(proj.tasks);
   isEditing={editingTaskId === t.id}
   onStartEdit={() => { if (!isExpanded(t.id)) toggleExpanded(t.id); setEditingTaskId(t.id); }}
   onCancelEdit={() => setEditingTaskId(null)}
-  canAct={meCanActOnTask(t)}          // members can update status & check their own tasks
+   canAct={!!meCanActOnTask(t)}           // members can update status & check their own tasks
 />
 
 
