@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import styles from './login.module.css';
 import Link from 'next/link';
-import LoginButton from '@/components/LoginButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -143,7 +142,19 @@ export default function LoginPage() {
 
           <div className={styles.divider}><span>or</span></div>
 
-          <LoginButton />
+          <button
+            type="button"
+            className={styles.sso}
+            onClick={() => { window.location.href = '/api/auth/google'; }}
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google logo"
+              width={20}
+              height={20}
+            />
+            Continue with Google
+          </button>
 
           <div className={styles.footer}>
             Need access? Contact IT.
