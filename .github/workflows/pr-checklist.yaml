@@ -1,0 +1,57 @@
+name: PR Checklist
+
+on: [pull_request]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: employees
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # --- BACKEND CHECKS ---
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Run Migrations (Test DB)
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgres://user:password@localhost:5432/employees
+        run: npx prisma migrate deploy
+
+      - name: Lint Check
+        working-directory: ./backend
+        run: npm run lint
+
+      # Uncomment if you have tests
+      # - name: Run Backend Tests
+      #   working-directory: ./backend
+      #   env:
+      #     DATABASE_URL: postgres://user:password@localhost:5432/employees
+      #   run: npm test
