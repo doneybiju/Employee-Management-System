@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type {NextApiRequest, NextApiResponse} from 'next';
 
 type DocPolicy = {
   enabled: boolean;
@@ -6,8 +6,8 @@ type DocPolicy = {
   delayUnit: 'days' | 'weeks' | 'months';
   lastRunAt?: string | null;
   lastDeleted?: number | null;
-  includeAvatar?: boolean;         // new
-  includeProfileImage?: boolean;   // response compatibility
+  includeAvatar?: boolean; // new
+  includeProfileImage?: boolean; // response compatibility
 };
 
 const DEFAULT: DocPolicy = {
@@ -16,8 +16,8 @@ const DEFAULT: DocPolicy = {
   delayUnit: 'days',
   lastRunAt: null,
   lastDeleted: 0,
-  includeAvatar: false,            // new
-  includeProfileImage: false,      // new
+  includeAvatar: false, // new
+  includeProfileImage: false, // new
 };
 
 // simple in-memory store
@@ -26,7 +26,7 @@ declare global {
   var __docCleanupPolicy: DocPolicy | undefined;
 }
 function getStore(): DocPolicy {
-  if (!global.__docCleanupPolicy) global.__docCleanupPolicy = { ...DEFAULT };
+  if (!global.__docCleanupPolicy) global.__docCleanupPolicy = {...DEFAULT};
   return global.__docCleanupPolicy;
 }
 
@@ -42,20 +42,28 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'PUT') {
     const cur = getStore();
-    const b = (req.body ?? {}) as Partial<DocPolicy> & { includeProfileImage?: boolean };
+    const b = (req.body ?? {}) as Partial<DocPolicy> & {
+      includeProfileImage?: boolean;
+    };
 
     // normalize avatar flag from either key
     let avatarFlag = cur.includeAvatar ?? false;
     if (typeof b.includeAvatar === 'boolean') avatarFlag = b.includeAvatar;
-    if (typeof b.includeProfileImage === 'boolean') avatarFlag = b.includeProfileImage;
+    if (typeof b.includeProfileImage === 'boolean')
+      avatarFlag = b.includeProfileImage;
 
     const next: DocPolicy = {
       ...cur,
-      ...(typeof b.enabled === 'boolean' ? { enabled: b.enabled } : {}),
+      ...(typeof b.enabled === 'boolean' ? {enabled: b.enabled} : {}),
       ...(Number.isFinite(b.delayAmount)
-        ? { delayAmount: Math.max(0, Math.min(30, Math.trunc(Number(b.delayAmount)))) }
+        ? {
+            delayAmount: Math.max(
+              0,
+              Math.min(30, Math.trunc(Number(b.delayAmount))),
+            ),
+          }
         : {}),
-      ...(b.delayUnit ? { delayUnit: b.delayUnit } : {}),
+      ...(b.delayUnit ? {delayUnit: b.delayUnit} : {}),
       includeAvatar: avatarFlag,
       includeProfileImage: avatarFlag,
     };
@@ -65,5 +73,5 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   res.setHeader('Allow', 'GET, PUT');
-  return res.status(405).json({ error: 'Method Not Allowed' });
+  return res.status(405).json({error: 'Method Not Allowed'});
 }

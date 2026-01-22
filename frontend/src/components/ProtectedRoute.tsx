@@ -1,7 +1,7 @@
 // frontend/src/components/ProtectedRoute.tsx
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/context/AuthContext';
+import {useEffect} from 'react';
+import {useRouter} from 'next/router';
+import {useAuth} from '@/context/AuthContext';
 
 type AllowedRole = 'employee' | 'hr' | 'super_admin';
 
@@ -11,8 +11,8 @@ interface ProtectedRouteProps {
   roles?: AllowedRole[];
 }
 
-export default function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
-  const { isAuthenticated, ready, mustChangePassword, user, loading } = useAuth();
+export default function ProtectedRoute({children, roles}: ProtectedRouteProps) {
+  const {isAuthenticated, ready, mustChangePassword, user, loading} = useAuth();
   const router = useRouter();
 
   // 1) Basic auth + password-change gate (unchanged)
@@ -62,7 +62,12 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
   }
 
   // If roles are specified and user is loaded but not allowed, don't flash the page
-  if (roles && roles.length > 0 && user && !roles.includes(user.role as AllowedRole)) {
+  if (
+    roles &&
+    roles.length > 0 &&
+    user &&
+    !roles.includes(user.role as AllowedRole)
+  ) {
     return null;
   }
 

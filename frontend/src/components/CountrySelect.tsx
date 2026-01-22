@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 
-type Country = { name: string; code: string }; // ISO 3166-1 alpha-2
+type Country = {name: string; code: string}; // ISO 3166-1 alpha-2
 
 export default function CountrySelect({
   value,
@@ -27,28 +27,35 @@ export default function CountrySelect({
     let stop = false;
     (async () => {
       try {
-        const r = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+        const r = await fetch(
+          'https://restcountries.com/v3.1/all?fields=name,cca2',
+        );
         const json = await r.json();
         if (stop) return;
         const list: Country[] = json
-          .map((c: any) => ({ name: c.name?.common as string, code: c.cca2 as string }))
+          .map((c: any) => ({
+            name: c.name?.common as string,
+            code: c.cca2 as string,
+          }))
           .filter((c: Country) => c.name && c.code)
           .sort((a, b) => a.name.localeCompare(b.name));
         setItems(list);
       } catch {
         // tiny offline fallback
         setItems([
-          { name: 'India', code: 'IN' },
-          { name: 'Italy', code: 'IT' },
-          { name: 'Spain', code: 'ES' },
-          { name: 'France', code: 'FR' },
-          { name: 'Germany', code: 'DE' },
-          { name: 'United States', code: 'US' },
-          { name: 'United Kingdom', code: 'GB' },
+          {name: 'India', code: 'IN'},
+          {name: 'Italy', code: 'IT'},
+          {name: 'Spain', code: 'ES'},
+          {name: 'France', code: 'FR'},
+          {name: 'Germany', code: 'DE'},
+          {name: 'United States', code: 'US'},
+          {name: 'United Kingdom', code: 'GB'},
         ]);
       }
     })();
-    return () => { stop = true; };
+    return () => {
+      stop = true;
+    };
   }, []);
 
   // close on click outside
@@ -82,9 +89,10 @@ export default function CountrySelect({
   };
 
   return (
-    <div ref={box} style={{ position: 'relative' }}>
-      <label style={{ fontSize: 12, display: 'block' }}>
-        {label}{required ? ' *' : ''}
+    <div ref={box} style={{position: 'relative'}}>
+      <label style={{fontSize: 12, display: 'block'}}>
+        {label}
+        {required ? ' *' : ''}
       </label>
 
       <button
@@ -100,7 +108,7 @@ export default function CountrySelect({
           alignItems: 'center',
           gap: 8,
           background: 'white',
-          position: 'relative'
+          position: 'relative',
         }}
       >
         {selected ? (
@@ -110,12 +118,12 @@ export default function CountrySelect({
               width={24}
               height={18}
               alt=""
-              style={{ display: 'inline-block', borderRadius: 2 }}
+              style={{display: 'inline-block', borderRadius: 2}}
             />
             <span>{selected.name}</span>
           </>
         ) : (
-          <span style={{ color: '#888' }}>{placeholder}</span>
+          <span style={{color: '#888'}}>{placeholder}</span>
         )}
       </button>
 
@@ -149,7 +157,7 @@ export default function CountrySelect({
         // hidden input to satisfy native required validation
         <input
           tabIndex={-1}
-          style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+          style={{opacity: 0, width: 0, height: 0, position: 'absolute'}}
           required
           value={value}
           onChange={() => {}}
@@ -171,16 +179,21 @@ export default function CountrySelect({
             boxShadow: '0 8px 20px rgba(0,0,0,.08)',
           }}
         >
-          <div style={{ padding: 8, borderBottom: '1px solid #eee' }}>
+          <div style={{padding: 8, borderBottom: '1px solid #eee'}}>
             <input
               autoFocus
               placeholder="Search…"
               value={q}
               onChange={e => setQ(e.target.value)}
-              style={{ width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '6px 8px' }}
+              style={{
+                width: '100%',
+                border: '1px solid #ddd',
+                borderRadius: 6,
+                padding: '6px 8px',
+              }}
             />
           </div>
-          <div style={{ maxHeight: 260, overflow: 'auto' }}>
+          <div style={{maxHeight: 260, overflow: 'auto'}}>
             {filtered.map(c => (
               <button
                 type="button"
@@ -204,13 +217,13 @@ export default function CountrySelect({
                   width={24}
                   height={18}
                   alt=""
-                  style={{ display: 'inline-block', borderRadius: 2 }}
+                  style={{display: 'inline-block', borderRadius: 2}}
                 />
                 <span>{c.name}</span>
               </button>
             ))}
             {!filtered.length && (
-              <div style={{ padding: 12, color: '#777' }}>No matches</div>
+              <div style={{padding: 12, color: '#777'}}>No matches</div>
             )}
           </div>
         </div>

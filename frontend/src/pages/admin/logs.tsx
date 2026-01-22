@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router';
+import {useRouter} from 'next/router';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface LogCard {
@@ -17,7 +17,8 @@ export default function LogsGatewayPage() {
     {
       id: 'login-events',
       title: 'Login Events',
-      description: 'View login attempts, authentication history, and security events',
+      description:
+        'View login attempts, authentication history, and security events',
       icon: '🔐',
       route: '/admin/logs/login-events',
       color: '#3b82f6',
@@ -45,7 +46,7 @@ export default function LogsGatewayPage() {
   };
 
   return (
-      <ProtectedRoute roles={['super_admin']}>
+    <ProtectedRoute roles={['super_admin']}>
       <div className="logs-gateway-page">
         <div className="header-section">
           <h1>System Logs</h1>
@@ -53,19 +54,22 @@ export default function LogsGatewayPage() {
         </div>
 
         <div className="cards-grid">
-          {logCards.map((card) => (
+          {logCards.map(card => (
             <div
               key={card.id}
               className="log-card"
               onClick={() => handleCardClick(card.route)}
-              style={{ borderTopColor: card.color }}
+              style={{borderTopColor: card.color}}
             >
-              <div className="card-icon" style={{ background: `${card.color}15` }}>
-                <span style={{ color: card.color }}>{card.icon}</span>
+              <div
+                className="card-icon"
+                style={{background: `${card.color}15`}}
+              >
+                <span style={{color: card.color}}>{card.icon}</span>
               </div>
               <h3 className="card-title">{card.title}</h3>
               <p className="card-description">{card.description}</p>
-              <div className="card-arrow" style={{ color: card.color }}>
+              <div className="card-arrow" style={{color: card.color}}>
                 →
               </div>
             </div>
@@ -151,7 +155,9 @@ export default function LogsGatewayPage() {
             font-size: 1.5rem;
             font-weight: bold;
             opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition:
+              opacity 0.3s ease,
+              transform 0.3s ease;
           }
 
           .log-card:hover .card-arrow {

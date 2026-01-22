@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { fetchWithAuth } from '@/lib/api';
+import {useEffect, useState} from 'react';
+import {fetchWithAuth} from '@/lib/api';
 
 interface DocumentLog {
   id: number;
@@ -31,7 +31,9 @@ export default function DocumentLogsPage() {
   const fetchLogs = async (pageNum: number) => {
     setLoading(true);
     try {
-      const response = await fetchWithAuth(`/api/logs/documents?page=${pageNum}&limit=${limit}`);
+      const response = await fetchWithAuth(
+        `/api/logs/documents?page=${pageNum}&limit=${limit}`,
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch: ${response.statusText}`);
       }
@@ -54,44 +56,123 @@ export default function DocumentLogsPage() {
   };
 
   const formatDocumentType = (type: string) => {
-    return type
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
 
   return (
-    <main style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Document Activity Logs</h1>
-        <p style={{ color: '#6b7280', fontSize: 14 }}>
+    <main style={{padding: 24, maxWidth: 1400, margin: '0 auto'}}>
+      <div style={{marginBottom: 24}}>
+        <h1 style={{fontSize: 28, fontWeight: 700, marginBottom: 8}}>
+          Document Activity Logs
+        </h1>
+        <p style={{color: '#6b7280', fontSize: 14}}>
           Track all document uploads and deletions by HR and admins
         </p>
       </div>
 
       {loading && logs.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60 }}>Loading...</div>
+        <div style={{textAlign: 'center', padding: 60}}>Loading...</div>
       ) : (
         <>
-          <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto' }}>
-              <table className="logs-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 12,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{overflowX: 'auto'}}>
+              <table
+                className="logs-table"
+                style={{width: '100%', borderCollapse: 'collapse'}}
+              >
                 <thead>
-                  <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                    <th style={{ padding: 12, textAlign: 'left', fontWeight: 600, fontSize: 14 }}>Date & Time</th>
-                    <th style={{ padding: 12, textAlign: 'left', fontWeight: 600, fontSize: 14 }}>Action</th>
-                    <th style={{ padding: 12, textAlign: 'left', fontWeight: 600, fontSize: 14 }}>Document</th>
-                    <th style={{ padding: 12, textAlign: 'left', fontWeight: 600, fontSize: 14 }}>For User</th>
-                    <th style={{ padding: 12, textAlign: 'left', fontWeight: 600, fontSize: 14 }}>Performed By</th>
-                    <th style={{ padding: 12, textAlign: 'left', fontWeight: 600, fontSize: 14 }}>IP Address</th>
+                  <tr
+                    style={{
+                      background: '#f9fafb',
+                      borderBottom: '2px solid #e5e7eb',
+                    }}
+                  >
+                    <th
+                      style={{
+                        padding: 12,
+                        textAlign: 'left',
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      Date & Time
+                    </th>
+                    <th
+                      style={{
+                        padding: 12,
+                        textAlign: 'left',
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      Action
+                    </th>
+                    <th
+                      style={{
+                        padding: 12,
+                        textAlign: 'left',
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      Document
+                    </th>
+                    <th
+                      style={{
+                        padding: 12,
+                        textAlign: 'left',
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      For User
+                    </th>
+                    <th
+                      style={{
+                        padding: 12,
+                        textAlign: 'left',
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      Performed By
+                    </th>
+                    <th
+                      style={{
+                        padding: 12,
+                        textAlign: 'left',
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      IP Address
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: 12, fontSize: 13, color: '#4b5563', whiteSpace: 'nowrap' }}>
+                  {logs.map(log => (
+                    <tr
+                      key={log.id}
+                      style={{borderBottom: '1px solid #f3f4f6'}}
+                    >
+                      <td
+                        style={{
+                          padding: 12,
+                          fontSize: 13,
+                          color: '#4b5563',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         {formatDate(log.performedAt)}
                       </td>
-                      <td style={{ padding: 12 }}>
+                      <td style={{padding: 12}}>
                         <span
                           style={{
                             display: 'inline-block',
@@ -99,45 +180,87 @@ export default function DocumentLogsPage() {
                             borderRadius: 12,
                             fontSize: 12,
                             fontWeight: 600,
-                            background: log.action === 'upload' ? '#d1fae5' 
-                              : log.action === 'replace' ? '#fef3c7' 
-                              : '#fee2e2',
-                            color: log.action === 'upload' ? '#065f46' 
-                              : log.action === 'replace' ? '#92400e' 
-                              : '#991b1b',
+                            background:
+                              log.action === 'upload'
+                                ? '#d1fae5'
+                                : log.action === 'replace'
+                                  ? '#fef3c7'
+                                  : '#fee2e2',
+                            color:
+                              log.action === 'upload'
+                                ? '#065f46'
+                                : log.action === 'replace'
+                                  ? '#92400e'
+                                  : '#991b1b',
                           }}
                         >
-                          {log.action === 'upload' ? '📤 Upload' 
-                            : log.action === 'replace' ? '🔄 Replace' 
-                            : '🗑️ Delete'}
+                          {log.action === 'upload'
+                            ? '📤 Upload'
+                            : log.action === 'replace'
+                              ? '🔄 Replace'
+                              : '🗑️ Delete'}
                         </span>
                       </td>
-                      <td style={{ padding: 12 }}>
-                        <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: 4 }}>
+                      <td style={{padding: 12}}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: '#1f2937',
+                            marginBottom: 4,
+                          }}
+                        >
                           {formatDocumentType(log.documentType)}
                         </div>
-                        <div style={{ fontSize: 12, color: '#6b7280', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: '#6b7280',
+                            maxWidth: 250,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
                           {log.fileName}
                         </div>
                         {log.expiryDate && (
-                          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
-                            Expires: {new Date(log.expiryDate).toLocaleDateString()}
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: '#9ca3af',
+                              marginTop: 2,
+                            }}
+                          >
+                            Expires:{' '}
+                            {new Date(log.expiryDate).toLocaleDateString()}
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: 12 }}>
-                        <div style={{ fontWeight: 500, color: '#1f2937' }}>
+                      <td style={{padding: 12}}>
+                        <div style={{fontWeight: 500, color: '#1f2937'}}>
                           {log.employeeName || 'Unknown'}
                         </div>
-                        <div style={{ fontSize: 11, color: '#6b7280', fontFamily: 'monospace' }}>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: '#6b7280',
+                            fontFamily: 'monospace',
+                          }}
+                        >
                           {log.employeeId.substring(0, 8)}...
                         </div>
                       </td>
-                      <td style={{ padding: 12 }}>
-                        <div style={{ fontWeight: 500, color: '#1f2937', marginBottom: 4 }}>
+                      <td style={{padding: 12}}>
+                        <div
+                          style={{
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            marginBottom: 4,
+                          }}
+                        >
                           {log.performedByName}
                         </div>
-                        <div style={{ display: 'flex', gap: 4 }}>
+                        <div style={{display: 'flex', gap: 4}}>
                           <span
                             style={{
                               padding: '2px 6px',
@@ -162,7 +285,14 @@ export default function DocumentLogsPage() {
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: 12, fontFamily: 'monospace', fontSize: 12, color: '#6b7280' }}>
+                      <td
+                        style={{
+                          padding: 12,
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: '#6b7280',
+                        }}
+                      >
                         {log.ip || '—'}
                       </td>
                     </tr>
@@ -173,7 +303,15 @@ export default function DocumentLogsPage() {
           </div>
 
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 24 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 16,
+                marginTop: 24,
+              }}
+            >
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
@@ -189,7 +327,7 @@ export default function DocumentLogsPage() {
               >
                 Previous
               </button>
-              <span style={{ fontSize: 14, color: '#6b7280' }}>
+              <span style={{fontSize: 14, color: '#6b7280'}}>
                 Page {page} of {totalPages} ({total} total)
               </span>
               <button

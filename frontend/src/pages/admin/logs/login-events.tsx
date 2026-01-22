@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { fetchWithAuth } from '@/lib/api';
+import {useState, useEffect} from 'react';
+import {useRouter} from 'next/router';
+import {fetchWithAuth} from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface LoginLog {
@@ -45,7 +45,9 @@ export default function LoginEventsPage() {
   const fetchLogs = async (pageNum: number) => {
     setLoading(true);
     try {
-      const response = await fetchWithAuth(`/api/admin/security/login-events?page=${pageNum}&pageSize=${limit}`);
+      const response = await fetchWithAuth(
+        `/api/admin/security/login-events?page=${pageNum}&pageSize=${limit}`,
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch: ${response.statusText}`);
       }
@@ -79,7 +81,10 @@ export default function LoginEventsPage() {
     <ProtectedRoute roles={['super_admin']}>
       <div className="login-events-page">
         <div className="header-section">
-          <button className="back-button" onClick={() => router.push('/admin/logs')}>
+          <button
+            className="back-button"
+            onClick={() => router.push('/admin/logs')}
+          >
             ← Back to Logs
           </button>
           <h1>Login Events</h1>
@@ -106,59 +111,103 @@ export default function LoginEventsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => {
-                    const location = [log.city, log.region, log.country].filter(Boolean).join(', ') || '-';
-                    const deviceInfo = [log.browser, log.os, log.deviceType].filter(Boolean).join(' • ') || '-';
-                    
+                  {logs.map(log => {
+                    const location =
+                      [log.city, log.region, log.country]
+                        .filter(Boolean)
+                        .join(', ') || '-';
+                    const deviceInfo =
+                      [log.browser, log.os, log.deviceType]
+                        .filter(Boolean)
+                        .join(' • ') || '-';
+
                     return (
-                      <tr key={log.id} className={log.success ? 'row-success' : 'row-failure'}>
+                      <tr
+                        key={log.id}
+                        className={log.success ? 'row-success' : 'row-failure'}
+                      >
                         <td>
                           <div className="datetime-cell">
                             {formatDate(log.createdAt)}
                           </div>
                         </td>
                         <td>
-                          <span className={`status-badge ${log.success ? 'status-success' : 'status-failure'}`}>
+                          <span
+                            className={`status-badge ${log.success ? 'status-success' : 'status-failure'}`}
+                          >
                             {log.success ? '✓ Success' : '✗ Failed'}
                           </span>
                           {!log.success && log.failReason && (
-                            <div className="fail-reason">{log.failReason.replace(/_/g, ' ')}</div>
+                            <div className="fail-reason">
+                              {log.failReason.replace(/_/g, ' ')}
+                            </div>
                           )}
                         </td>
                         <td className="user-cell">
-                          <div className="user-email">{log.email || 'Unknown'}</div>
-                          {log.userId && <div className="user-id">ID: {log.userId}</div>}
+                          <div className="user-email">
+                            {log.email || 'Unknown'}
+                          </div>
+                          {log.userId && (
+                            <div className="user-id">ID: {log.userId}</div>
+                          )}
                         </td>
                         <td className="location-cell">
                           <div className="location-text">{location}</div>
                           {(log.lat || log.lon) && (
-                            <div className="coordinates">{log.lat?.toFixed(4)}, {log.lon?.toFixed(4)}</div>
+                            <div className="coordinates">
+                              {log.lat?.toFixed(4)}, {log.lon?.toFixed(4)}
+                            </div>
                           )}
                         </td>
                         <td className="device-cell">
                           <div className="device-info">{deviceInfo}</div>
-                          {log.platform && <div className="platform">Platform: {log.platform}</div>}
-                          {log.language && <div className="language">Lang: {log.language}</div>}
+                          {log.platform && (
+                            <div className="platform">
+                              Platform: {log.platform}
+                            </div>
+                          )}
+                          {log.language && (
+                            <div className="language">Lang: {log.language}</div>
+                          )}
                         </td>
                         <td className="ip-cell">
                           <div className="ip-address">{log.ip}</div>
-                          {log.deviceId && <div className="device-id">Device: {log.deviceId.substring(0, 8)}...</div>}
+                          {log.deviceId && (
+                            <div className="device-id">
+                              Device: {log.deviceId.substring(0, 8)}...
+                            </div>
+                          )}
                         </td>
                         <td className="flags-cell">
                           {log.alerts && log.alerts.length > 0 ? (
                             log.alerts.map((alert, idx) => {
                               const isWarning = alert.severity === 'medium';
                               const isHigh = alert.severity === 'high';
-                              const badgeClass = isHigh ? 'flag-alert' : isWarning ? 'flag-warning' : 'flag-info';
-                              const icon = alert.kind === 'NEW_DEVICE' ? '🆕' 
-                                : alert.kind === 'NEW_COUNTRY' ? '🌍'
-                                : alert.kind === 'IMPOSSIBLE_TRAVEL' ? '✈️'
-                                : alert.kind === 'FAILED_STREAK' ? '❌'
-                                : '⚠️';
-                              const label = alert.kind.replace(/_/g, ' ').toLowerCase();
-                              
+                              const badgeClass = isHigh
+                                ? 'flag-alert'
+                                : isWarning
+                                  ? 'flag-warning'
+                                  : 'flag-info';
+                              const icon =
+                                alert.kind === 'NEW_DEVICE'
+                                  ? '🆕'
+                                  : alert.kind === 'NEW_COUNTRY'
+                                    ? '🌍'
+                                    : alert.kind === 'IMPOSSIBLE_TRAVEL'
+                                      ? '✈️'
+                                      : alert.kind === 'FAILED_STREAK'
+                                        ? '❌'
+                                        : '⚠️';
+                              const label = alert.kind
+                                .replace(/_/g, ' ')
+                                .toLowerCase();
+
                               return (
-                                <span key={idx} className={`flag-badge ${badgeClass}`} title={`${alert.severity}: ${label}`}>
+                                <span
+                                  key={idx}
+                                  className={`flag-badge ${badgeClass}`}
+                                  title={`${alert.severity}: ${label}`}
+                                >
                                   {icon} {label}
                                 </span>
                               );
@@ -184,7 +233,10 @@ export default function LoginEventsPage() {
               <span>
                 Page {page} of {Math.ceil(total / limit) || 1}
               </span>
-              <button disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(page + 1)}>
+              <button
+                disabled={page >= Math.ceil(total / limit)}
+                onClick={() => setPage(page + 1)}
+              >
                 Next
               </button>
             </div>

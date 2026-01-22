@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
-import { Deadline } from '@/types/dashboard';
+import {useMemo, useState} from 'react';
+import {Deadline} from '@/types/dashboard';
 
 function daysLeft(iso: string) {
   return Math.ceil(
-    (new Date(iso).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86_400_000
+    (new Date(iso).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) /
+      86_400_000,
   );
 }
 function urgency(days: number) {
@@ -25,7 +26,7 @@ export default function UpcomingDeadlines({
   const [showAll, setShowAll] = useState(false);
   const visible = useMemo(
     () => (showAll ? deadlines : deadlines.slice(0, initialLimit)),
-    [showAll, deadlines, initialLimit]
+    [showAll, deadlines, initialLimit],
   );
 
   return (
@@ -49,7 +50,9 @@ export default function UpcomingDeadlines({
       <div className="deadlines-grid scroll-area">
         {visible.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon"><i className="fas fa-check-circle" /></div>
+            <div className="empty-icon">
+              <i className="fas fa-check-circle" />
+            </div>
             <h3>No upcoming deadlines</h3>
             <p>You're all caught up for now!</p>
           </div>
@@ -61,16 +64,23 @@ export default function UpcomingDeadlines({
               <div key={i} className={`deadline-card ${tag}`}>
                 <div className="deadline-header">
                   <div className="deadline-type">
-                    <i className={`fas ${
-                      d.kind === 'task' ? 'fa-tasks' :
-                      d.kind === 'internship_end' ? 'fa-flag' : 'fa-file'
-                    }`} />
-                    {d.kind.replace('_',' ')}
+                    <i
+                      className={`fas ${
+                        d.kind === 'task'
+                          ? 'fa-tasks'
+                          : d.kind === 'internship_end'
+                            ? 'fa-flag'
+                            : 'fa-file'
+                      }`}
+                    />
+                    {d.kind.replace('_', ' ')}
                   </div>
                   <div className={`urgency-badge ${tag}`}>{dleft}d</div>
                 </div>
                 <h4 className="deadline-title">{d.title}</h4>
-                {d.subtitle && <p className="deadline-subtitle">{d.subtitle}</p>}
+                {d.subtitle && (
+                  <p className="deadline-subtitle">{d.subtitle}</p>
+                )}
                 <div className="deadline-footer">
                   <div className="deadline-date">
                     <i className="fas fa-calendar" />

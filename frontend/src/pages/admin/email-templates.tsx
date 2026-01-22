@@ -1,9 +1,9 @@
 // frontend/src/pages/admin/email-templates.tsx
 import Head from 'next/head';
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/router';
-import { fetchWithAuth } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import {useEffect, useMemo, useState} from 'react';
+import {useRouter} from 'next/router';
+import {fetchWithAuth} from '@/lib/api';
+import {useAuth} from '@/context/AuthContext';
 
 type EmailTheme = {
   id: number;
@@ -37,7 +37,6 @@ type TemplateDetail = {
 
   headerTitle?: string | null;
   logoUrl?: string | null;
-
 };
 
 type PreviewResponse = {
@@ -64,7 +63,7 @@ async function apiJson(path: string, init: RequestInit = {}) {
 }
 
 export default function EmailTemplatesPage() {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const router = useRouter();
 
   const [tab, setTab] = useState<'templates' | 'theme'>('templates');
@@ -75,15 +74,15 @@ export default function EmailTemplatesPage() {
   const [headerTitle, setHeaderTitle] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
 
-
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const [q, setQ] = useState('');
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return templates;
-    return templates.filter(t =>
-      t.key.toLowerCase().includes(s) ||
-      (t.description || '').toLowerCase().includes(s)
+    return templates.filter(
+      t =>
+        t.key.toLowerCase().includes(s) ||
+        (t.description || '').toLowerCase().includes(s),
     );
   }, [templates, q]);
 
@@ -136,7 +135,9 @@ export default function EmailTemplatesPage() {
     setMsg(null);
     setPreview(null);
     try {
-      const d: TemplateDetail = await apiJson(`/api/admin/email/templates/${encodeURIComponent(key)}`);
+      const d: TemplateDetail = await apiJson(
+        `/api/admin/email/templates/${encodeURIComponent(key)}`,
+      );
       setDetail(d);
 
       setSubjectTemplate(d.subjectTemplate || '');
@@ -145,7 +146,6 @@ export default function EmailTemplatesPage() {
 
       setHeaderTitle((d as any).headerTitle || '');
       setLogoUrl((d as any).logoUrl || '');
-
 
       setHtmlTemplate(d.htmlTemplate || '');
       setTextTemplate(d.textTemplate || '');
@@ -182,7 +182,10 @@ export default function EmailTemplatesPage() {
         buttonColor: themeDraft.buttonColor ?? null,
         footerText: themeDraft.footerText ?? null,
       };
-      const updated = await apiJson('/api/admin/email/theme', { method: 'PUT', body: payload as any });
+      const updated = await apiJson('/api/admin/email/theme', {
+        method: 'PUT',
+        body: payload as any,
+      });
       setTheme(updated);
       setThemeDraft(updated);
       setMsg('Theme saved.');
@@ -222,10 +225,13 @@ export default function EmailTemplatesPage() {
         variables: detail?.variables || [],
         sampleData,
       };
-      await apiJson(`/api/admin/email/templates/${encodeURIComponent(selectedKey)}`, {
-        method: 'PUT',
-        body: payload as any,
-      });
+      await apiJson(
+        `/api/admin/email/templates/${encodeURIComponent(selectedKey)}`,
+        {
+          method: 'PUT',
+          body: payload as any,
+        },
+      );
       setMsg('Template saved.');
       await loadAll();
       await loadTemplate(selectedKey);
@@ -242,7 +248,10 @@ export default function EmailTemplatesPage() {
     setBusy(true);
     setMsg(null);
     try {
-      await apiJson(`/api/admin/email/templates/${encodeURIComponent(selectedKey)}`, { method: 'DELETE' });
+      await apiJson(
+        `/api/admin/email/templates/${encodeURIComponent(selectedKey)}`,
+        {method: 'DELETE'},
+      );
       setMsg('Reset to default.');
       await loadAll();
       await loadTemplate(selectedKey);
@@ -261,7 +270,7 @@ export default function EmailTemplatesPage() {
       const data = parseSample();
       const out: PreviewResponse = await apiJson(
         `/api/admin/email/templates/${encodeURIComponent(selectedKey)}/preview`,
-        { method: 'POST', body: { data } as any }
+        {method: 'POST', body: {data} as any},
       );
       setPreview(out);
     } catch (e: any) {
@@ -284,10 +293,13 @@ export default function EmailTemplatesPage() {
     setMsg(null);
     try {
       const data = parseSample();
-      await apiJson(`/api/admin/email/templates/${encodeURIComponent(selectedKey)}/test-send`, {
-        method: 'POST',
-        body: { to, data } as any,
-      });
+      await apiJson(
+        `/api/admin/email/templates/${encodeURIComponent(selectedKey)}/test-send`,
+        {
+          method: 'POST',
+          body: {to, data} as any,
+        },
+      );
       setMsg('Test email sent.');
     } catch (e: any) {
       setMsg(e?.message || 'Test send failed');
@@ -300,20 +312,34 @@ export default function EmailTemplatesPage() {
 
   return (
     <>
-      <Head><title>Email Templates</title></Head>
+      <Head>
+        <title>Email Templates</title>
+      </Head>
 
-      <div style={{ padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Email Templates</h1>
+      <div style={{padding: 24}}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 14,
+          }}
+        >
+          <h1 style={{margin: 0, fontSize: 22}}>Email Templates</h1>
           <button
             onClick={loadAll}
             disabled={busy}
-            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff' }}
+            style={{
+              padding: '8px 12px',
+              borderRadius: 8,
+              border: '1px solid #e5e7eb',
+              background: '#fff',
+            }}
           >
             Refresh
           </button>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div style={{marginLeft: 'auto', display: 'flex', gap: 8}}>
             <button
               onClick={() => setTab('templates')}
               style={{
@@ -342,79 +368,153 @@ export default function EmailTemplatesPage() {
         </div>
 
         {msg ? (
-          <div style={{ marginBottom: 12, padding: 10, borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff' }}>
+          <div
+            style={{
+              marginBottom: 12,
+              padding: 10,
+              borderRadius: 10,
+              border: '1px solid #e5e7eb',
+              background: '#fff',
+            }}
+          >
             {msg}
           </div>
         ) : null}
 
         {tab === 'theme' ? (
-          <div style={{ maxWidth: 860, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-            <h2 style={{ marginTop: 0, fontSize: 16 }}>Email Theme</h2>
+          <div
+            style={{
+              maxWidth: 860,
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 12,
+              padding: 16,
+            }}
+          >
+            <h2 style={{marginTop: 0, fontSize: 16}}>Email Theme</h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 12, alignItems: 'center' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '220px 1fr',
+                gap: 12,
+                alignItems: 'center',
+              }}
+            >
               <label>Header Title</label>
               <input
                 value={themeDraft.headerTitle ?? ''}
-                onChange={e => setThemeDraft(s => ({ ...s, headerTitle: e.target.value }))}
-                style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                onChange={e =>
+                  setThemeDraft(s => ({...s, headerTitle: e.target.value}))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: '1px solid #e5e7eb',
+                }}
               />
 
               <label>Brand Color</label>
               <input
                 value={themeDraft.brandColor ?? theme?.brandColor ?? '#4a6cf7'}
-                onChange={e => setThemeDraft(s => ({ ...s, brandColor: e.target.value }))}
-                style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                onChange={e =>
+                  setThemeDraft(s => ({...s, brandColor: e.target.value}))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: '1px solid #e5e7eb',
+                }}
               />
 
               <label>Button Color (optional)</label>
               <input
                 value={themeDraft.buttonColor ?? ''}
-                onChange={e => setThemeDraft(s => ({ ...s, buttonColor: e.target.value }))}
+                onChange={e =>
+                  setThemeDraft(s => ({...s, buttonColor: e.target.value}))
+                }
                 placeholder="Leave blank to use Brand Color"
-                style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: '1px solid #e5e7eb',
+                }}
               />
 
               <label>Logo URL (optional)</label>
               <input
                 value={themeDraft.logoUrl ?? ''}
-                onChange={e => setThemeDraft(s => ({ ...s, logoUrl: e.target.value }))}
+                onChange={e =>
+                  setThemeDraft(s => ({...s, logoUrl: e.target.value}))
+                }
                 placeholder="https://..."
-                style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: '1px solid #e5e7eb',
+                }}
               />
 
               <label>Footer Text (optional)</label>
               <textarea
                 value={themeDraft.footerText ?? ''}
-                onChange={e => setThemeDraft(s => ({ ...s, footerText: e.target.value }))}
+                onChange={e =>
+                  setThemeDraft(s => ({...s, footerText: e.target.value}))
+                }
                 rows={3}
-                style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: '1px solid #e5e7eb',
+                }}
               />
             </div>
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <div style={{display: 'flex', gap: 10, marginTop: 14}}>
               <button
                 onClick={saveTheme}
                 disabled={busy}
-                style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 600 }}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#2563eb',
+                  color: '#fff',
+                  fontWeight: 600,
+                }}
               >
                 Save Theme
               </button>
             </div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 14 }}>
+          <div
+            style={{display: 'grid', gridTemplateColumns: '320px 1fr', gap: 14}}
+          >
             {/* left list */}
-            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 12 }}>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div
+              style={{
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 12,
+                padding: 12,
+              }}
+            >
+              <div style={{display: 'flex', gap: 10, marginBottom: 10}}>
                 <input
                   value={q}
                   onChange={e => setQ(e.target.value)}
                   placeholder="Search templates..."
-                  style={{ flex: 1, padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    borderRadius: 10,
+                    border: '1px solid #e5e7eb',
+                  }}
                 />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
                 {filtered.map(t => (
                   <button
                     key={t.key}
@@ -429,9 +529,11 @@ export default function EmailTemplatesPage() {
                       cursor: 'pointer',
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{t.key}</div>
-                    <div style={{ fontSize: 12, opacity: 0.8 }}>{t.description}</div>
-                    <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>
+                    <div style={{fontWeight: 700, fontSize: 13}}>{t.key}</div>
+                    <div style={{fontSize: 12, opacity: 0.8}}>
+                      {t.description}
+                    </div>
+                    <div style={{fontSize: 12, marginTop: 6, opacity: 0.8}}>
                       {t.enabled ? 'Enabled' : 'Disabled'} · {t.source}
                     </div>
                   </button>
@@ -440,94 +542,185 @@ export default function EmailTemplatesPage() {
             </div>
 
             {/* right editor */}
-            <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 14 }}>
+            <div
+              style={{
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 12,
+                padding: 14,
+              }}
+            >
               {!detail ? (
-                <div style={{ padding: 10 }}>Select a template.</div>
+                <div style={{padding: 10}}>Select a template.</div>
               ) : (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <h2 style={{ margin: 0, fontSize: 16 }}>{detail.key}</h2>
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                    <h2 style={{margin: 0, fontSize: 16}}>{detail.key}</h2>
+                    <span style={{fontSize: 12, color: '#6b7280'}}>
                       Source: <b>{detail.source}</b>
                     </span>
-                    <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6b7280' }}>
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        fontSize: 12,
+                        color: '#6b7280',
+                      }}
+                    >
                       Vars: {detail.variables.join(', ') || '—'}
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 10, marginTop: 12, alignItems: 'center' }}>
-                    <label style={{ fontSize: 13 }}>Enabled</label>
-                    <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '180px 1fr',
+                      gap: 10,
+                      marginTop: 12,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <label style={{fontSize: 13}}>Enabled</label>
+                    <input
+                      type="checkbox"
+                      checked={enabled}
+                      onChange={e => setEnabled(e.target.checked)}
+                    />
 
-                    <label style={{ fontSize: 13 }}>Description</label>
+                    <label style={{fontSize: 13}}>Description</label>
                     <input
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                      style={{
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                      }}
                     />
 
-                    <label style={{ fontSize: 13 }}>Subject</label>
+                    <label style={{fontSize: 13}}>Subject</label>
                     <input
                       value={subjectTemplate}
                       onChange={e => setSubjectTemplate(e.target.value)}
-                      style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                      style={{
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                      }}
                     />
 
-                    <label style={{ fontSize: 13 }}>Header Title (override)</label>
+                    <label style={{fontSize: 13}}>
+                      Header Title (override)
+                    </label>
                     <input
-                        value={headerTitle}
-                        onChange={e => setHeaderTitle(e.target.value)}
-                        placeholder="Leave blank to use Theme header title"
-                        style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
+                      value={headerTitle}
+                      onChange={e => setHeaderTitle(e.target.value)}
+                      placeholder="Leave blank to use Theme header title"
+                      style={{
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                      }}
                     />
 
-                    <label style={{ fontSize: 13 }}>Logo URL (override)</label>
+                    <label style={{fontSize: 13}}>Logo URL (override)</label>
                     <input
-                        value={logoUrl}
-                        onChange={e => setLogoUrl(e.target.value)}
-                        placeholder="Leave blank to use Theme logo"
-                        style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb' }}
-                    />  
+                      value={logoUrl}
+                      onChange={e => setLogoUrl(e.target.value)}
+                      placeholder="Leave blank to use Theme logo"
+                      style={{
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                      }}
+                    />
                   </div>
 
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>HTML Body (template)</div>
+                  <div style={{marginTop: 12}}>
+                    <div
+                      style={{fontSize: 13, fontWeight: 700, marginBottom: 6}}
+                    >
+                      HTML Body (template)
+                    </div>
                     <textarea
                       value={htmlTemplate}
                       onChange={e => setHtmlTemplate(e.target.value)}
                       rows={12}
-                      style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }}
+                      style={{
+                        width: '100%',
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      }}
                     />
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
-                      Use <code>{'{{var}}'}</code> for escaped values and <code>{'{{{var}}}'}</code> for raw HTML inserts.
+                    <div style={{fontSize: 12, color: '#6b7280', marginTop: 6}}>
+                      Use <code>{'{{var}}'}</code> for escaped values and{' '}
+                      <code>{'{{{var}}}'}</code> for raw HTML inserts.
                     </div>
                   </div>
 
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Text Body (optional)</div>
+                  <div style={{marginTop: 12}}>
+                    <div
+                      style={{fontSize: 13, fontWeight: 700, marginBottom: 6}}
+                    >
+                      Text Body (optional)
+                    </div>
                     <textarea
                       value={textTemplate}
                       onChange={e => setTextTemplate(e.target.value)}
                       rows={6}
-                      style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }}
+                      style={{
+                        width: '100%',
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      }}
                     />
                   </div>
 
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Sample Data (JSON)</div>
+                  <div style={{marginTop: 12}}>
+                    <div
+                      style={{fontSize: 13, fontWeight: 700, marginBottom: 6}}
+                    >
+                      Sample Data (JSON)
+                    </div>
                     <textarea
                       value={sampleJson}
                       onChange={e => setSampleJson(e.target.value)}
                       rows={8}
-                      style={{ width: '100%', padding: 10, borderRadius: 10, border: '1px solid #e5e7eb', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }}
+                      style={{
+                        width: '100%',
+                        padding: 10,
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      }}
                     />
                   </div>
 
-                  <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 10,
+                      marginTop: 14,
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     <button
                       onClick={saveTemplate}
                       disabled={busy}
-                      style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 600 }}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 10,
+                        border: 'none',
+                        background: '#2563eb',
+                        color: '#fff',
+                        fontWeight: 600,
+                      }}
                     >
                       Save
                     </button>
@@ -535,7 +728,12 @@ export default function EmailTemplatesPage() {
                     <button
                       onClick={resetToDefault}
                       disabled={busy}
-                      style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff' }}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                        background: '#fff',
+                      }}
                     >
                       Reset to Default
                     </button>
@@ -543,22 +741,41 @@ export default function EmailTemplatesPage() {
                     <button
                       onClick={doPreview}
                       disabled={busy}
-                      style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff' }}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 10,
+                        border: '1px solid #e5e7eb',
+                        background: '#fff',
+                      }}
                     >
                       Preview
                     </button>
 
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div
+                      style={{display: 'flex', gap: 8, alignItems: 'center'}}
+                    >
                       <input
                         value={testTo}
                         onChange={e => setTestTo(e.target.value)}
                         placeholder="Test send to (email)"
-                        style={{ padding: 10, borderRadius: 10, border: '1px solid #e5e7eb', minWidth: 260 }}
+                        style={{
+                          padding: 10,
+                          borderRadius: 10,
+                          border: '1px solid #e5e7eb',
+                          minWidth: 260,
+                        }}
                       />
                       <button
                         onClick={testSend}
                         disabled={busy}
-                        style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#111827', color: '#fff', fontWeight: 600 }}
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: 10,
+                          border: 'none',
+                          background: '#111827',
+                          color: '#fff',
+                          fontWeight: 600,
+                        }}
                       >
                         Send
                       </button>
@@ -566,17 +783,31 @@ export default function EmailTemplatesPage() {
                   </div>
 
                   {preview?.html ? (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700 }}>Preview</div>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <div style={{marginTop: 16}}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          marginBottom: 8,
+                        }}
+                      >
+                        <div style={{fontSize: 13, fontWeight: 700}}>
+                          Preview
+                        </div>
+                        <div style={{fontSize: 12, color: '#6b7280'}}>
                           Subject: <b>{preview.subject}</b>
                         </div>
                       </div>
                       <iframe
                         title="Email preview"
                         srcDoc={preview.html}
-                        style={{ width: '100%', height: 520, border: '1px solid #e5e7eb', borderRadius: 12 }}
+                        style={{
+                          width: '100%',
+                          height: 520,
+                          border: '1px solid #e5e7eb',
+                          borderRadius: 12,
+                        }}
                       />
                     </div>
                   ) : null}
