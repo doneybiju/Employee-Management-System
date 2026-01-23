@@ -51,7 +51,7 @@ export default function RequestsReview() {
   const load = async () => {
     setIsLoading(true);
     try {
-      const data = await getJson<Row[]>(`/api/requests`);
+      const data = await getJson<Row[]>('/api/requests');
       setRows(data);
     } catch (error) {
       console.error('Failed to load requests:', error);
@@ -62,7 +62,7 @@ export default function RequestsReview() {
 
   const loadApprovedSheetUrl = async () => {
     try {
-      const data = await getJson<{url: string}>(`/api/requests/approved-sheet`);
+      const data = await getJson<{url: string}>('/api/requests/approved-sheet');
       setApprovedSheetUrl(data?.url || null);
     } catch {
       setApprovedSheetUrl(null);
@@ -96,7 +96,7 @@ export default function RequestsReview() {
 
   const act = async (id: number, action: 'approve' | 'reject') => {
     try {
-      let n = (
+      const n = (
         note[id] ??
         rows.find(r => r.id === id)?.reviewNote ??
         ''
