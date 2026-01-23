@@ -368,7 +368,10 @@ export default function ProjectsPage() {
         <div className="text-4xl mb-4">⚠️</div>
         <h2 className="text-xl font-medium mb-2">Error Loading Projects</h2>
         <p className="mb-4">{error}</p>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition-all" onClick={loadProjects}>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition-all"
+          onClick={loadProjects}
+        >
           Try Again
         </button>
       </div>
@@ -388,7 +391,9 @@ export default function ProjectsPage() {
       {/* Header Section */}
       <header className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-2xl font-medium text-gray-900">Project Dashboard</h1>
+          <h1 className="text-2xl font-medium text-gray-900">
+            Project Dashboard
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
             Manage your projects, track progress, and collaborate with your team
           </p>
@@ -407,15 +412,21 @@ export default function ProjectsPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-3xl font-semibold text-gray-900">{totalProjects}</div>
+          <div className="text-3xl font-semibold text-gray-900">
+            {totalProjects}
+          </div>
           <div className="text-sm text-gray-500 mt-1">Total Projects</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-3xl font-semibold text-gray-900">{inProgressProjects}</div>
+          <div className="text-3xl font-semibold text-gray-900">
+            {inProgressProjects}
+          </div>
           <div className="text-sm text-gray-500 mt-1">In Progress</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-          <div className="text-3xl font-semibold text-gray-900">{completedProjects}</div>
+          <div className="text-3xl font-semibold text-gray-900">
+            {completedProjects}
+          </div>
           <div className="text-sm text-gray-500 mt-1">Completed</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -434,7 +445,9 @@ export default function ProjectsPage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">All Projects</h2>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              🔍
+            </span>
             <input
               type="text"
               placeholder="Search projects..."
@@ -483,10 +496,16 @@ export default function ProjectsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.length > 0 ? (
           filteredProjects.map(project => (
-            <div key={project.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+            <div
+              key={project.id}
+              className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 flex flex-col justify-between h-full hover:shadow-md transition-shadow"
+            >
               <div className="mb-4">
                 <div className="flex items-start justify-between gap-4 mb-2">
-                  <h3 className="text-lg font-medium text-gray-900 line-clamp-1" title={project.title}>
+                  <h3
+                    className="text-lg font-medium text-gray-900 line-clamp-1"
+                    title={project.title}
+                  >
                     {project.title}
                   </h3>
 
@@ -521,7 +540,9 @@ export default function ProjectsPage() {
 
                 <div className="flex flex-col gap-2 text-sm text-gray-500">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs uppercase tracking-wider font-medium text-gray-400">Status</span>
+                    <span className="text-xs uppercase tracking-wider font-medium text-gray-400">
+                      Status
+                    </span>
                     <span
                       className="px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1"
                       style={{
@@ -534,7 +555,9 @@ export default function ProjectsPage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs uppercase tracking-wider font-medium text-gray-400">Due</span>
+                    <span className="text-xs uppercase tracking-wider font-medium text-gray-400">
+                      Due
+                    </span>
                     <span>
                       {project.dueDate
                         ? formatDate(project.dueDate)
@@ -584,7 +607,9 @@ export default function ProjectsPage() {
 
                 <div className="flex gap-2 shrink-0">
                   <Link href={`/projects/${project.id}`}>
-                    <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">View →</button>
+                    <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                      View →
+                    </button>
                   </Link>
 
                   {canManage && (
@@ -615,7 +640,9 @@ export default function ProjectsPage() {
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center p-12 bg-white rounded-lg border border-gray-200 shadow-sm text-gray-500">
             <div className="text-4xl mb-4">📁</div>
-            <h3 className="text-lg font-medium text-gray-900">No projects found</h3>
+            <h3 className="text-lg font-medium text-gray-900">
+              No projects found
+            </h3>
             <p className="text-sm mt-1 mb-4">
               {searchQuery || statusFilter !== 'ALL'
                 ? 'Try adjusting your search or filter criteria'
@@ -647,15 +674,22 @@ export default function ProjectsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4 shadow-xl">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium text-gray-900">Edit Project</h2>
-              <button className="text-gray-400 hover:text-gray-600 text-2xl leading-none" onClick={closeEdit}>
+              <h2 className="text-xl font-medium text-gray-900">
+                Edit Project
+              </h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                onClick={closeEdit}
+              >
                 ×
               </button>
             </div>
 
             <form onSubmit={saveEdit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Title *
+                </label>
                 <input
                   type="text"
                   required
@@ -667,7 +701,9 @@ export default function ProjectsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
                 <textarea
                   value={editDescription}
                   onChange={e => setEditDescription(e.target.value)}
@@ -678,7 +714,9 @@ export default function ProjectsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Date
+                </label>
                 <input
                   type="date"
                   value={editDueDate}
@@ -689,7 +727,9 @@ export default function ProjectsPage() {
 
               {/* ADD status select in Edit modal */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   value={editingProject?.status || 'NOT_STARTED'}
                   onChange={e =>
@@ -733,7 +773,9 @@ export default function ProjectsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4 shadow-xl">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium text-gray-900">Create New Project</h2>
+              <h2 className="text-xl font-medium text-gray-900">
+                Create New Project
+              </h2>
               <button
                 className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
                 onClick={() => setShowCreateModal(false)}
@@ -744,7 +786,9 @@ export default function ProjectsPage() {
 
             <form onSubmit={createProject}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Title *
+                </label>
                 <input
                   type="text"
                   required
@@ -756,7 +800,9 @@ export default function ProjectsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -768,7 +814,9 @@ export default function ProjectsPage() {
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date
+                  </label>
                   <input
                     type="date"
                     value={dueDate}
@@ -777,7 +825,9 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
                   <select
                     value={status}
                     onChange={e => setStatus(e.target.value as any)}
@@ -792,7 +842,9 @@ export default function ProjectsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Add Team Members</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Add Team Members
+                </label>
                 <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto divide-y divide-gray-100">
                   {memberCandidates.map(member => (
                     <div
@@ -814,7 +866,9 @@ export default function ProjectsPage() {
                         {getInitials(member.name)}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {member.name}
+                        </div>
                         <div className="text-xs text-gray-500">
                           {member.email}
                         </div>

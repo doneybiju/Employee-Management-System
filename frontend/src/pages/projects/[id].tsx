@@ -267,7 +267,7 @@ export default function ProjectDetailPage() {
       const names = assigned.map(t => `• ${t.title}`).join('\n');
       alert(
         `Cannot remove ${memberName}.\n\nThis user is assigned to the following task(s):\n${names}\n\n` +
-          `Please unassign/reassign them first.`,
+          'Please unassign/reassign them first.',
       );
       return;
     }
@@ -289,7 +289,7 @@ export default function ProjectDetailPage() {
           const names = j.tasks.map((t: any) => `• ${t.title}`).join('\n');
           throw new Error(
             `Cannot remove ${memberName}.\n\nThis user is assigned to:\n${names}\n\n` +
-              `Please unassign/reassign them first.`,
+              'Please unassign/reassign them first.',
           );
         }
         throw new Error(j?.error || `${res.status} ${res.statusText}`);
