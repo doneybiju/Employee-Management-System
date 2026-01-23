@@ -107,7 +107,7 @@ export default function Navigation() {
 
       <aside
         ref={sidebarRef}
-        className={`sidebar${mobileOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}
+        className={`sidebar w-64 bg-white border-r border-gray-200 h-screen${mobileOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}
         aria-hidden={isMobile ? !mobileOpen : collapsed}
       >
         <div className="logo">

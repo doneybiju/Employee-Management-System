@@ -309,14 +309,14 @@ export default function AdminUsers() {
     setCountry('');
   };
 
-  if (loading) return <main style={{padding: 24}}>Loading…</main>;
+  if (loading) return <main className="p-8">Loading…</main>;
   if (!isStaff)
     return (
-      <main style={{padding: 24}}>
+      <main className="p-8">
         <Link href="/login">Login</Link> required.
       </main>
     );
-  if (error) return <main style={{padding: 24, color: '#b00'}}>{error}</main>;
+  if (error) return <main className="p-8 text-red-600">{error}</main>;
 
   // Helper: try multiple backend endpoints to delete a Workspace user
   const tryGsuiteDelete = async (
@@ -628,72 +628,46 @@ export default function AdminUsers() {
   const renderCells = (r: Row) => (
     <>
       {/* name */}
-      <td
-        style={{
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          maxWidth: 240,
-        }}
-      >
+      <td className="px-6 py-4 text-sm font-medium text-gray-900" style={{maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
         {r.name}
       </td>
       {/* companyEmail */}
-      <td
-        style={{
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          maxWidth: 260,
-        }}
-      >
+      <td className="px-6 py-4 text-sm text-gray-700" style={{maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
         {r.companyEmail || '—'}
       </td>
       {/* department */}
-      <td>{r.department || '—'}</td>
+      <td className="px-6 py-4 text-sm text-gray-700">{r.department || '—'}</td>
       {/* position */}
-      <td>{r.position || '—'}</td>
+      <td className="px-6 py-4 text-sm text-gray-700">{r.position || '—'}</td>
       {/* start */}
-      <td>{dmy(r.joiningDate)}</td>
+      <td className="px-6 py-4 text-sm text-gray-700">{dmy(r.joiningDate)}</td>
       {/* end */}
-      <td>{dmy(r.leavingDate)}</td>
+      <td className="px-6 py-4 text-sm text-gray-700">{dmy(r.leavingDate)}</td>
 
       {/* Details */}
-      <td>
+      <td className="px-6 py-4 text-sm">
         <button
           onClick={() => openDetails(r)}
-          style={{
-            background: '#eef6ff',
-            border: '1px solid #cfe3ff',
-            color: '#1e62d0',
-            padding: '6px 10px',
-            borderRadius: 8,
-            cursor: 'pointer',
-          }}
+          className="px-3 py-1 bg-white border border-blue-200 text-blue-600 rounded-md text-sm hover:bg-blue-50 transition-colors"
           title="See full details"
         >
           Details
         </button>
       </td>
       {/* Actions */}
-      <td>
-        <div style={{display: 'flex', gap: 10}}>
+      <td className="px-6 py-4 text-sm">
+        <div className="flex gap-3">
           <button
             title="Edit"
             onClick={() => openEdit(r)}
-            style={{background: 'none', border: 'none', cursor: 'pointer'}}
+            className="text-gray-500 hover:text-blue-600 transition-colors"
           >
             ✏️
           </button>
           <button
             title="Update History"
             onClick={() => openUpdateLog(r)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px',
-            }}
+            className="text-gray-500 hover:text-blue-600 transition-colors"
           >
             📋
           </button>
@@ -710,7 +684,7 @@ export default function AdminUsers() {
                     alert('Restore failed');
                   }
                 }}
-                style={{background: 'none', border: 'none', cursor: 'pointer'}}
+                className="text-gray-500 hover:text-green-600 transition-colors"
               >
                 🔓
               </button>
@@ -727,7 +701,7 @@ export default function AdminUsers() {
                     alert('Revoke failed');
                   }
                 }}
-                style={{background: 'none', border: 'none', cursor: 'pointer'}}
+                className="text-gray-500 hover:text-red-600 transition-colors"
               >
                 🔒
               </button>
@@ -736,7 +710,7 @@ export default function AdminUsers() {
           <button
             title="Deactivate & Delete login"
             onClick={() => handleDelete(r)}
-            style={{background: 'none', border: 'none', cursor: 'pointer'}}
+            className="text-gray-500 hover:text-red-600 transition-colors"
           >
             🗑️
           </button>
@@ -805,31 +779,14 @@ export default function AdminUsers() {
   };
 
   return (
-    <main style={{maxWidth: 1250, margin: '2rem auto', padding: 16}}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <h1 style={{marginRight: 'auto'}}>User Management</h1>
+    <main className="flex-1 p-8 bg-gray-50 h-screen overflow-y-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-medium text-gray-900">User Management</h1>
 
-        <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+        <div className="flex items-center gap-4">
           <Link
             href="/admin/import-users"
-            style={{
-              padding: '10px 16px',
-              border: '1px solid #ccc',
-              background: 'white',
-              color: '#111',
-              borderRadius: 8,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
+            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
             title="Import users from CSV"
           >
             ⬆️ Import Users
@@ -840,40 +797,20 @@ export default function AdminUsers() {
       </div>
 
       {/* Search & Filters */}
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #eee',
-          borderRadius: 10,
-          padding: 16,
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-          marginBottom: 16,
-        }}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
-            gap: 8,
-          }}
-        >
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <input
             placeholder="Search name, email, dept, position, ID…"
             value={q}
             onChange={e => setQ(e.target.value)}
-            style={{padding: 10, border: '1px solid #ddd', borderRadius: 8}}
+            className="input w-full"
           />
           <div>
-            <label style={{fontSize: 13, color: '#6b7280'}}>Department</label>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">Department</label>
             <select
               value={dep}
               onChange={e => setDep(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #ddd',
-                borderRadius: 8,
-              }}
+              className="input w-full"
             >
               <option value="all">All departments</option>
               {departments.map(d => (
@@ -884,16 +821,11 @@ export default function AdminUsers() {
             </select>
           </div>
           <div>
-            <label style={{fontSize: 13, color: '#6b7280'}}>Gender</label>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">Gender</label>
             <select
               value={gen}
               onChange={e => setGen(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #ddd',
-                borderRadius: 8,
-              }}
+              className="input w-full"
             >
               {['all', 'male', 'female', 'others'].map(v => (
                 <option key={v} value={v}>
@@ -905,7 +837,7 @@ export default function AdminUsers() {
             </select>
           </div>
           <div>
-            <label style={{fontSize: 13, color: '#6b7280'}}>Country</label>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">Country</label>
             <CountrySelect
               value={country}
               onChange={setCountry}
@@ -913,68 +845,41 @@ export default function AdminUsers() {
               allowClear
             />
           </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 12,
-              alignItems: 'end',
-              justifyContent: 'flex-end',
-            }}
-          >
+          <div className="flex items-end justify-end gap-2">
             {cfg?.selectable && isHR && (
               <button
                 onClick={() => setShowCols(true)}
-                style={{
-                  background: '#3498db',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px 16px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-all"
                 title="Configure which fields HR can see in Details"
               >
-                ▦ Select Columns
+                ▦ Columns
               </button>
             )}
             <button
               onClick={resetFilters}
-              style={{
-                background: '#e74c3c',
-                color: '#fff',
-                border: 'none',
-                padding: '10px 16px',
-                borderRadius: 8,
-                cursor: 'pointer',
-              }}
+              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded shadow-sm transition-all hover:bg-red-700"
             >
-              ⟲ Reset Filters
+              ⟲ Reset
             </button>
           </div>
         </div>
       </div>
 
       {/* Table (fixed 6 columns) */}
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #eee',
-          borderRadius: 10,
-          overflow: 'hidden',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-        }}
-      >
-        <table
-          width="100%"
-          cellPadding={12}
-          style={{borderCollapse: 'collapse'}}
-        >
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr style={{textAlign: 'left', background: '#f8f9fa'}}>
-              {renderThs()}
+            <tr className="bg-gray-50 border-b border-gray-100">
+              {TABLE_COLS.map(id => (
+                <th key={id} className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {thLabel(id)}
+                </th>
+              ))}
+              <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+              <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {filtered.map((r, i) => {
               const key =
                 r.userId != null
@@ -983,7 +888,7 @@ export default function AdminUsers() {
                     ? `i-${r.internId}`
                     : `idx-${i}-${r.companyEmail || ''}`;
               return (
-                <tr key={key} style={{borderBottom: '1px solid #f0f0f0'}}>
+                <tr key={key} className="hover:bg-gray-50 transition-colors">
                   {renderCells(r)}
                 </tr>
               );
@@ -992,7 +897,7 @@ export default function AdminUsers() {
               <tr>
                 <td
                   colSpan={TABLE_COLS.length + 2}
-                  style={{color: '#666', padding: 16}}
+                  className="px-6 py-4 text-center text-gray-500"
                 >
                   No users for this tab / filters.
                 </td>
@@ -1793,23 +1698,23 @@ function FragmentRow({label, value}: {label: string; value: string}) {
 }
 
 function Tabs({tab, onChange}: {tab: Tab; onChange: (t: Tab) => void}) {
-  const Btn = ({id, label}: {id: Tab; label: string}) => (
-    <button
-      onClick={() => onChange(id)}
-      style={{
-        padding: '10px 16px',
-        border: '1px solid #ccc',
-        background: tab === id ? '#2d8cf0' : 'white',
-        color: tab === id ? '#fff' : '#111',
-        textTransform: 'capitalize',
-        borderRadius: id === 'active' ? '8px 0 0 8px' : '0 8px 8px 0',
-      }}
-    >
-      {label}
-    </button>
-  );
+  const Btn = ({id, label}: {id: Tab; label: string}) => {
+    const active = tab === id;
+    return (
+      <button
+        onClick={() => onChange(id)}
+        className={`px-4 py-2 border text-sm font-medium transition-colors ${
+          active
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+        } ${id === 'active' ? 'rounded-l-lg border-r-0' : 'rounded-r-lg'}`}
+      >
+        {label}
+      </button>
+    );
+  };
   return (
-    <div style={{display: 'flex'}}>
+    <div className="flex">
       <Btn id="active" label="Active Users" />
       <Btn id="inactive" label="Inactive Users" />
     </div>
