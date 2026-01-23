@@ -4,6 +4,7 @@ import {useState, useEffect, useRef} from 'react';
 import {useRouter} from 'next/router';
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navigation() {
   const {isAuthenticated, logout, user, mustChangePassword} = useAuth();
@@ -174,11 +175,18 @@ export default function Navigation() {
         )}
 
         <div style={{marginTop: 'auto', padding: '12px 25px'}}>
+          <ThemeToggle />
           {isAuthenticated ? (
             <button
               onClick={logout}
               className="nav-item"
-              style={{width: '100%', textAlign: 'left'}}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
               Logout
             </button>

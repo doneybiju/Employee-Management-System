@@ -9,6 +9,17 @@
     0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 
+.dark,
+[data-theme='dark'] {
+  --background: #202124;
+  --surface: #2d2e31;
+  --text-high: #e8eaed;
+  --text-medium: #9aa0a6;
+  --border: #3c4043;
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.3),
+    0 1px 3px 1px rgba(0, 0, 0, 0.15);
+}
+
 html,
 body,
 #__next {
@@ -83,9 +94,24 @@ body,
   color: var(--primary);
 }
 
+/* Override hover for dark mode to not be too bright white */
+.dark .nav-item:hover,
+[data-theme='dark'] .nav-item:hover {
+  background: #3c4043;
+  color: #8ab4f8; /* Lighter blue for dark mode */
+}
+
 .nav-item.active {
   background: #e8f0fe;
   color: var(--primary);
+}
+
+/* Override active for dark mode */
+.dark .nav-item.active,
+[data-theme='dark'] .nav-item.active {
+  background: #41331c; /* A very slight tint or just stick to a dark highlight */
+  background: rgba(138, 180, 248, 0.24); /* Standard Google dark mode active state */
+  color: #8ab4f8;
 }
 
 .nav-item.has-children {
@@ -117,6 +143,12 @@ body,
 .nav-children .nav-item:hover {
   color: var(--primary);
   background: #f1f3f4;
+}
+
+.dark .nav-children .nav-item:hover,
+[data-theme='dark'] .nav-children .nav-item:hover {
+  background: #3c4043;
+  color: #8ab4f8;
 }
 
 .backdrop {
@@ -179,6 +211,12 @@ body,
   color: var(--primary);
 }
 
+.dark .menu-toggle:hover,
+[data-theme='dark'] .menu-toggle:hover {
+  background: #3c4043;
+  color: #8ab4f8;
+}
+
 .menu-toggle.hidden {
   opacity: 0;
   pointer-events: none;
@@ -196,6 +234,11 @@ body,
   margin: 0;
   font-weight: 700;
   color: var(--primary);
+}
+
+.dark .logo h1,
+[data-theme='dark'] .logo h1 {
+  color: #8ab4f8; /* Light blue logo in dark mode */
 }
 
 /* Content wrapper (optional if your pages use it) */
