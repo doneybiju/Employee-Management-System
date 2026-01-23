@@ -92,7 +92,7 @@ function Avatar({
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold shadow-sm ring-1 ring-blue-200 dark:ring-blue-800`}
+      className={`${sizeClasses[size]} rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold`}
     >
       {initials}
     </div>
@@ -108,7 +108,7 @@ function StatusBadge({
 }) {
   if (blocked) {
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-600 border border-red-500/20">
         Blocked
       </span>
     );
@@ -116,13 +116,13 @@ function StatusBadge({
   const s = (status || 'inactive').toLowerCase();
   if (s === 'active') {
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 border border-green-500/20">
         Active
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 text-gray-500 border border-gray-500/20">
       Inactive
     </span>
   );
@@ -165,21 +165,21 @@ function SideDrawer({
   if (!visible && !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
+    <>
+      {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}
       />
       {/* Panel */}
       <div
-        className={`relative w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 w-[500px] bg-white dark:bg-[#111] shadow-2xl z-50 transform transition-transform duration-300 ease-out border-l border-gray-200 dark:border-gray-800 flex flex-col ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
-        } flex flex-col h-full border-l border-gray-200 dark:border-gray-800`}
+        }`}
       >
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/50 dark:bg-gray-900/50 backdrop-blur sticky top-0 z-10">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/50 dark:bg-[#111]/50 backdrop-blur sticky top-0 z-10">
           <div className="text-lg font-semibold text-gray-900 dark:text-white">
             {title}
           </div>
@@ -195,7 +195,7 @@ function SideDrawer({
         </div>
         <div className="flex-1 overflow-y-auto p-6">{children}</div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -667,24 +667,24 @@ export default function AdminUsers() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700">
+            <thead className="sticky top-0 z-10 bg-gray-50/90 dark:bg-[#111]/90 backdrop-blur text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-200 dark:border-gray-800">
               <tr>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="py-4 px-6 font-semibold uppercase tracking-wider">
                   User
                 </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="py-4 px-6 font-semibold uppercase tracking-wider">
                   Role / Dept
                 </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="py-4 px-6 font-semibold uppercase tracking-wider">
                   Position
                 </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="py-4 px-6 font-semibold uppercase tracking-wider">
                   Status
                 </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">
+                <th className="py-4 px-6 font-semibold uppercase tracking-wider text-right">
                   Actions
                 </th>
               </tr>
@@ -693,7 +693,8 @@ export default function AdminUsers() {
               {filtered.map((r, i) => (
                 <tr
                   key={r.userId || r.internId || i}
-                  className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors h-16"
+                  className="group hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors h-16"
+                  onClick={() => openDetails(r)}
                 >
                   <td className="py-3 px-6">
                     <div className="flex items-center gap-3">
@@ -750,10 +751,10 @@ export default function AdminUsers() {
                           className="fixed inset-0 z-20 cursor-default"
                           onClick={() => setOpenMenuId(null)}
                         />
-                        <div className="absolute right-8 top-10 z-30 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 py-1 flex flex-col animate-in fade-in zoom-in-95 duration-100">
+                        <div className="absolute right-8 top-10 z-30 w-48 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 py-1 flex flex-col animate-in fade-in zoom-in-95 duration-100">
                           <button
                             onClick={() => openDetails(r)}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
                           >
                             <UserIcon size={14} /> View Details
                           </button>
@@ -762,7 +763,7 @@ export default function AdminUsers() {
                               openEdit(r);
                               setOpenMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
                           >
                             <Edit2 size={14} /> Edit User
                           </button>
@@ -771,11 +772,11 @@ export default function AdminUsers() {
                               openUpdateLog(r);
                               setOpenMenuId(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
                           >
                             <ClipboardList size={14} /> History
                           </button>
-                          <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
+                          <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
                           {r.userId != null &&
                             isSA &&
                             (r.blocked ? (
@@ -840,32 +841,63 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Side Drawer (Details) */}
+      {/* Side Drawer (Details & Edit) */}
       <SideDrawer
-        isOpen={!!view}
-        onClose={() => setView(null)}
+        isOpen={!!view || !!edit}
+        onClose={() => {
+          setView(null);
+          setEdit(null);
+          setPendingDelete(null);
+        }}
         title={
-          <div className="flex items-center gap-3">
-            <Avatar name={view?.name || 'User'} size="md" />
-            <div>
-              <div className="text-lg font-bold leading-tight">
-                {view?.name}
+          edit ? (
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg">
+                <Edit2 size={20} />
               </div>
-              <div className="text-xs text-gray-500 font-normal">
-                {view?.role}
+              <div>
+                <div className="text-lg font-bold leading-tight">Edit User</div>
+                <div className="text-xs text-gray-500 font-normal">
+                  Update details
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Avatar name={view?.name || 'User'} size="md" />
+              <div>
+                <div className="text-lg font-bold leading-tight">
+                  {view?.name}
+                </div>
+                <div className="text-xs text-gray-500 font-normal">
+                  {view?.role}
+                </div>
+              </div>
+            </div>
+          )
         }
         actions={
-          <button
-            onClick={() => {
-              if (view) openEdit(view);
-            }}
-            className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-medium hover:bg-blue-100 transition-colors"
-          >
-            Edit
-          </button>
+          view ? (
+            <button
+              onClick={() => {
+                if (view) openEdit(view);
+                setView(null); // Switch to edit mode
+              }}
+              className="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-medium hover:bg-blue-100 transition-colors"
+            >
+              Edit
+            </button>
+          ) : (
+            <button
+              onClick={() =>
+                saveEdit({thenDelete: pendingDelete ? true : false})
+              }
+              disabled={!edit?.internId}
+              className="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+            >
+              Save
+            </button>
+          )
         }
       >
         {view && (
@@ -963,179 +995,226 @@ export default function AdminUsers() {
             )}
           </div>
         )}
-      </SideDrawer>
 
-      {/* Edit Modal (Preserved & Styled) */}
-      {edit && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setEdit(null)}
-          />
-          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Edit User
+        {edit && (
+          <div className="space-y-8 pb-20">
+            {/* Identity Section */}
+            <section>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <UserIcon size={14} /> Identity
               </h3>
-              <button
-                onClick={() => setEdit(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto space-y-4">
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                  Name
-                </label>
-                <input
-                  className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                    Department
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Full Name
                   </label>
-                  <select
-                    className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-                    value={editDeptId ?? ''}
-                    onChange={e => {
-                      const v = e.target.value ? Number(e.target.value) : null;
-                      setEditDeptId(v);
-                      setEditPosId(null);
-                    }}
-                  >
-                    <option value="">—</option>
-                    {depts.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.departmentName}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Nationality
+                    </label>
+                    <input
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editNationality}
+                      onChange={e => setEditNationality(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Gender
+                    </label>
+                    <input
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editGender}
+                      onChange={e => setEditGender(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                    Position
-                  </label>
-                  <select
-                    className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
-                    value={editPosId ?? ''}
-                    disabled={editDeptId == null}
-                    onChange={e =>
-                      setEditPosId(
-                        e.target.value ? Number(e.target.value) : null,
-                      )
-                    }
-                  >
-                    <option value="">—</option>
-                    {(
-                      depts.find(d => d.id === editDeptId)?.positions || []
-                    ).map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                    Start Date
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Birthdate
                   </label>
                   <input
                     type="date"
-                    className="w-full p-2 border border-gray-200 rounded-lg"
-                    value={editStart}
-                    onChange={e => setEditStart(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                    value={editBirthdate}
+                    onChange={e => setEditBirthdate(e.target.value)}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Contact Section */}
+            <section>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Mail size={14} /> Contact
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Personal Email
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                    value={editPersonalEmail}
+                    onChange={e => setEditPersonalEmail(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                    End Date
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Phone Number
                   </label>
                   <input
-                    type="date"
-                    className="w-full p-2 border border-gray-200 rounded-lg"
-                    value={editEnd}
-                    onChange={e => setEditEnd(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                    value={editPhone}
+                    onChange={e => setEditPhone(e.target.value)}
                   />
                 </div>
               </div>
+            </section>
 
-              {/* Other Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  placeholder="Phone"
-                  className="p-2 border border-gray-200 rounded-lg"
-                  value={editPhone}
-                  onChange={e => setEditPhone(e.target.value)}
-                />
-                <input
-                  placeholder="Personal Email"
-                  type="email"
-                  className="p-2 border border-gray-200 rounded-lg"
-                  value={editPersonalEmail}
-                  onChange={e => setEditPersonalEmail(e.target.value)}
-                />
-              </div>
+            {/* Role Section */}
+            <section>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Briefcase size={14} /> Role & Department
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Department
+                    </label>
+                    <select
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editDeptId ?? ''}
+                      onChange={e => {
+                        const v = e.target.value
+                          ? Number(e.target.value)
+                          : null;
+                        setEditDeptId(v);
+                        setEditPosId(null);
+                      }}
+                    >
+                      <option value="">—</option>
+                      {depts.map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.departmentName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Position
+                    </label>
+                    <select
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editPosId ?? ''}
+                      disabled={editDeptId == null}
+                      onChange={e =>
+                        setEditPosId(
+                          e.target.value ? Number(e.target.value) : null,
+                        )
+                      }
+                    >
+                      <option value="">—</option>
+                      {(
+                        depts.find(d => d.id === editDeptId)?.positions || []
+                      ).map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-              {/* Role/Supervisor */}
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  placeholder="Supervisor"
-                  className="p-2 border border-gray-200 rounded-lg"
-                  value={editSupervisor}
-                  onChange={e => setEditSupervisor(e.target.value)}
-                />
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Supervisor
+                  </label>
+                  <input
+                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                    value={editSupervisor}
+                    onChange={e => setEditSupervisor(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editStart}
+                      onChange={e => setEditStart(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editEnd}
+                      onChange={e => setEditEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+
                 {isSA && (
-                  <select
-                    className="p-2 border border-gray-200 rounded-lg"
-                    value={editRole}
-                    onChange={e => setEditRole(e.target.value as any)}
-                  >
-                    <option value="intern">Intern</option>
-                    <option value="hr">HR</option>
-                    <option value="super_admin">Super Admin</option>
-                  </select>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      System Role
+                    </label>
+                    <select
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-black focus:ring-2 ring-blue-500/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+                      value={editRole}
+                      onChange={e => setEditRole(e.target.value as any)}
+                    >
+                      <option value="intern">Intern</option>
+                      <option value="hr">HR</option>
+                      <option value="super_admin">Super Admin</option>
+                    </select>
+                  </div>
                 )}
               </div>
-            </div>
-            <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800">
-              <button
-                onClick={() => setEdit(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              {pendingDelete ? (
-                <button
-                  onClick={() => saveEdit({thenDelete: true})}
-                  disabled={!edit?.internId || !editEnd}
-                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-                >
-                  Save & Delete
-                </button>
-              ) : (
-                <button
-                  onClick={() => saveEdit()}
-                  disabled={!edit?.internId}
-                  className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Save Changes
-                </button>
-              )}
-            </div>
+            </section>
+
+            {pendingDelete && (
+              <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-lg border border-red-200 dark:border-red-900/30">
+                <h4 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1">
+                  Deleting User
+                </h4>
+                <p className="text-xs text-red-600 dark:text-red-300">
+                  You are about to delete this user. Please ensure the End Date
+                  is set correctly before proceeding. This action will
+                  deactivate their access.
+                </p>
+                <div className="mt-3 flex justify-end">
+                  <button
+                    onClick={() => saveEdit({thenDelete: true})}
+                    disabled={!edit?.internId || !editEnd}
+                    className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-md font-medium hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    Confirm Deactivation
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </SideDrawer>
 
       {/* Update Log Modal */}
       {showUpdateLog && (
