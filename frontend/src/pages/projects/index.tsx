@@ -3,7 +3,6 @@ import {useEffect, useState, type FormEvent} from 'react';
 import Link from 'next/link';
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
-import styles from './index.module.css';
 
 type Project = {
   id: number;
@@ -356,8 +355,8 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner}></div>
+      <div className="flex-1 p-8 bg-gray-50 h-screen flex flex-col items-center justify-center text-gray-500">
+        <div className="text-4xl mb-4">⏳</div>
         <p>Loading projects...</p>
       </div>
     );
@@ -365,11 +364,11 @@ export default function ProjectsPage() {
 
   if (error) {
     return (
-      <div className={styles.errorContainer}>
-        <div className={styles.errorIcon}>⚠️</div>
-        <h2 className={styles.errorTitle}>Error Loading Projects</h2>
-        <p>{error}</p>
-        <button className={styles.retryBtn} onClick={loadProjects}>
+      <div className="flex-1 p-8 bg-gray-50 h-screen flex flex-col items-center justify-center text-red-600">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-xl font-medium mb-2">Error Loading Projects</h2>
+        <p className="mb-4">{error}</p>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition-all" onClick={loadProjects}>
           Try Again
         </button>
       </div>
@@ -385,68 +384,68 @@ export default function ProjectsPage() {
   ).length;
 
   return (
-    <div className={styles.container}>
+    <div className="flex-1 p-8 bg-gray-50 h-screen overflow-y-auto">
       {/* Header Section */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>Project Dashboard</h1>
-          <p className={styles.subtitle}>
+      <header className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-medium text-gray-900">Project Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">
             Manage your projects, track progress, and collaborate with your team
           </p>
-          {canManage && (
-            <button
-              className={styles.createBtn}
-              onClick={() => canManage && setShowCreateModal(true)}
-            >
-              <span>+</span>
-              Create New Project
-            </button>
-          )}
         </div>
+        {canManage && (
+          <button
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-all flex items-center gap-2"
+            onClick={() => canManage && setShowCreateModal(true)}
+          >
+            <span>+</span>
+            Create New Project
+          </button>
+        )}
       </header>
 
       {/* Stats Overview */}
-      <div className={styles.statsOverview}>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{totalProjects}</div>
-          <div className={styles.statLabel}>Total Projects</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-3xl font-semibold text-gray-900">{totalProjects}</div>
+          <div className="text-sm text-gray-500 mt-1">Total Projects</div>
         </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{inProgressProjects}</div>
-          <div className={styles.statLabel}>In Progress</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-3xl font-semibold text-gray-900">{inProgressProjects}</div>
+          <div className="text-sm text-gray-500 mt-1">In Progress</div>
         </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{completedProjects}</div>
-          <div className={styles.statLabel}>Completed</div>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-3xl font-semibold text-gray-900">{completedProjects}</div>
+          <div className="text-sm text-gray-500 mt-1">Completed</div>
         </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-3xl font-semibold text-gray-900">
             {totalProjects
               ? Math.round((completedProjects / totalProjects) * 100)
               : 0}
             %
           </div>
-          <div className={styles.statLabel}>Success Rate</div>
+          <div className="text-sm text-gray-500 mt-1">Success Rate</div>
         </div>
       </div>
 
       {/* Filter Section */}
-      <section className={styles.filterSection}>
-        <div className={styles.filterHeader}>
-          <h2 className={styles.filterTitle}>All Projects</h2>
-          <div className={styles.searchBox}>
-            <span className={styles.searchIcon}>🔍</span>
+      <section className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-medium text-gray-900">All Projects</h2>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
             <input
               type="text"
               placeholder="Search projects..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
 
-        <div className={styles.statusTabs}>
+        <div className="flex flex-wrap gap-2">
           {(
             [
               'ALL',
@@ -458,20 +457,21 @@ export default function ProjectsPage() {
           ).map(statusKey => (
             <button
               key={statusKey}
-              className={`${styles.statusTab} ${statusFilter === statusKey ? styles.active : ''}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all flex items-center gap-1.5 ${statusFilter === statusKey ? 'ring-2 ring-offset-1 ring-blue-100' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-600'}`}
               onClick={() => setStatusFilter(statusKey)}
               style={
                 statusFilter === statusKey
                   ? {
                       backgroundColor: statusColors[statusKey].bg,
                       color: statusColors[statusKey].text,
+                      borderColor: statusColors[statusKey].bg,
                     }
                   : {}
               }
             >
               <span>{statusIcons[statusKey]}</span>
               {statusKey.replace('_', ' ')}
-              <span className={styles.statusCount}>
+              <span className="ml-1 opacity-75 text-xs bg-white/30 px-1.5 py-0.5 rounded-full">
                 {getStatusCount(statusKey)}
               </span>
             </button>
@@ -480,20 +480,13 @@ export default function ProjectsPage() {
       </section>
 
       {/* Projects Grid */}
-      <div className={styles.projectsGrid}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.length > 0 ? (
           filteredProjects.map(project => (
-            <div key={project.id} className={styles.projectCard}>
-              <div className={styles.projectCardHeader}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}
-                >
-                  <h3 className={styles.projectTitle} style={{margin: 0}}>
+            <div key={project.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+              <div className="mb-4">
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <h3 className="text-lg font-medium text-gray-900 line-clamp-1" title={project.title}>
                     {project.title}
                   </h3>
 
@@ -509,7 +502,7 @@ export default function ProjectsPage() {
                       disabled={savingId === project.id}
                       aria-label="Update project status"
                       title="Update project status"
-                      style={{padding: '6px 8px', borderRadius: 6}}
+                      className="text-xs border-gray-300 rounded text-gray-600 py-1"
                     >
                       {STATUS_OPTIONS.map(s => (
                         <option key={s} value={s}>
@@ -521,32 +514,28 @@ export default function ProjectsPage() {
                 </div>
 
                 {project.description && (
-                  <p className={styles.projectDescription}>
+                  <p className="text-sm text-gray-500 line-clamp-2 mb-4">
                     {project.description}
                   </p>
                 )}
-              </div>
 
-              <div className={styles.projectCardBody}>
-                <div className={styles.projectMeta}>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Status</span>
-                    <span className={styles.metaValue}>
-                      <span
-                        className={styles.statusBadge}
-                        style={{
-                          backgroundColor: statusColors[project.status].bg,
-                          color: statusColors[project.status].text,
-                        }}
-                      >
-                        {statusIcons[project.status]}{' '}
-                        {project.status.replace('_', ' ')}
-                      </span>
+                <div className="flex flex-col gap-2 text-sm text-gray-500">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs uppercase tracking-wider font-medium text-gray-400">Status</span>
+                    <span
+                      className="px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1"
+                      style={{
+                        backgroundColor: statusColors[project.status].bg,
+                        color: statusColors[project.status].text,
+                      }}
+                    >
+                      {statusIcons[project.status]}{' '}
+                      {project.status.replace('_', ' ')}
                     </span>
                   </div>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Due Date</span>
-                    <span className={styles.metaValue}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs uppercase tracking-wider font-medium text-gray-400">Due</span>
+                    <span>
                       {project.dueDate
                         ? formatDate(project.dueDate)
                         : 'No due date'}
@@ -554,28 +543,25 @@ export default function ProjectsPage() {
                   </div>
                 </div>
 
-                <div className={styles.progressSection}>
-                  <div className={styles.progressHeader}>
-                    <span className={styles.progressLabel}>Progress</span>
-                    <span className={styles.progressPercent}>
-                      {project.progress}%
-                    </span>
+                <div className="mt-4">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Progress</span>
+                    <span>{project.progress}%</span>
                   </div>
-                  <div className={styles.progressBar}>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={styles.progressFill}
+                      className="bg-blue-600 h-1.5 rounded-full transition-all"
                       style={{width: `${project.progress}%`}}
                     ></div>
                   </div>
                 </div>
 
-                <div className={styles.membersSection}>
-                  <div className={styles.membersLabel}>Team Members</div>
-                  <div className={styles.membersList}>
+                <div className="mt-4">
+                  <div className="flex -space-x-2 overflow-hidden py-1">
                     {project.members.slice(0, 4).map((member, index) => (
                       <div
                         key={member.id}
-                        className={styles.memberAvatar}
+                        className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600"
                         style={{zIndex: 10 - index}}
                         title={member.name}
                       >
@@ -583,7 +569,7 @@ export default function ProjectsPage() {
                       </div>
                     ))}
                     {project.members.length > 4 && (
-                      <div className={styles.moreMembers}>
+                      <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-500">
                         +{project.members.length - 4}
                       </div>
                     )}
@@ -591,34 +577,34 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              <div className={styles.projectCardFooter}>
-                <span className={styles.metaValue}>
+              <div className="pt-4 border-t border-gray-100 flex justify-between items-center gap-4">
+                <span className="text-xs text-gray-400 whitespace-nowrap">
                   Updated {formatDate(project.updatedAt)}
                 </span>
 
-                <div style={{display: 'flex', gap: 8}}>
+                <div className="flex gap-2 shrink-0">
                   <Link href={`/projects/${project.id}`}>
-                    <button className={styles.viewBtn}>View Project →</button>
+                    <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">View →</button>
                   </Link>
 
                   {canManage && (
                     <>
                       <button
                         onClick={() => openEdit(project)}
-                        className={styles.editBtn}
+                        className="text-gray-400 hover:text-gray-600"
                         aria-label="Edit project"
                         title="Edit project"
                       >
-                        Edit
+                        ✏️
                       </button>
 
                       <button
                         onClick={() => deleteProject(project.id)}
-                        className={styles.deleteBtn}
+                        className="text-gray-400 hover:text-red-600"
                         aria-label="Delete project"
                         title="Delete project"
                       >
-                        Delete
+                        🗑️
                       </button>
                     </>
                   )}
@@ -627,17 +613,17 @@ export default function ProjectsPage() {
             </div>
           ))
         ) : (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📁</div>
-            <h3 className={styles.emptyTitle}>No projects found</h3>
-            <p className={styles.emptyText}>
+          <div className="col-span-full flex flex-col items-center justify-center p-12 bg-white rounded-lg border border-gray-200 shadow-sm text-gray-500">
+            <div className="text-4xl mb-4">📁</div>
+            <h3 className="text-lg font-medium text-gray-900">No projects found</h3>
+            <p className="text-sm mt-1 mb-4">
               {searchQuery || statusFilter !== 'ALL'
                 ? 'Try adjusting your search or filter criteria'
                 : 'Get started by creating your first project'}
             </p>
             {searchQuery || statusFilter !== 'ALL' ? (
               <button
-                className={styles.retryBtn}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                 onClick={() => {
                   setSearchQuery('');
                   setStatusFilter('ALL');
@@ -647,9 +633,8 @@ export default function ProjectsPage() {
               </button>
             ) : canManage ? (
               <button
-                className={styles.createBtn}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow-sm transition-all"
                 onClick={() => setShowCreateModal(true)}
-                style={{background: '#667eea', color: 'white'}}
               >
                 Create Your First Project
               </button>
@@ -659,52 +644,52 @@ export default function ProjectsPage() {
       </div>
 
       {editingProject && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Edit Project</h2>
-              <button className={styles.modalClose} onClick={closeEdit}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-medium text-gray-900">Edit Project</h2>
+              <button className="text-gray-400 hover:text-gray-600 text-2xl leading-none" onClick={closeEdit}>
                 ×
               </button>
             </div>
 
-            <form onSubmit={saveEdit} className={styles.modalForm}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Project Title *</label>
+            <form onSubmit={saveEdit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
                 <input
                   type="text"
                   required
                   value={editTitle}
                   onChange={e => setEditTitle(e.target.value)}
-                  className={styles.formInput}
+                  className="input w-full"
                   placeholder="Enter project title"
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Description</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   value={editDescription}
                   onChange={e => setEditDescription(e.target.value)}
-                  className={styles.formTextarea}
+                  className="input w-full"
                   placeholder="Project description (optional)"
                   rows={3}
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Due Date</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
                 <input
                   type="date"
                   value={editDueDate}
                   onChange={e => setEditDueDate(e.target.value)}
-                  className={styles.formInput}
+                  className="input w-full"
                 />
               </div>
 
               {/* ADD status select in Edit modal */}
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Status</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={editingProject?.status || 'NOT_STARTED'}
                   onChange={e =>
@@ -712,7 +697,7 @@ export default function ProjectsPage() {
                       p ? {...p, status: e.target.value as ProjectStatus} : p,
                     )
                   }
-                  className={styles.formSelect}
+                  className="input w-full"
                 >
                   {STATUS_OPTIONS.map(s => (
                     <option key={s} value={s}>
@@ -722,10 +707,10 @@ export default function ProjectsPage() {
                 </select>
               </div>
 
-              <div className={styles.modalActions}>
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
-                  className={styles.cancelBtn}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={closeEdit}
                 >
                   Cancel
@@ -733,7 +718,7 @@ export default function ProjectsPage() {
                 <button
                   type="submit"
                   disabled={savingEdit || !editTitle.trim()}
-                  className={styles.submitBtn}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   {savingEdit ? 'Saving…' : 'Save Changes'}
                 </button>
@@ -745,58 +730,58 @@ export default function ProjectsPage() {
 
       {/* Create Project Modal */}
       {canManage && showCreateModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Create New Project</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto m-4 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-medium text-gray-900">Create New Project</h2>
               <button
-                className={styles.modalClose}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
                 onClick={() => setShowCreateModal(false)}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={createProject} className={styles.modalForm}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Project Title *</label>
+            <form onSubmit={createProject}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Project Title *</label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  className={styles.formInput}
+                  className="input w-full"
                   placeholder="Enter project title"
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Description</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  className={styles.formTextarea}
+                  className="input w-full"
                   placeholder="Project description (optional)"
                   rows={3}
                 />
               </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Due Date</label>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
-                    className={styles.formInput}
+                    className="input w-full"
                   />
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Status</label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={status}
                     onChange={e => setStatus(e.target.value as any)}
-                    className={styles.formSelect}
+                    className="input w-full"
                   >
                     <option value="NOT_STARTED">Not Started</option>
                     <option value="IN_PROGRESS">In Progress</option>
@@ -806,16 +791,16 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Add Team Members</label>
-                <div className={styles.memberSelect}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Add Team Members</label>
+                <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto divide-y divide-gray-100">
                   {memberCandidates.map(member => (
                     <div
                       key={member.id}
-                      className={`${styles.memberOption} ${
+                      className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
                         selectedMembers.includes(member.id)
-                          ? styles.selected
-                          : ''
+                          ? 'bg-blue-50'
+                          : 'hover:bg-gray-50'
                       }`}
                       onClick={() => {
                         setSelectedMembers(prev =>
@@ -825,12 +810,12 @@ export default function ProjectsPage() {
                         );
                       }}
                     >
-                      <div className={styles.memberAvatarSmall}>
+                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
                         {getInitials(member.name)}
                       </div>
                       <div>
-                        <div style={{fontWeight: 600}}>{member.name}</div>
-                        <div style={{fontSize: '12px', opacity: 0.7}}>
+                        <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                        <div className="text-xs text-gray-500">
                           {member.email}
                         </div>
                       </div>
@@ -839,10 +824,10 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              <div className={styles.modalActions}>
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
-                  className={styles.cancelBtn}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={() => setShowCreateModal(false)}
                 >
                   Cancel
@@ -850,7 +835,7 @@ export default function ProjectsPage() {
                 <button
                   type="submit"
                   disabled={creating || !title.trim()}
-                  className={styles.submitBtn}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   {creating ? 'Creating...' : 'Create Project'}
                 </button>

@@ -3,7 +3,6 @@ import {useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {fetchWithAuth} from '@/lib/api';
 import {useAuth} from '@/context/AuthContext';
-import styles from './my-work.module.css';
 
 type Member = {id: number; name: string};
 type ProjectSummary = {
@@ -185,20 +184,19 @@ export default function MyWorkPage() {
 
   if (loading)
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner}></div>
+      <div className="flex-1 p-8 bg-gray-50 h-screen flex flex-col items-center justify-center text-gray-500">
         <p>Loading your work...</p>
       </div>
     );
 
   if (err)
     return (
-      <div className={styles.errorContainer}>
-        <div className={styles.errorIcon}>⚠️</div>
-        <h2>Error Loading Your Work</h2>
-        <p>{err}</p>
+      <div className="flex-1 p-8 bg-gray-50 h-screen flex flex-col items-center justify-center text-red-600">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-xl font-medium mb-2">Error Loading Your Work</h2>
+        <p className="mb-4">{err}</p>
         <button
-          className={styles.retryButton}
+          className="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition-all"
           onClick={() => window.location.reload()}
         >
           Try Again
@@ -207,264 +205,258 @@ export default function MyWorkPage() {
     );
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>My Work</h1>
-        <Link href="/projects" className={styles.backLink}>
+    <div className="flex-1 p-8 bg-gray-50 h-screen overflow-y-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-medium text-gray-900">My Work</h1>
+        <Link href="/projects" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
           ← Back to Projects
         </Link>
       </div>
 
-      {memberProjects.length === 0 ? (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>📊</div>
-          <h2>No Projects Assigned</h2>
-          <p>You're not a member of any projects yet.</p>
-        </div>
-      ) : (
-        memberProjects.map(p => {
-          const myTasksForProject = (tasksByProject[p.id] || []).sort(
-            (a, b) => a.id - b.id,
-          );
-          const projectProgress = getProjectProgress(p.id);
+      <div className="grid grid-cols-1 gap-6">
+        {memberProjects.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-lg border border-gray-200 shadow-sm text-gray-500">
+            <div className="text-4xl mb-4">📊</div>
+            <h2 className="text-lg font-medium mb-2">No Projects Assigned</h2>
+            <p>You're not a member of any projects yet.</p>
+          </div>
+        ) : (
+          memberProjects.map(p => {
+            const myTasksForProject = (tasksByProject[p.id] || []).sort(
+              (a, b) => a.id - b.id,
+            );
+            const projectProgress = getProjectProgress(p.id);
 
-          return (
-            <div key={p.id} className={styles.projectCard}>
-              <div className={styles.projectHeader}>
-                <div className={styles.projectInfo}>
-                  <h2 className={styles.projectTitle}>{p.title}</h2>
-                  {p.description && (
-                    <p className={styles.projectDescription}>{p.description}</p>
-                  )}
-                  <div className={styles.projectMeta}>
-                    <div className={styles.metaItem}>
-                      <span className={styles.metaIcon}>👥</span>
-                      <span>{p.members?.length || 0} members</span>
-                    </div>
-                    {p.dueDate && (
-                      <div className={styles.metaItem}>
-                        <span className={styles.metaIcon}>📅</span>
+            return (
+              <div key={p.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
+                  <div className="flex-1">
+                    <h2 className="text-xl font-medium text-gray-900">{p.title}</h2>
+                    {p.description && (
+                      <p className="text-sm text-gray-500 mt-1">{p.description}</p>
+                    )}
+                    <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <span>👥</span>
+                        <span>{p.members?.length || 0} members</span>
+                      </div>
+                      {p.dueDate && (
+                        <div className="flex items-center gap-1">
+                          <span>📅</span>
+                          <span>
+                            Due {new Date(p.dueDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <span>📋</span>
                         <span>
-                          Due {new Date(p.dueDate).toLocaleDateString()}
+                          {myTasksForProject.length} tasks assigned to you
                         </span>
                       </div>
-                    )}
-                    <div className={styles.metaItem}>
-                      <span className={styles.metaIcon}>📋</span>
-                      <span>
-                        {myTasksForProject.length} tasks assigned to you
-                      </span>
                     </div>
+
+                    {/* Progress Bar */}
+                    {myTasksForProject.length > 0 && (
+                      <div className="mt-3 max-w-xs">
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                          <span>Your Progress</span>
+                          <span>{projectProgress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all"
+                            style={{width: `${projectProgress}%`}}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Progress Bar */}
-                  {myTasksForProject.length > 0 && (
-                    <div className={styles.progressSection}>
-                      <div className={styles.progressHeader}>
-                        <h3 className={styles.progressTitle}>Your Progress</h3>
-                        <span>{projectProgress}%</span>
-                      </div>
-                      <div className={styles.progressBar}>
+                  <Link
+                    href={`/projects/${p.id}`}
+                    className="text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap ml-4"
+                  >
+                    Open Project →
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  {myTasksForProject.length ? (
+                    myTasksForProject.map(t => {
+                      const detail = taskDetail[t.id];
+                      const statusColor = statusColors[t.status];
+                      const statusIcon = statusIcons[t.status];
+                      const expanded = isExpanded(t.id);
+
+                      return (
                         <div
-                          className={styles.progressFill}
-                          style={{width: `${projectProgress}%`}}
-                        ></div>
-                      </div>
+                          key={t.id}
+                          className={`border rounded-lg transition-colors bg-white ${expanded ? 'border-blue-300 ring-1 ring-blue-100' : 'border-gray-200 hover:border-blue-300'}`}
+                        >
+                          <div
+                            className="p-4 cursor-pointer flex justify-between items-start"
+                            onClick={() => {
+                              toggleExpanded(t.id);
+                              if (!isExpanded(t.id))
+                                ensureTaskDetail(t).catch(() => {});
+                            }}
+                          >
+                            <div className="flex-1">
+                              <h3 className="text-sm font-medium text-gray-900">{t.title}</h3>
+                              <div className="flex flex-wrap gap-3 mt-2">
+                                {t.dueDate && (
+                                  <div
+                                    className={`text-xs flex items-center gap-1 ${new Date(t.dueDate) < new Date() ? 'text-red-600 font-medium' : 'text-gray-500'}`}
+                                  >
+                                    <span>📅</span>
+                                    <span>
+                                      Due{' '}
+                                      {new Date(t.dueDate).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                )}
+                                <div
+                                  className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 font-medium"
+                                  style={{
+                                    backgroundColor: statusColor.bg,
+                                    color: statusColor.text,
+                                  }}
+                                >
+                                  {statusIcon} {t.status.replace('_', ' ')}
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                            >
+                              ▼
+                            </div>
+                          </div>
+
+                          {expanded && (
+                            <div className="border-t border-gray-100 p-4 bg-gray-50 rounded-b-lg">
+                              <div className="mb-4">
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Update Status</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {(
+                                    [
+                                      'NOT_STARTED',
+                                      'IN_PROGRESS',
+                                      'BLOCKED',
+                                      'COMPLETED',
+                                    ] as const
+                                  ).map(s => {
+                                    const sColor = statusColors[s];
+                                    const sIcon = statusIcons[s];
+                                    return (
+                                      <button
+                                        key={s}
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          updateStatus(t.id, s).catch(err =>
+                                            alert(err.message),
+                                          );
+                                        }}
+                                        disabled={t.status === s}
+                                        className={`px-3 py-1.5 rounded text-xs font-medium border transition-all flex items-center gap-1 ${t.status === s ? 'ring-2 ring-offset-1 ring-blue-100' : 'bg-white hover:bg-gray-100'}`}
+                                        style={
+                                          t.status === s
+                                            ? {
+                                                backgroundColor: sColor.bg,
+                                                color: sColor.text,
+                                                borderColor: sColor.bg,
+                                              }
+                                            : {
+                                                borderColor: '#e5e7eb',
+                                                color: '#4b5563',
+                                              }
+                                        }
+                                      >
+                                        {sIcon} {s.replace('_', ' ')}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Checklist */}
+                              {detail ? (
+                                detail.checklistEnabled ? (
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-gray-500">📋</span>
+                                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Checklist
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-2">
+                                      {detail.checklistItems.length ? (
+                                        detail.checklistItems
+                                          .sort(
+                                            (a, b) =>
+                                              a.sort - b.sort || a.id - b.id,
+                                          )
+                                          .map(i => (
+                                            <div
+                                              key={i.id}
+                                              className="flex items-start gap-2 bg-white p-2 rounded border border-gray-200"
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                checked={i.done}
+                                                onChange={e => {
+                                                  e.stopPropagation();
+                                                  toggleChecklistItem(
+                                                    t,
+                                                    i.id,
+                                                    e.target.checked,
+                                                  ).catch(err =>
+                                                    alert(err.message),
+                                                  );
+                                                }}
+                                                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                              />
+                                              <span
+                                                className={`text-sm ${i.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}
+                                              >
+                                                {i.title}
+                                              </span>
+                                            </div>
+                                          ))
+                                      ) : (
+                                        <div className="text-sm text-gray-500 italic">
+                                          No checklist items yet.
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-sm text-gray-500 italic">
+                                    Checklist is disabled for this task.
+                                  </div>
+                                )
+                              ) : (
+                                <div className="text-sm text-gray-500 animate-pulse">
+                                  Loading checklist...
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                      <p>No tasks assigned to you in this project.</p>
                     </div>
                   )}
                 </div>
-
-                <Link
-                  href={`/projects/${p.id}`}
-                  className={styles.openProjectLink}
-                >
-                  Open Project →
-                </Link>
               </div>
-
-              <div className={styles.tasksSection}>
-                {myTasksForProject.length ? (
-                  myTasksForProject.map(t => {
-                    const detail = taskDetail[t.id];
-                    const statusColor = statusColors[t.status];
-                    const statusIcon = statusIcons[t.status];
-
-                    return (
-                      <div
-                        key={t.id}
-                        className={`${styles.taskCard} ${isExpanded(t.id) ? styles.expanded : ''}`}
-                      >
-                        <div
-                          className={styles.taskHeader}
-                          onClick={() => {
-                            toggleExpanded(t.id);
-                            if (!isExpanded(t.id))
-                              ensureTaskDetail(t).catch(() => {});
-                          }}
-                        >
-                          <div className={styles.taskInfo}>
-                            <h3 className={styles.taskTitle}>{t.title}</h3>
-                            <div className={styles.taskMeta}>
-                              {t.dueDate && (
-                                <div
-                                  className={`${styles.dueDate} ${new Date(t.dueDate) < new Date() ? styles.overdue : ''}`}
-                                >
-                                  <span>📅</span>
-                                  <span>
-                                    Due{' '}
-                                    {new Date(t.dueDate).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              )}
-                              <div
-                                className={`${styles.taskStatus} ${
-                                  t.status === 'NOT_STARTED'
-                                    ? styles.statusNotStarted
-                                    : t.status === 'IN_PROGRESS'
-                                      ? styles.statusInProgress
-                                      : t.status === 'BLOCKED'
-                                        ? styles.statusBlocked
-                                        : styles.statusCompleted
-                                }`}
-                                style={{
-                                  backgroundColor: statusColor.bg,
-                                  color: statusColor.text,
-                                }}
-                              >
-                                {statusIcon} {t.status.replace('_', ' ')}
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`${styles.expandIcon} ${isExpanded(t.id) ? styles.expanded : ''}`}
-                          >
-                            ▼
-                          </div>
-                        </div>
-
-                        {isExpanded(t.id) && (
-                          <div className={styles.taskContent}>
-                            <div className={styles.statusActions}>
-                              <h4>Update Status</h4>
-                              <div className={styles.statusButtons}>
-                                {(
-                                  [
-                                    'NOT_STARTED',
-                                    'IN_PROGRESS',
-                                    'BLOCKED',
-                                    'COMPLETED',
-                                  ] as const
-                                ).map(s => {
-                                  const sColor = statusColors[s];
-                                  const sIcon = statusIcons[s];
-                                  return (
-                                    <button
-                                      key={s}
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        updateStatus(t.id, s).catch(err =>
-                                          alert(err.message),
-                                        );
-                                      }}
-                                      disabled={t.status === s}
-                                      className={`${styles.statusButton} ${t.status === s ? styles.active : ''}`}
-                                      style={
-                                        t.status === s
-                                          ? {
-                                              backgroundColor: sColor.bg,
-                                              color: sColor.text,
-                                              borderColor: sColor.bg,
-                                            }
-                                          : {}
-                                      }
-                                    >
-                                      {sIcon} {s.replace('_', ' ')}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Checklist */}
-                            {detail ? (
-                              detail.checklistEnabled ? (
-                                <div className={styles.checklistSection}>
-                                  <div className={styles.checklistHeader}>
-                                    <span className={styles.checklistIcon}>
-                                      📋
-                                    </span>
-                                    <h4 className={styles.checklistTitle}>
-                                      Checklist
-                                    </h4>
-                                  </div>
-                                  <div className={styles.checklistItems}>
-                                    {detail.checklistItems.length ? (
-                                      detail.checklistItems
-                                        .sort(
-                                          (a, b) =>
-                                            a.sort - b.sort || a.id - b.id,
-                                        )
-                                        .map(i => (
-                                          <div
-                                            key={i.id}
-                                            className={styles.checklistItem}
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={i.done}
-                                              onChange={e => {
-                                                e.stopPropagation();
-                                                toggleChecklistItem(
-                                                  t,
-                                                  i.id,
-                                                  e.target.checked,
-                                                ).catch(err =>
-                                                  alert(err.message),
-                                                );
-                                              }}
-                                              className={
-                                                styles.checklistCheckbox
-                                              }
-                                            />
-                                            <span
-                                              className={`${styles.checklistText} ${i.done ? styles.completed : ''}`}
-                                            >
-                                              {i.title}
-                                            </span>
-                                          </div>
-                                        ))
-                                    ) : (
-                                      <div className={styles.checklistEmpty}>
-                                        No checklist items yet.
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className={styles.checklistDisabled}>
-                                  Checklist is disabled for this task.
-                                </div>
-                              )
-                            ) : (
-                              <div className={styles.checklistLoading}>
-                                Loading checklist...
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className={styles.noTasks}>
-                    <p>No tasks assigned to you in this project.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
