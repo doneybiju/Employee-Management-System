@@ -3,7 +3,8 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #1a1a1a;
   background: #f8fafc;
   min-height: 100vh;
@@ -21,7 +22,7 @@
   padding: 8px 16px;
   border-radius: 8px;
   background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .backButton:hover {
@@ -34,7 +35,7 @@
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 32px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
 }
 
@@ -134,7 +135,7 @@
   background: white;
   border-radius: 16px;
   padding: 28px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
 }
 
@@ -157,7 +158,7 @@
 
 .memberCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   border-color: #0070f3;
 }
 
@@ -198,7 +199,7 @@
   background: white;
   border-radius: 16px;
   padding: 28px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
 }
 
@@ -219,13 +220,13 @@
 
 .taskCard:hover {
   border-color: #e2e8f0;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
 .taskCard.expanded {
   border-color: #0070f3;
-  box-shadow: 0 12px 40px rgba(0,112,243,0.15);
+  box-shadow: 0 12px 40px rgba(0, 112, 243, 0.15);
 }
 
 .taskHeader {
@@ -296,7 +297,8 @@
   flex-wrap: wrap;
 }
 
-.assigneePreview, .dueDatePreview {
+.assigneePreview,
+.dueDatePreview {
   font-size: 14px;
   color: #64748b;
   display: flex;
@@ -362,8 +364,14 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .taskDescriptionSection {
@@ -613,7 +621,7 @@
 .checklistInput:focus {
   outline: none;
   border-color: #0070f3;
-  box-shadow: 0 0 0 3px rgba(0,112,243,0.1);
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
 }
 
 .addItemBtn {
@@ -718,7 +726,7 @@
 .statusActionBtn:hover:not(.active):not(:disabled) {
   border-color: #0070f3;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .statusActionBtn.active {
@@ -779,7 +787,7 @@
 .formSelect:focus {
   outline: none;
   border-color: #0070f3;
-  box-shadow: 0 0 0 3px rgba(0,112,243,0.1);
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
 }
 
 .formRow {
@@ -837,7 +845,8 @@
 }
 
 /* Buttons */
-.addMemberBtn, .createTaskBtn {
+.addMemberBtn,
+.createTaskBtn {
   background: linear-gradient(135deg, #0070f3, #00c4ff);
   color: white;
   border: none;
@@ -849,12 +858,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(0,112,243,0.3);
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
 }
 
-.addMemberBtn:hover, .createTaskBtn:hover {
+.addMemberBtn:hover,
+.createTaskBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,112,243,0.4);
+  box-shadow: 0 6px 20px rgba(0, 112, 243, 0.4);
 }
 
 /* Empty States */
@@ -903,8 +913,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .errorContainer {
@@ -914,7 +928,7 @@
   margin: 40px auto;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .errorIcon {
@@ -951,7 +965,7 @@
   margin: 40px auto;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .notFound h2 {
@@ -976,7 +990,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -992,13 +1006,19 @@
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalSlideIn 0.3s ease;
 }
 
 @keyframes modalSlideIn {
-  from { opacity: 0; transform: scale(0.9) translateY(-20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modalHeader {
@@ -1046,55 +1066,55 @@
   .container {
     padding: 16px;
   }
-  
+
   .projectHeader {
     padding: 24px;
   }
-  
+
   .projectTitle {
     font-size: 2rem;
   }
-  
+
   .projectTitleSection {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .projectMeta {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .sectionHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .taskTitleSection {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .taskPreviewMeta {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .formRow {
     grid-template-columns: 1fr;
   }
-  
+
   .statusActionsGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .editActions {
     flex-direction: column;
   }
-  
+
   .modal {
     margin: 0;
     max-height: 100vh;
@@ -1106,11 +1126,11 @@
   .membersGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .taskDetailsGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .checklistTitle {
     flex-direction: column;
     align-items: flex-start;
@@ -1125,26 +1145,26 @@
   gap: 8px;
   cursor: pointer;
   user-select: none;
-  line-height: 1;        /* keeps text vertically centered with the box */
+  line-height: 1; /* keeps text vertically centered with the box */
 }
 .checkbox {
   width: 18px;
   height: 18px;
-  margin: 0;             /* remove default checkbox vertical offset */
+  margin: 0; /* remove default checkbox vertical offset */
   vertical-align: middle;
 }
 
 /* --- Create Task: checklist item input + X button --- */
 .checklistItemInput {
-  display: flex;         /* line input + button on one row */
-  align-items: center;   /* vertically center both */
+  display: flex; /* line input + button on one row */
+  align-items: center; /* vertically center both */
   gap: 8px;
   margin-top: 8px;
 }
 
 /* limit to the input inside the checklist row so we don't affect other inputs */
 .checklistItemInput .formInput {
-  height: 38px;          /* same height as the remove button below */
+  height: 38px; /* same height as the remove button below */
   padding: 8px 10px;
   line-height: 1.2;
 }
@@ -1157,7 +1177,7 @@
   width: 38px;
   height: 38px;
   padding: 0;
-  line-height: 1;        /* prevents vertical wobble from the × glyph */
+  line-height: 1; /* prevents vertical wobble from the × glyph */
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: #f9fafb;
@@ -1166,7 +1186,6 @@
 .removeItemBtn:hover {
   background: #f3f4f6;
 }
-
 
 /* Align the Enable-checklist row */
 .checkboxLabel {
@@ -1207,10 +1226,16 @@
   background: #f9fafb;
   cursor: pointer;
 }
-.removeItemBtn:hover { background: #f3f4f6; }
+.removeItemBtn:hover {
+  background: #f3f4f6;
+}
 
 /* Buttons in the modal footer — make Create Task same shape as Cancel but blue */
-.modalActions { display: flex; gap: 8px; margin-top: 16px; }
+.modalActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
 
 /* shared button sizing */
 .cancelBtn,
@@ -1232,7 +1257,9 @@
   color: #111827;
   border-color: #e5e7eb;
 }
-.cancelBtn:hover { background: #f9fafb; }
+.cancelBtn:hover {
+  background: #f9fafb;
+}
 
 /* create task = primary blue */
 .submitBtn {
@@ -1248,5 +1275,3 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
-
-

@@ -1,14 +1,13 @@
 // frontend/src/pages/admin/index.tsx
 import Link from 'next/link';
 import Head from 'next/head';
-import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import {useEffect, useMemo, useState} from 'react';
+import {useAuth} from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { fetchWithAuth } from '@/lib/api';
+import {fetchWithAuth} from '@/lib/api';
 
 import UpcomingDeadlines from '@/components/UpcomingDeadlines';
-import { Deadline } from '@/types/dashboard';
-
+import {Deadline} from '@/types/dashboard';
 
 type Role = 'intern' | 'hr' | 'super_admin';
 
@@ -21,12 +20,16 @@ type MeSummary = {
   daysLeft: number | null;
 };
 
-type PeopleStats = { interns: number; employees: number; teamLeads: number };
+type PeopleStats = {interns: number; employees: number; teamLeads: number};
 
 function AdminHome() {
-  const { user, loading } = useAuth();
+  const {user, loading} = useAuth();
   const role = (user?.role ?? 'intern') as Role;
-  const [missingDocs, setMissingDocs] = useState<{ count: number; total: number; percent: number } | null>(null);
+  const [missingDocs, setMissingDocs] = useState<{
+    count: number;
+    total: number;
+    percent: number;
+  } | null>(null);
 
   // Which tabs are allowed for this user?
   const tabs = useMemo<string[]>(() => {
@@ -50,7 +53,9 @@ function AdminHome() {
     if (!user) return;
     (async () => {
       try {
-        const r = await fetchWithAuth('/api/stats/deadlines', { cache: 'no-store' as RequestCache });
+        const r = await fetchWithAuth('/api/stats/deadlines', {
+          cache: 'no-store' as RequestCache,
+        });
         const j = await r.json();
         setDeadlines(Array.isArray(j?.items) ? j.items : []);
       } catch {
@@ -67,12 +72,15 @@ function AdminHome() {
         const res = await fetchWithAuth('/api/stats/me');
         const d = await res.json();
         const s: MeSummary = {
-          status: d?.status ? String(d.status).toLowerCase() as MeSummary['status'] : null,
+          status: d?.status
+            ? (String(d.status).toLowerCase() as MeSummary['status'])
+            : null,
           startDate: d?.startDate ? new Date(d.startDate).toISOString() : null,
           endDate: d?.endDate ? new Date(d.endDate).toISOString() : null,
           department: d?.department ?? null,
           position: d?.position ?? null,
-          daysLeft: typeof d?.daysRemaining === 'number' ? d.daysRemaining : null,
+          daysLeft:
+            typeof d?.daysRemaining === 'number' ? d.daysRemaining : null,
         };
         setSummary(s);
       } catch {
@@ -87,30 +95,29 @@ function AdminHome() {
     if (role !== 'hr' && role !== 'super_admin') return;
 
     (async () => {
-  try {
-    const res = await fetchWithAuth('/api/stats/admin/summary', { cache: 'no-store' as RequestCache });
-    const d = await res.json();
+      try {
+        const res = await fetchWithAuth('/api/stats/admin/summary', {
+          cache: 'no-store' as RequestCache,
+        });
+        const d = await res.json();
 
-    setPeople({
-      interns: Number(d?.activeInterns ?? 0),
-      employees: Number(d?.activeEmployees ?? 0),
-      teamLeads: Number(d?.activeTeamLeads ?? 0),
-    });
+        setPeople({
+          interns: Number(d?.activeInterns ?? 0),
+          employees: Number(d?.activeEmployees ?? 0),
+          teamLeads: Number(d?.activeTeamLeads ?? 0),
+        });
 
-    setMissingDocs({
-      count: Number(d?.missingDocs?.count ?? 0),
-      total: Number(d?.missingDocs?.total ?? 0),
-      percent: Number(d?.missingDocs?.percent ?? 0),
-    });
-  } catch {
-    setPeople({ interns: 0, employees: 0, teamLeads: 0 });
-    setMissingDocs({ count: 0, total: 0, percent: 0 });
-  }
-})();
-
+        setMissingDocs({
+          count: Number(d?.missingDocs?.count ?? 0),
+          total: Number(d?.missingDocs?.total ?? 0),
+          percent: Number(d?.missingDocs?.percent ?? 0),
+        });
+      } catch {
+        setPeople({interns: 0, employees: 0, teamLeads: 0});
+        setMissingDocs({count: 0, total: 0, percent: 0});
+      }
+    })();
   }, [user, role]);
-
-  
 
   if (loading) {
     return (
@@ -123,13 +130,22 @@ function AdminHome() {
     );
   }
 
-  if (!user) return <main style={{ padding: 24 }}><Link href="/login">Login</Link> required.</main>;
+  if (!user)
+    return (
+      <main style={{padding: 24}}>
+        <Link href="/login">Login</Link> required.
+      </main>
+    );
   if (role !== 'hr' && role !== 'super_admin') {
-    return <main style={{ padding: 24 }}>Forbidden.</main>;
+    return <main style={{padding: 24}}>Forbidden.</main>;
   }
 
-  const displayName = user.firstName ? `${user.firstName} ${user.surname ?? ''}`.trim() : (user.email ?? 'User');
-  const displayedDeadlines = showAllDeadlines ? deadlines : deadlines.slice(0, 3);
+  const displayName = user.firstName
+    ? `${user.firstName} ${user.surname ?? ''}`.trim()
+    : (user.email ?? 'User');
+  const displayedDeadlines = showAllDeadlines
+    ? deadlines
+    : deadlines.slice(0, 3);
 
   const getStatusVariant = (status: string) => {
     return status === 'active' ? 'success' : 'warning';
@@ -145,15 +161,21 @@ function AdminHome() {
   const hasEndDate = !!summary?.endDate;
 
   // Percent shares shown in the Super Admin "People Statistics" block
-const peopleTotal = (people?.interns ?? 0) + (people?.employees ?? 0) + (people?.teamLeads ?? 0);
-const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTotal) : 0);
-
+  const peopleTotal =
+    (people?.interns ?? 0) +
+    (people?.employees ?? 0) +
+    (people?.teamLeads ?? 0);
+  const sharePct = (n: number) =>
+    peopleTotal ? Math.round((n * 100) / peopleTotal) : 0;
 
   return (
     <div className="modern-dashboard admin-dashboard">
       <Head>
         <title>Admin Dashboard • Intern Portal</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
       </Head>
 
       {/* Header */}
@@ -163,7 +185,6 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
             <h1 className="dashboard-title">Admin Dashboard</h1>
             <div className="welcome-text">Welcome back, {displayName}! 👋</div>
           </div>
-          
         </div>
       </header>
 
@@ -180,7 +201,7 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               Dashboard
             </button>
           )}
-          
+
           {/* HR Tab - Only show for HR role */}
           {tabs.includes('hr') && (
             <button
@@ -191,7 +212,7 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               HR Dashboard
             </button>
           )}
-          
+
           {/* Super Admin Tab - Only show for Super Admin role */}
           {tabs.includes('super_admin') && (
             <button
@@ -218,30 +239,39 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
                 </div>
                 <div className="metric-content">
                   <div className="metric-label">Status</div>
-                  <div className={`metric-value ${getStatusVariant(summary?.status || '')}`}>
+                  <div
+                    className={`metric-value ${getStatusVariant(summary?.status || '')}`}
+                  >
                     {(summary?.status || '—').toString().replace('_', ' ')}
                   </div>
                   <div className="metric-description">
-                    Since {summary?.startDate ? new Date(summary.startDate).toLocaleDateString() : '—'}
+                    Since{' '}
+                    {summary?.startDate
+                      ? new Date(summary.startDate).toLocaleDateString()
+                      : '—'}
                   </div>
                 </div>
               </div>
 
               {hasEndDate && (
-  <div className="metric-card timeline">
-    <div className="metric-icon">
-      <i className="fas fa-calendar"></i>
-    </div>
-    <div className="metric-content">
-      <div className="metric-label">Timeline</div>
-      <div className="metric-value">{summary?.daysLeft ?? '—'} days</div>
-      <div className="metric-description">
-        Ends {new Date(summary!.endDate as string).toLocaleDateString()}
-      </div>
-    </div>
-  </div>
-)}
-
+                <div className="metric-card timeline">
+                  <div className="metric-icon">
+                    <i className="fas fa-calendar"></i>
+                  </div>
+                  <div className="metric-content">
+                    <div className="metric-label">Timeline</div>
+                    <div className="metric-value">
+                      {summary?.daysLeft ?? '—'} days
+                    </div>
+                    <div className="metric-description">
+                      Ends{' '}
+                      {new Date(
+                        summary!.endDate as string,
+                      ).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="metric-card position">
                 <div className="metric-icon">
@@ -250,14 +280,15 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
                 <div className="metric-content">
                   <div className="metric-label">Position</div>
                   <div className="metric-value">{summary?.position || '—'}</div>
-                  <div className="metric-description">{summary?.department || '—'}</div>
+                  <div className="metric-description">
+                    {summary?.department || '—'}
+                  </div>
                 </div>
               </div>
             </section>
 
             {/* Deadlines Section */}
             <UpcomingDeadlines deadlines={deadlines} />
-
 
             {/* Quick Actions */}
             <section className="quick-actions">
@@ -275,11 +306,11 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
                   <span>Upload Docs</span>
                 </button>
                 <Link href="/my-work" className="action-card">
-  <div className="action-icon">
-    <i className="fas fa-tasks"></i>
-  </div>
-  <span>My Tasks</span>
-</Link>
+                  <div className="action-icon">
+                    <i className="fas fa-tasks"></i>
+                  </div>
+                  <span>My Tasks</span>
+                </Link>
 
                 <button className="action-card">
                   <div className="action-icon">
@@ -310,7 +341,10 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
 
             <section className="metrics-grid">
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#dbeafe', color: '#3b82f6' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#dbeafe', color: '#3b82f6'}}
+                >
                   <i className="fas fa-user-graduate"></i>
                 </div>
                 <div className="metric-content">
@@ -321,7 +355,10 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
 
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#dcfce7', color: '#16a34a' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#dcfce7', color: '#16a34a'}}
+                >
                   <i className="fas fa-briefcase"></i>
                 </div>
                 <div className="metric-content">
@@ -332,7 +369,10 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
 
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#fef3c7', color: '#d97706'}}
+                >
                   <i className="fas fa-user-tie"></i>
                 </div>
                 <div className="metric-content">
@@ -343,17 +383,20 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
 
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#fee2e2', color: '#ef4444' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#fee2e2', color: '#ef4444'}}
+                >
                   <i className="fas fa-exclamation-circle"></i>
                 </div>
                 <div className="metric-content">
                   <div className="metric-label">Document Alerts</div>
                   <div className="metric-value">{missingDocs?.count ?? 0}</div>
                   <div className="metric-description">
-  {missingDocs
-    ? `${missingDocs.count} of ${missingDocs.total} intern users missing required docs (${missingDocs.percent}%)`
-    : 'Missing documents'}
-</div>
+                    {missingDocs
+                      ? `${missingDocs.count} of ${missingDocs.total} intern users missing required docs (${missingDocs.percent}%)`
+                      : 'Missing documents'}
+                  </div>
                 </div>
               </div>
             </section>
@@ -368,19 +411,19 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
               <div className="actions-grid">
                 <Link href="/admin/interns" className="action-card">
-                  <div className="action-icon" style={{ background: '#3b82f6' }}>
+                  <div className="action-icon" style={{background: '#3b82f6'}}>
                     <i className="fas fa-user-graduate"></i>
                   </div>
                   <span>Manage Interns</span>
                 </Link>
-                        <Link href="/admin/documents" className="action-card">
-                  <div className="action-icon" style={{ background: '#ef4444' }}>
+                <Link href="/admin/documents" className="action-card">
+                  <div className="action-icon" style={{background: '#ef4444'}}>
                     <i className="fas fa-file-contract"></i>
                   </div>
                   <span>Document Review</span>
                 </Link>
                 <Link href="/admin/analytics" className="action-card">
-                  <div className="action-icon" style={{ background: '#10b981' }}>
+                  <div className="action-icon" style={{background: '#10b981'}}>
                     <i className="fas fa-chart-bar"></i>
                   </div>
                   <span>Analytics</span>
@@ -403,7 +446,10 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
             {/* System Health Metrics */}
             <section className="metrics-grid">
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#dbeafe', color: '#3b82f6' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#dbeafe', color: '#3b82f6'}}
+                >
                   <i className="fas fa-user-check"></i>
                 </div>
                 <div className="metric-content">
@@ -414,18 +460,26 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
 
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#dcfce7', color: '#16a34a' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#dcfce7', color: '#16a34a'}}
+                >
                   <i className="fas fa-heartbeat"></i>
                 </div>
                 <div className="metric-content">
                   <div className="metric-label">System Health</div>
                   <div className="metric-value">OK</div>
-                  <div className="metric-description">All systems operational</div>
+                  <div className="metric-description">
+                    All systems operational
+                  </div>
                 </div>
               </div>
 
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#fef3c7', color: '#d97706'}}
+                >
                   <i className="fas fa-database"></i>
                 </div>
                 <div className="metric-content">
@@ -436,7 +490,10 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
 
               <div className="metric-card">
-                <div className="metric-icon" style={{ background: '#f3e8ff', color: '#9333ea' }}>
+                <div
+                  className="metric-icon"
+                  style={{background: '#f3e8ff', color: '#9333ea'}}
+                >
                   <i className="fas fa-code"></i>
                 </div>
                 <div className="metric-content">
@@ -456,22 +513,30 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
                 <div className="stat-item">
                   <div className="stat-value">{people?.interns ?? 0}</div>
                   <div className="stat-label">Active Interns</div>
-                  <div className="stat-trend positive">{sharePct(people?.interns ?? 0)}%</div>
+                  <div className="stat-trend positive">
+                    {sharePct(people?.interns ?? 0)}%
+                  </div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-value">{people?.employees ?? 0}</div>
                   <div className="stat-label">Active Employees</div>
-                  <div className="stat-trend neutral">{sharePct(people?.employees ?? 0)}%</div>
+                  <div className="stat-trend neutral">
+                    {sharePct(people?.employees ?? 0)}%
+                  </div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-value">{people?.teamLeads ?? 0}</div>
-                  <div className="stat-label">Active  Team Leads</div>
-                  <div className="stat-trend positive">{sharePct(people?.teamLeads ?? 0)}%</div>
+                  <div className="stat-label">Active Team Leads</div>
+                  <div className="stat-trend positive">
+                    {sharePct(people?.teamLeads ?? 0)}%
+                  </div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-value">{missingDocs?.count ?? 0}</div>
                   <div className="stat-label">Document Alerts</div>
-                  <div className="stat-trend negative">{missingDocs?.percent ?? 0}%</div>
+                  <div className="stat-trend negative">
+                    {missingDocs?.percent ?? 0}%
+                  </div>
                 </div>
               </div>
             </section>
@@ -486,25 +551,25 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
               </div>
               <div className="actions-grid">
                 <Link href="/admin/users" className="action-card">
-                  <div className="action-icon" style={{ background: '#3b82f6' }}>
+                  <div className="action-icon" style={{background: '#3b82f6'}}>
                     <i className="fas fa-users-cog"></i>
                   </div>
                   <span>User Management</span>
                 </Link>
                 <Link href="/admin/system" className="action-card">
-                  <div className="action-icon" style={{ background: '#8b5cf6' }}>
+                  <div className="action-icon" style={{background: '#8b5cf6'}}>
                     <i className="fas fa-sliders-h"></i>
                   </div>
                   <span>System Settings</span>
                 </Link>
                 <Link href="/admin/security" className="action-card">
-                  <div className="action-icon" style={{ background: '#ef4444' }}>
+                  <div className="action-icon" style={{background: '#ef4444'}}>
                     <i className="fas fa-clipboard-list"></i>
                   </div>
                   <span>Audit Logs</span>
                 </Link>
                 <Link href="/admin/backup" className="action-card">
-                  <div className="action-icon" style={{ background: '#10b981' }}>
+                  <div className="action-icon" style={{background: '#10b981'}}>
                     <i className="fas fa-database"></i>
                   </div>
                   <span>Backup & Restore</span>
@@ -514,8 +579,6 @@ const sharePct = (n: number) => (peopleTotal ? Math.round((n * 100) / peopleTota
           </div>
         )}
       </main>
-
-      
     </div>
   );
 }

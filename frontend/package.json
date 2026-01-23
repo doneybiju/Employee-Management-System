@@ -4,7 +4,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint"
   },
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
@@ -21,6 +28,7 @@
     "@types/node": "25.0.9",
     "@types/react": "19.2.9",
     "@types/react-dom": "^19.1.7",
+    "gts": "^7.0.0",
     "sass": "^1.92.1",
     "typescript": "5.9.3"
   }

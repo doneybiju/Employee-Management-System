@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { fetchWithAuth } from '@/lib/api';
+import {useState, useEffect} from 'react';
+import {useRouter} from 'next/router';
+import {fetchWithAuth} from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface UserCreationLog {
@@ -34,7 +34,9 @@ export default function UserCreationLogsPage() {
   const fetchLogs = async (pageNum: number) => {
     setLoading(true);
     try {
-      const response = await fetchWithAuth(`/api/logs/user-creation?page=${pageNum}&limit=${limit}`);
+      const response = await fetchWithAuth(
+        `/api/logs/user-creation?page=${pageNum}&limit=${limit}`,
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch logs: ${response.statusText}`);
       }
@@ -68,11 +70,16 @@ export default function UserCreationLogsPage() {
     <ProtectedRoute roles={['super_admin']}>
       <div className="user-creation-page">
         <div className="header-section">
-          <button className="back-button" onClick={() => router.push('/admin/logs')}>
+          <button
+            className="back-button"
+            onClick={() => router.push('/admin/logs')}
+          >
             ← Back to Logs
           </button>
           <h1>User Creation Logs</h1>
-          <p className="subtitle">Track user account creation history and audit trail</p>
+          <p className="subtitle">
+            Track user account creation history and audit trail
+          </p>
         </div>
 
         {loading ? (
@@ -94,33 +101,48 @@ export default function UserCreationLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => {
+                  {logs.map(log => {
                     const createdUser = `${log.firstName} ${log.surname}`;
                     const createdBy = log.createdByName || 'System';
-                    const creatorRole = log.createdByRole ? log.createdByRole.replace('_', ' ') : '';
-                    const creatorEmpType = log.createdByEmpType ? log.createdByEmpType.replace('_', ' ') : '';
-                    const methodLabel = log.creationMethod === 'google_workspace' ? 'Google Workspace' 
-                      : log.creationMethod === 'csv_import' ? 'CSV Import' 
-                      : log.creationMethod || 'Unknown';
-                    
+                    const creatorRole = log.createdByRole
+                      ? log.createdByRole.replace('_', ' ')
+                      : '';
+                    const creatorEmpType = log.createdByEmpType
+                      ? log.createdByEmpType.replace('_', ' ')
+                      : '';
+                    const methodLabel =
+                      log.creationMethod === 'google_workspace'
+                        ? 'Google Workspace'
+                        : log.creationMethod === 'csv_import'
+                          ? 'CSV Import'
+                          : log.creationMethod || 'Unknown';
+
                     return (
                       <tr key={log.id}>
                         <td>
-                          <div className="date-time">{formatDate(log.createdAt)}</div>
+                          <div className="date-time">
+                            {formatDate(log.createdAt)}
+                          </div>
                         </td>
                         <td className="user-created-cell">
                           <div className="user-info">
                             <div className="user-name-large">{createdUser}</div>
                             <div className="user-details">
-                              <span className="detail-item">{log.companyEmail}</span>
+                              <span className="detail-item">
+                                {log.companyEmail}
+                              </span>
                               <span className="detail-separator">•</span>
-                              <span className="detail-item">ID: {log.empId}</span>
+                              <span className="detail-item">
+                                ID: {log.empId}
+                              </span>
                             </div>
                             <div className="user-badges">
                               <span className={`role-badge role-${log.role}`}>
                                 {log.role}
                               </span>
-                              <span className={`emp-type-badge emp-${log.empType}`}>
+                              <span
+                                className={`emp-type-badge emp-${log.empType}`}
+                              >
                                 {log.empType.replace('_', ' ')}
                               </span>
                             </div>
@@ -128,16 +150,22 @@ export default function UserCreationLogsPage() {
                         </td>
                         <td className="creator-cell">
                           <div className="creator-info">
-                            <div className="creator-name-large">{createdBy}</div>
+                            <div className="creator-name-large">
+                              {createdBy}
+                            </div>
                             {log.createdBy && (
                               <div className="creator-details">
                                 {creatorRole && (
-                                  <span className={`role-badge-sm role-${log.createdByRole}`}>
+                                  <span
+                                    className={`role-badge-sm role-${log.createdByRole}`}
+                                  >
                                     {creatorRole}
                                   </span>
                                 )}
                                 {creatorEmpType && (
-                                  <span className={`emp-type-badge-sm emp-${log.createdByEmpType}`}>
+                                  <span
+                                    className={`emp-type-badge-sm emp-${log.createdByEmpType}`}
+                                  >
                                     {creatorEmpType}
                                   </span>
                                 )}
@@ -150,7 +178,10 @@ export default function UserCreationLogsPage() {
                         </td>
                         <td className="ip-cell">{log.ip || '-'}</td>
                         <td className="user-agent-cell">
-                          <div className="user-agent-text" title={log.userAgent || '-'}>
+                          <div
+                            className="user-agent-text"
+                            title={log.userAgent || '-'}
+                          >
                             {log.userAgent || '-'}
                           </div>
                         </td>
@@ -169,7 +200,10 @@ export default function UserCreationLogsPage() {
               <span>
                 Page {page} of {Math.ceil(total / limit) || 1}
               </span>
-              <button disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(page + 1)}>
+              <button
+                disabled={page >= Math.ceil(total / limit)}
+                onClick={() => setPage(page + 1)}
+              >
                 Next
               </button>
             </div>

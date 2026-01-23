@@ -1,15 +1,13 @@
 // frontend/src/pages/index.tsx
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { useAuth } from '@/context/AuthContext';
-import { fetchWithAuth } from '@/lib/api';
+import {useAuth} from '@/context/AuthContext';
+import {fetchWithAuth} from '@/lib/api';
 
 import UpcomingDeadlines from '@/components/UpcomingDeadlines';
-import { Deadline } from '@/types/dashboard';
+import {Deadline} from '@/types/dashboard';
 import Link from 'next/link';
-
-
 
 type MeStats = {
   status: 'Active' | 'Inactive' | null;
@@ -20,7 +18,6 @@ type MeStats = {
   daysRemaining: number | null;
 };
 
-
 function useMissingDocsNotice() {
   const [missing, setMissing] = useState<string[]>([]);
   const [show, setShow] = useState(false);
@@ -28,8 +25,10 @@ function useMissingDocsNotice() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetchWithAuth('/api/reminders/me', { cache: 'no-store' as RequestCache });
-        const j = await res.json().catch(() => ({ missing: [] }));
+        const res = await fetchWithAuth('/api/reminders/me', {
+          cache: 'no-store' as RequestCache,
+        });
+        const j = await res.json().catch(() => ({missing: []}));
         const list = Array.isArray(j?.missing) ? j.missing : [];
         setMissing(list);
         const until = Number(localStorage.getItem('doc_notice_until') || 0);
@@ -50,12 +49,20 @@ function useMissingDocsNotice() {
     setShow(false);
   }
 
-  return { missing, show, remindLater, dismiss };
+  return {missing, show, remindLater, dismiss};
 }
 
-function ModernNotification({ missing, onLater, onDismiss }: { missing: string[]; onLater: () => void; onDismiss: () => void }) {
+function ModernNotification({
+  missing,
+  onLater,
+  onDismiss,
+}: {
+  missing: string[];
+  onLater: () => void;
+  onDismiss: () => void;
+}) {
   if (missing.length === 0) return null;
-  
+
   return (
     <div className="modern-notification">
       <div className="notification-badge">
@@ -63,10 +70,15 @@ function ModernNotification({ missing, onLater, onDismiss }: { missing: string[]
       </div>
       <div className="notification-body">
         <div className="notification-title">Required Documents</div>
-        <div className="notification-desc">Upload {missing.join(', ')} to complete your profile</div>
+        <div className="notification-desc">
+          Upload {missing.join(', ')} to complete your profile
+        </div>
       </div>
       <div className="notification-actions">
-        <button className="action-btn primary" onClick={() => window.location.href = '/profile'}>
+        <button
+          className="action-btn primary"
+          onClick={() => (window.location.href = '/profile')}
+        >
           Upload Now
         </button>
         <button className="action-btn secondary" onClick={onLater}>
@@ -82,7 +94,7 @@ function ModernNotification({ missing, onLater, onDismiss }: { missing: string[]
 
 function IndexInner() {
   const notice = useMissingDocsNotice();
-  const { user, loading } = useAuth();
+  const {user, loading} = useAuth();
   const [me, setMe] = useState<MeStats | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [showAllDeadlines, setShowAllDeadlines] = useState(false);
@@ -90,7 +102,9 @@ function IndexInner() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetchWithAuth('/api/stats/deadlines', { cache: 'no-store' as RequestCache });
+        const r = await fetchWithAuth('/api/stats/deadlines', {
+          cache: 'no-store' as RequestCache,
+        });
         const j = await r.json();
         setDeadlines(Array.isArray(j?.items) ? j.items : []);
       } catch {
@@ -111,7 +125,9 @@ function IndexInner() {
     })();
   }, []);
 
-  const displayedDeadlines = showAllDeadlines ? deadlines : deadlines.slice(0, 3);
+  const displayedDeadlines = showAllDeadlines
+    ? deadlines
+    : deadlines.slice(0, 3);
 
   const getStatusVariant = (status: string) => {
     return status === 'Active' ? 'success' : 'warning';
@@ -137,12 +153,14 @@ function IndexInner() {
 
   const hasEndDate = !!me?.endDate;
 
-
   return (
     <div className="modern-dashboard">
       <Head>
         <title>Dashboard • Intern Portal</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
       </Head>
 
       {/* Header */}
@@ -150,15 +168,17 @@ function IndexInner() {
         <div className="header-main">
           <div className="header-left">
             <h1 className="dashboard-title">Dashboard</h1>
-            <div className="welcome-text">Welcome back, {user?.firstName || 'Intern'}! 👋</div>
+            <div className="welcome-text">
+              Welcome back, {user?.firstName || 'Intern'}! 👋
+            </div>
           </div>
         </div>
       </header>
 
       {/* Alert Banner */}
       {notice.show && (
-        <ModernNotification 
-          missing={notice.missing} 
+        <ModernNotification
+          missing={notice.missing}
           onLater={notice.remindLater}
           onDismiss={notice.dismiss}
         />
@@ -174,30 +194,36 @@ function IndexInner() {
             </div>
             <div className="metric-content">
               <div className="metric-label">Status</div>
-              <div className={`metric-value ${getStatusVariant(me?.status || '')}`}>
+              <div
+                className={`metric-value ${getStatusVariant(me?.status || '')}`}
+              >
                 {me?.status || '—'}
               </div>
               <div className="metric-description">
-                Since {me?.startDate ? new Date(me.startDate).toLocaleDateString() : '—'}
+                Since{' '}
+                {me?.startDate
+                  ? new Date(me.startDate).toLocaleDateString()
+                  : '—'}
               </div>
             </div>
           </div>
 
           {hasEndDate && (
-  <div className="metric-card timeline">
-    <div className="metric-icon">
-      <i className="fas fa-calendar"></i>
-    </div>
-    <div className="metric-content">
-      <div className="metric-label">Timeline</div>
-      <div className="metric-value">{me?.daysRemaining ?? '—'} days</div>
-      <div className="metric-description">
-        Ends {new Date(me!.endDate as string).toLocaleDateString()}
-      </div>
-    </div>
-  </div>
-)}
-
+            <div className="metric-card timeline">
+              <div className="metric-icon">
+                <i className="fas fa-calendar"></i>
+              </div>
+              <div className="metric-content">
+                <div className="metric-label">Timeline</div>
+                <div className="metric-value">
+                  {me?.daysRemaining ?? '—'} days
+                </div>
+                <div className="metric-description">
+                  Ends {new Date(me!.endDate as string).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="metric-card position">
             <div className="metric-icon">
@@ -209,12 +235,10 @@ function IndexInner() {
               <div className="metric-description">{me?.department || '—'}</div>
             </div>
           </div>
-
         </section>
 
         {/* Deadlines Section */}
         <UpcomingDeadlines deadlines={deadlines} />
-
 
         {/* Quick Actions */}
         <section className="quick-actions">
@@ -232,11 +256,11 @@ function IndexInner() {
               <span>Upload Docs</span>
             </button>
             <Link href="/my-work" className="action-card">
-  <div className="action-icon">
-    <i className="fas fa-tasks"></i>
-  </div>
-  <span>My Tasks</span>
-</Link>
+              <div className="action-icon">
+                <i className="fas fa-tasks"></i>
+              </div>
+              <span>My Tasks</span>
+            </Link>
 
             <button className="action-card">
               <div className="action-icon">
@@ -253,8 +277,6 @@ function IndexInner() {
           </div>
         </section>
       </main>
-
-      
     </div>
   );
 }

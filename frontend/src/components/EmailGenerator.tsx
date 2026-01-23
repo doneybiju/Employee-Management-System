@@ -1,7 +1,6 @@
 // frontend/src/components/EmailGenerator.tsx
-import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-
+import {useState} from 'react';
+import {useAuth} from '@/context/AuthContext';
 
 const DOMAIN = '@extramus.eu';
 const departments = [
@@ -12,30 +11,63 @@ const departments = [
   'Languages',
   'IT',
   'Urban Design',
-  'Law'
+  'Law',
 ];
-const departmentPositions: Record<string,string[]> = {
-  'Digital Marketing': ['Social Media Manager','Video Editor','Copywriter','Plot Writer','Google Ads Manager','Lead Generation','Graphic Designer','Community Manager'],
-  'Human Resource Management': ['Recruitment','Executive Assistant','HR Intern'],
-  'Business & Data Analyst': ['Google Analytics','Accountant','Business Analyst','Finance'],
-  'Project Management': ['European Project Manager','Business Project Manager','Product Manager'],
-  'Languages': ['English','Italian','Spanish'],
-  'IT': ['WordPress Developer','Front-End Developer','Back-End Developer','Cyber Security','Game Developer','Full Stack Developer','UX/UI Designer','App Developer','Web Developer','Chatbot Manager'],
-  'Urban Design': ['Civil Engineer','Architect'],
-  'Law': ['Business Lawyer']
+const departmentPositions: Record<string, string[]> = {
+  'Digital Marketing': [
+    'Social Media Manager',
+    'Video Editor',
+    'Copywriter',
+    'Plot Writer',
+    'Google Ads Manager',
+    'Lead Generation',
+    'Graphic Designer',
+    'Community Manager',
+  ],
+  'Human Resource Management': [
+    'Recruitment',
+    'Executive Assistant',
+    'HR Intern',
+  ],
+  'Business & Data Analyst': [
+    'Google Analytics',
+    'Accountant',
+    'Business Analyst',
+    'Finance',
+  ],
+  'Project Management': [
+    'European Project Manager',
+    'Business Project Manager',
+    'Product Manager',
+  ],
+  Languages: ['English', 'Italian', 'Spanish'],
+  IT: [
+    'WordPress Developer',
+    'Front-End Developer',
+    'Back-End Developer',
+    'Cyber Security',
+    'Game Developer',
+    'Full Stack Developer',
+    'UX/UI Designer',
+    'App Developer',
+    'Web Developer',
+    'Chatbot Manager',
+  ],
+  'Urban Design': ['Civil Engineer', 'Architect'],
+  Law: ['Business Lawyer'],
 };
 
 export default function EmailGenerator() {
-  const { token } = useAuth();
-  const [firstName, setFirstName]     = useState('');
-  const [surname, setSurname]         = useState('');
-  const [dept, setDept]               = useState('');
-  const [position, setPosition]       = useState('');
+  const {token} = useAuth();
+  const [firstName, setFirstName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [dept, setDept] = useState('');
+  const [position, setPosition] = useState('');
   const [joiningDate, setJoiningDate] = useState('');
   const [leavingDate, setLeavingDate] = useState('');
-  const [email, setEmail]             = useState('');
-  const [empID, setEmpID]             = useState('');
-  const [msg, setMsg]                 = useState('');
+  const [email, setEmail] = useState('');
+  const [empID, setEmpID] = useState('');
+  const [msg, setMsg] = useState('');
 
   function generate() {
     if (!firstName || !surname || !dept || !position || !joiningDate) {
@@ -55,7 +87,7 @@ export default function EmailGenerator() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -66,8 +98,8 @@ export default function EmailGenerator() {
           joiningDate,
           leavingDate: leavingDate || undefined,
           email,
-          empID
-        })
+          empID,
+        }),
       });
       if (!res.ok) throw new Error(await res.text());
       setMsg('Request submitted!');
@@ -86,9 +118,9 @@ export default function EmailGenerator() {
   }
 
   return (
-    <div style={{ maxWidth: 500, margin: 'auto', padding: 16 }}>
+    <div style={{maxWidth: 500, margin: 'auto', padding: 16}}>
       <h2>Email & Request Generator</h2>
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{display: 'grid', gap: 8}}>
         <input
           placeholder="First Name"
           value={firstName}
@@ -101,11 +133,16 @@ export default function EmailGenerator() {
         />
         <select
           value={dept}
-          onChange={e => { setDept(e.target.value); setPosition(''); }}
+          onChange={e => {
+            setDept(e.target.value);
+            setPosition('');
+          }}
         >
           <option value="">-- Select Department --</option>
           {departments.map(d => (
-            <option key={d} value={d}>{d}</option>
+            <option key={d} value={d}>
+              {d}
+            </option>
           ))}
         </select>
         <select
@@ -114,9 +151,12 @@ export default function EmailGenerator() {
           disabled={!dept}
         >
           <option value="">-- Select Position --</option>
-          {dept && departmentPositions[dept].map(p => (
-            <option key={p} value={p}>{p}</option>
-          ))}
+          {dept &&
+            departmentPositions[dept].map(p => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
         </select>
         <label>
           Joining Date{' '}
@@ -138,9 +178,13 @@ export default function EmailGenerator() {
         <button onClick={generate}>Generate Email & EmpID</button>
 
         {email && (
-          <div style={{ background: '#f0f0f0', padding: 8 }}>
-            <div><strong>Email:</strong> {email}</div>
-            <div><strong>EmpID:</strong> {empID}</div>
+          <div style={{background: '#f0f0f0', padding: 8}}>
+            <div>
+              <strong>Email:</strong> {email}
+            </div>
+            <div>
+              <strong>EmpID:</strong> {empID}
+            </div>
           </div>
         )}
 

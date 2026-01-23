@@ -35,28 +35,28 @@ function PageInner() {
 
           <div className="actions-grid">
             <Link href="/admin/deprovision" className="action-card">
-              <div className="action-icon" style={{ background: '#ef4444' }}>
+              <div className="action-icon" style={{background: '#ef4444'}}>
                 <i className="fas fa-user-slash"></i>
               </div>
               <span>Deprovision</span>
             </Link>
 
             <Link href="/admin/smtp" className="action-card">
-              <div className="action-icon" style={{ background: '#3b82f6' }}>
+              <div className="action-icon" style={{background: '#3b82f6'}}>
                 <i className="fas fa-envelope"></i>
               </div>
               <span>SMTP</span>
             </Link>
 
             <Link href="/admin/email-templates" className="action-card">
-              <div className="action-icon" style={{ background: '#8b5cf6' }}>
+              <div className="action-icon" style={{background: '#8b5cf6'}}>
                 <i className="fas fa-file-alt"></i>
               </div>
               <span>Email Templates</span>
             </Link>
 
             <Link href="/admin/security" className="action-card">
-              <div className="action-icon" style={{ background: '#10b981' }}>
+              <div className="action-icon" style={{background: '#10b981'}}>
                 <i className="fas fa-shield-alt"></i>
               </div>
               <span>Security</span>

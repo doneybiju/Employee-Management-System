@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import {useEffect, Suspense} from 'react';
+import {useSearchParams} from 'next/navigation';
 
 function AuthSuccessContent() {
   const searchParams = useSearchParams();
@@ -18,7 +18,14 @@ function AuthSuccessContent() {
   }, [searchParams]);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}
+    >
       <p>Authenticating...</p>
     </div>
   );
