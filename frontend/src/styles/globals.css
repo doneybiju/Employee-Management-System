@@ -1,10 +1,26 @@
+:root {
+  --primary: #1a73e8;
+  --background: #f8f9fa;
+  --surface: #ffffff;
+  --text-high: #202124;
+  --text-medium: #5f6368;
+  --border: #dadce0;
+  --shadow-card: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
+    0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
 html,
 body,
 #__next {
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  background-color: var(--background);
+  color: var(--text-high);
 }
+
 * {
   box-sizing: border-box;
 }
@@ -17,60 +33,92 @@ body,
   top: 0;
   bottom: 0;
   width: 280px;
-  background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
-  color: #fff;
+  background: var(--surface);
+  color: var(--text-high);
+  border-right: 1px solid var(--border);
   overflow-y: auto;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* Removed heavy shadow, rely on border or subtle shadow if needed */
   transform: translateX(-100%);
   transition: transform 0.28s ease;
   z-index: 1000;
 }
+
 .sidebar .logo {
   padding: 14px 25px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--border);
 }
+
 .sidebar .logo h1 {
   font-size: 20px;
   margin: 0;
+  color: var(--primary);
 }
+
 .nav-section {
   margin-top: 10px;
 }
+
 .nav-title {
   padding: 10px 25px;
   font-size: 12px;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-medium);
+  font-weight: 600;
 }
+
 .nav-item {
   display: block;
   padding: 12px 25px 12px 35px;
-  color: #fff;
+  color: var(--text-medium);
   text-decoration: none;
+  font-weight: 500;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
+
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f3f4;
+  color: var(--primary);
 }
+
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.16);
+  background: #e8f0fe;
+  color: var(--primary);
 }
+
 .nav-item.has-children {
   cursor: pointer;
   position: relative;
 }
+
 .nav-item .chevron {
   position: absolute;
   right: 20px;
+  color: var(--text-medium);
 }
+
 .nav-children {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease;
 }
+
 .nav-children.open {
   max-height: 600px;
 }
+
+.nav-children .nav-item {
+  padding-left: 60px;
+  color: var(--text-medium);
+}
+
+.nav-children .nav-item:hover {
+  color: var(--primary);
+  background: #f1f3f4;
+}
+
 .backdrop {
   position: fixed;
   inset: 0;
@@ -79,6 +127,7 @@ body,
   opacity: 1;
   animation: fadeIn 0.2s ease;
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -103,8 +152,6 @@ body,
   }
 }
 
-/* Content shift when desktop is collapsed (hidden) */
-
 /* Floating toggle – shows only when sidebar hidden */
 .menu-toggle {
   position: fixed;
@@ -113,11 +160,11 @@ body,
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #3498db;
-  color: #fff;
-  border: none;
+  background: var(--surface);
+  color: var(--text-medium);
+  border: 1px solid var(--border);
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   display: grid;
   place-items: center;
   z-index: 950;
@@ -126,6 +173,12 @@ body,
     opacity 0.2s ease,
     transform 0.2s ease;
 }
+
+.menu-toggle:hover {
+  background: #f8f9fa;
+  color: var(--primary);
+}
+
 .menu-toggle.hidden {
   opacity: 0;
   pointer-events: none;
@@ -134,66 +187,15 @@ body,
 
 .logo {
   padding: 0 25px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid var(--border);
   margin-bottom: 14px;
 }
+
 .logo h1 {
   font-size: 22px;
   margin: 0;
   font-weight: 700;
-}
-
-.nav-section {
-  margin-bottom: 6px;
-}
-.nav-title {
-  padding: 10px 25px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
-}
-.nav-item {
-  padding: 12px 25px 12px 35px;
-  display: block;
-  color: #fff;
-  text-decoration: none;
-  transition:
-    background 0.2s,
-    color 0.2s;
-  position: relative;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-.nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.nav-item.active {
-  background: rgba(255, 255, 255, 0.16);
-}
-.has-children {
-  cursor: pointer;
-}
-.chevron {
-  position: absolute;
-  right: 25px;
-}
-.nav-children {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-}
-.nav-children.open {
-  max-height: 500px;
-}
-.nav-children .nav-item {
-  padding-left: 60px;
-  color: rgba(255, 255, 255, 0.9);
-}
-.nav-children .nav-item:hover {
-  color: #fff;
+  color: var(--primary);
 }
 
 /* Content wrapper (optional if your pages use it) */
@@ -201,40 +203,7 @@ body,
   margin-left: 0;
   padding: 30px;
   min-height: 100vh;
-  background: #f5f7fa;
-}
-/* ---------- Toggle button ---------- */
-.menu-toggle {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 1200;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background: #3498db;
-  color: #fff;
-  font-size: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-}
-.menu-toggle:active {
-  transform: translateY(1px);
-}
-.menu-toggle.hidden {
-  display: none;
-} /* hidden when sidebar is open */
-
-/* Backdrop for mobile click-off */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  z-index: 1050;
+  background: var(--background);
 }
 
 /* Desktop collapse state */
@@ -244,12 +213,6 @@ body.nav-collapsed .sidebar {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-  .sidebar.open {
-    transform: translateX(0);
-  }
   .content {
     margin-left: 0;
     padding: 20px;
@@ -265,16 +228,19 @@ body.nav-collapsed .sidebar {
   align-items: center;
   gap: 10px;
   padding: 12px 0;
-  color: #fff;
+  color: var(--text-high);
   text-decoration: none;
 }
+
 .logo .user-chip .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  background: rgba(255, 255, 255, 0.2);
+  background: #eee;
+  border: 1px solid var(--border);
 }
+
 .logo .user-chip .name {
   font-weight: 700;
   letter-spacing: 0.2px;
@@ -283,6 +249,7 @@ body.nav-collapsed .sidebar {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 /* === Overlay sidebar click-through fix === */
 .sidebar {
   z-index: 1200 !important;
@@ -322,13 +289,13 @@ body.nav-collapsed .sidebar {
 .input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fff;
-  color: #111;
+  background: var(--surface);
+  color: var(--text-high);
   outline: none;
 }
 .input:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15); /* Google Blue opacity */
 }
