@@ -89,27 +89,18 @@ export default function CountrySelect({
   };
 
   return (
-    <div ref={box} style={{position: 'relative'}}>
-      <label style={{fontSize: 12, display: 'block'}}>
-        {label}
-        {required ? ' *' : ''}
-      </label>
+    <div ref={box} className="relative group">
+      {label && (
+        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">
+          {label}
+          {required ? ' *' : ''}
+        </label>
+      )}
 
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        style={{
-          width: '100%',
-          textAlign: 'left',
-          padding: '8px 36px 8px 10px',
-          border: '1px solid #ccc',
-          borderRadius: 6,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'white',
-          position: 'relative',
-        }}
+        className="w-full text-left p-2.5 pr-9 border border-gray-300 dark:border-gray-700 rounded-lg flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 relative"
       >
         {selected ? (
           <>
@@ -118,12 +109,12 @@ export default function CountrySelect({
               width={24}
               height={18}
               alt=""
-              style={{display: 'inline-block', borderRadius: 2}}
+              className="rounded-sm"
             />
-            <span>{selected.name}</span>
+            <span className="truncate">{selected.name}</span>
           </>
         ) : (
-          <span style={{color: '#888'}}>{placeholder}</span>
+          <span className="text-gray-500">{placeholder}</span>
         )}
       </button>
 
@@ -133,21 +124,11 @@ export default function CountrySelect({
           onClick={clear}
           aria-label="Clear country"
           title="Clear"
-          style={{
-            position: 'absolute',
-            right: 10,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 18,
-            height: 18,
-            lineHeight: '18px',
-            textAlign: 'center',
-            borderRadius: '50%',
-            border: '1px solid #ddd',
-            background: '#fff',
-            cursor: 'pointer',
-            fontSize: 12,
-          }}
+          className={`absolute right-2.5 w-5 h-5 flex items-center justify-center rounded-full border border-gray-200 bg-white dark:bg-gray-700 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 text-xs z-10 ${
+            label
+              ? 'top-[calc(50%+12px)] -translate-y-1/2'
+              : 'top-1/2 -translate-y-1/2'
+          }`}
         >
           ×
         </button>
@@ -157,7 +138,7 @@ export default function CountrySelect({
         // hidden input to satisfy native required validation
         <input
           tabIndex={-1}
-          style={{opacity: 0, width: 0, height: 0, position: 'absolute'}}
+          className="opacity-0 w-0 h-0 absolute"
           required
           value={value}
           onChange={() => {}}
@@ -165,65 +146,38 @@ export default function CountrySelect({
       )}
 
       {open && (
-        <div
-          style={{
-            position: 'absolute',
-            zIndex: 20,
-            top: '100%',
-            left: 0,
-            right: 0,
-            marginTop: 4,
-            border: '1px solid #ddd',
-            borderRadius: 8,
-            background: 'white',
-            boxShadow: '0 8px 20px rgba(0,0,0,.08)',
-          }}
-        >
-          <div style={{padding: 8, borderBottom: '1px solid #eee'}}>
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-xl max-h-60 overflow-hidden flex flex-col">
+          <div className="p-2 border-b border-gray-100 dark:border-gray-700">
             <input
               autoFocus
               placeholder="Search…"
               value={q}
               onChange={e => setQ(e.target.value)}
-              style={{
-                width: '100%',
-                border: '1px solid #ddd',
-                borderRadius: 6,
-                padding: '6px 8px',
-              }}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
             />
           </div>
-          <div style={{maxHeight: 260, overflow: 'auto'}}>
+          <div className="overflow-auto flex-1 max-h-60">
             {filtered.map(c => (
               <button
                 type="button"
                 key={c.code}
                 onClick={() => pick(c)}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '8px 10px',
-                  background: 'white',
-                  border: 'none',
-                  borderBottom: '1px solid #f6f6f6',
-                  cursor: 'pointer',
-                }}
+                className="w-full text-left flex items-center gap-3 px-3 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors border-b border-gray-50 dark:border-gray-700 last:border-0"
               >
                 <img
                   src={`https://flagcdn.com/24x18/${c.code.toLowerCase()}.png`}
                   width={24}
                   height={18}
                   alt=""
-                  style={{display: 'inline-block', borderRadius: 2}}
+                  className="rounded-sm"
                 />
-                <span>{c.name}</span>
+                <span className="text-sm">{c.name}</span>
               </button>
             ))}
             {!filtered.length && (
-              <div style={{padding: 12, color: '#777'}}>No matches</div>
+              <div className="p-3 text-gray-500 text-center text-sm">
+                No matches
+              </div>
             )}
           </div>
         </div>

@@ -5,6 +5,14 @@ import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
 import CountrySelect from '@/components/CountrySelect';
 import {blockUser, unblockUser} from '@/lib/api';
+import {
+  Pencil,
+  ClipboardList,
+  Unlock,
+  Lock,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 
 /* ================= Types ================= */
 type EmpType = 'intern' | 'employee' | 'team_lead';
@@ -108,6 +116,22 @@ const dmy = (v?: string | Date | null) => {
     year: 'numeric',
   }).format(dt);
 };
+
+// Reusable Tailwind classes
+const MODAL_OVERLAY =
+  'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm';
+const MODAL_CARD =
+  'bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 border border-gray-100 dark:border-gray-700';
+const INPUT_CLASS =
+  'w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500';
+const LABEL_CLASS =
+  'text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block';
+
+const ACTION_BTN_BASE =
+  'p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors';
+const ACTION_BTN_BLUE = `${ACTION_BTN_BASE} hover:text-blue-600`;
+const ACTION_BTN_RED = `${ACTION_BTN_BASE} hover:text-red-600`;
+const ACTION_BTN_GREEN = `${ACTION_BTN_BASE} hover:text-green-600`;
 
 export default function AdminUsers() {
   const {user, loading} = useAuth();
@@ -614,25 +638,16 @@ export default function AdminUsers() {
 
   /* ===== Table headers (fixed 6 columns) ===== */
   const thLabel = (id: ColId) => ALL_COLS.find(c => c.id === id)?.label || id;
-  const renderThs = () => (
-    <>
-      {TABLE_COLS.map(id => (
-        <th key={id}>{thLabel(id)}</th>
-      ))}
-      <th>Details</th>
-      <th>Actions</th>
-    </>
-  );
 
   /* ===== Row cells (fixed 6 columns) ===== */
   const renderCells = (r: Row) => (
     <>
       {/* name */}
-      <td className="px-6 py-4 text-sm font-medium text-gray-900" style={{maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+      <td className="px-6 py-4 text-sm font-medium text-gray-900 max-w-[240px] truncate">
         {r.name}
       </td>
       {/* companyEmail */}
-      <td className="px-6 py-4 text-sm text-gray-700" style={{maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+      <td className="px-6 py-4 text-sm text-gray-700 max-w-[260px] truncate">
         {r.companyEmail || '—'}
       </td>
       {/* department */}
@@ -656,20 +671,20 @@ export default function AdminUsers() {
       </td>
       {/* Actions */}
       <td className="px-6 py-4 text-sm">
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             title="Edit"
             onClick={() => openEdit(r)}
-            className="text-gray-500 hover:text-blue-600 transition-colors"
+            className={ACTION_BTN_BLUE}
           >
-            ✏️
+            <Pencil className="w-4 h-4" />
           </button>
           <button
             title="Update History"
             onClick={() => openUpdateLog(r)}
-            className="text-gray-500 hover:text-blue-600 transition-colors"
+            className={ACTION_BTN_BLUE}
           >
-            📋
+            <ClipboardList className="w-4 h-4" />
           </button>
           {r.userId != null &&
             user?.role === 'super_admin' &&
@@ -684,9 +699,9 @@ export default function AdminUsers() {
                     alert('Restore failed');
                   }
                 }}
-                className="text-gray-500 hover:text-green-600 transition-colors"
+                className={ACTION_BTN_GREEN}
               >
-                🔓
+                <Unlock className="w-4 h-4" />
               </button>
             ) : (
               <button
@@ -701,18 +716,18 @@ export default function AdminUsers() {
                     alert('Revoke failed');
                   }
                 }}
-                className="text-gray-500 hover:text-red-600 transition-colors"
+                className={ACTION_BTN_RED}
               >
-                🔒
+                <Lock className="w-4 h-4" />
               </button>
             ))}
 
           <button
             title="Deactivate & Delete login"
             onClick={() => handleDelete(r)}
-            className="text-gray-500 hover:text-red-600 transition-colors"
+            className={ACTION_BTN_RED}
           >
-            🗑️
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </td>
@@ -789,7 +804,7 @@ export default function AdminUsers() {
             className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
             title="Import users from CSV"
           >
-            ⬆️ Import Users
+            <Upload className="w-4 h-4" /> Import Users
           </Link>
 
           <Tabs tab={tab} onChange={setTab} />
@@ -806,7 +821,9 @@ export default function AdminUsers() {
             className="input w-full"
           />
           <div>
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">Department</label>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">
+              Department
+            </label>
             <select
               value={dep}
               onChange={e => setDep(e.target.value)}
@@ -821,7 +838,9 @@ export default function AdminUsers() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">Gender</label>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">
+              Gender
+            </label>
             <select
               value={gen}
               onChange={e => setGen(e.target.value)}
@@ -837,7 +856,9 @@ export default function AdminUsers() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">Country</label>
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 block">
+              Country
+            </label>
             <CountrySelect
               value={country}
               onChange={setCountry}
@@ -871,12 +892,19 @@ export default function AdminUsers() {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
               {TABLE_COLS.map(id => (
-                <th key={id} className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  key={id}
+                  className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   {thLabel(id)}
                 </th>
               ))}
-              <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-              <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Details
+              </th>
+              <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -910,43 +938,16 @@ export default function AdminUsers() {
       {/* Columns Modal (SA) — controls HR Details only */}
       {/* Columns Modal (HR) — controls HR Details only */}
       {isHR && cfg?.selectable && showCols && (
-        <div
-          onClick={() => setShowCols(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.3)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: 520,
-              maxWidth: '95vw',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              background: '#fff',
-              borderRadius: 12,
-              padding: 16,
-            }}
-          >
-            <h2 style={{margin: '0 0 12px'}}>Select Columns (HR)</h2>
-            <div
-              style={{
-                overflow: 'auto',
-                maxHeight: 380,
-                border: '1px solid #eee',
-                borderRadius: 8,
-                padding: 12,
-              }}
-            >
+        <div onClick={() => setShowCols(false)} className={MODAL_OVERLAY}>
+          <div onClick={e => e.stopPropagation()} className={MODAL_CARD}>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Select Columns (HR)
+            </h2>
+            <div className="overflow-auto max-h-[380px] border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-4">
               {ALL_COLS.map(c => (
                 <label
                   key={c.id}
-                  style={{display: 'block', padding: '8px 6px'}}
+                  className="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer text-gray-700 dark:text-gray-300"
                 >
                   <input
                     type="checkbox"
@@ -954,49 +955,35 @@ export default function AdminUsers() {
                     onChange={e => {
                       setLocalCols(s => {
                         const n = new Set(s);
-                        e.target.checked ? n.add(c.id) : n.delete(c.id);
+                        if (e.target.checked) {
+                          n.add(c.id);
+                        } else {
+                          n.delete(c.id);
+                        }
                         return n;
                       });
                     }}
-                    style={{marginRight: 8}}
+                    className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   {c.label}
                 </label>
               ))}
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 10,
-                marginTop: 12,
-              }}
-            >
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowCols(false)}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  background: '#fff',
-                }}
+                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={saveCols}
-                style={{
-                  padding: '8px 12px',
-                  border: 'none',
-                  borderRadius: 8,
-                  background: '#1e90ff',
-                  color: '#fff',
-                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
               >
                 Save
               </button>
             </div>
-            <p style={{marginTop: 10, color: '#6b7280', fontSize: 12}}>
+            <p className="mt-3 text-xs text-gray-500">
               Table always shows 6 basic fields. This controls extra fields in
               the Details modal for HR.
             </p>
@@ -1006,28 +993,9 @@ export default function AdminUsers() {
 
       {/* Edit Modal */}
       {edit && (
-        <div
-          onClick={() => setEdit(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.3)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: 520,
-              maxWidth: '95vw',
-              background: '#fff',
-              borderRadius: 12,
-              padding: 16,
-            }}
-          >
-            <h3 style={{marginTop: 0}}>
+        <div onClick={() => setEdit(null)} className={MODAL_OVERLAY}>
+          <div onClick={e => e.stopPropagation()} className={MODAL_CARD}>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
               Edit:{' '}
               {editingName ? (
                 <input
@@ -1035,36 +1003,24 @@ export default function AdminUsers() {
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onBlur={() => setEditingName(false)}
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 600,
-                    border: '1px solid #ddd',
-                    borderRadius: 6,
-                    padding: '4px 8px',
-                  }}
+                  className="text-lg font-semibold border-b border-gray-300 dark:border-gray-600 focus:outline-none bg-transparent"
                 />
               ) : (
                 <span
                   onClick={() => setEditingName(true)}
                   title="Click to edit name"
-                  style={{cursor: 'text', borderBottom: '1px dashed #bbb'}}
+                  className="cursor-pointer border-b border-dashed border-gray-400 hover:border-blue-500 hover:text-blue-600 transition-colors"
                 >
                   {editName || edit.name}
                 </span>
               )}
             </h3>
 
-            <div style={{display: 'grid', gap: 12}}>
+            <div className="space-y-4">
               {/* Department & Position */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Department</div>
+                  <div className={LABEL_CLASS}>Department</div>
                   <select
                     value={editDeptId ?? ''}
                     onChange={e => {
@@ -1072,12 +1028,7 @@ export default function AdminUsers() {
                       setEditDeptId(v);
                       setEditPosId(null);
                     }}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   >
                     <option value="">—</option>
                     {depts.map(d => (
@@ -1089,7 +1040,7 @@ export default function AdminUsers() {
                 </label>
 
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Position</div>
+                  <div className={LABEL_CLASS}>Position</div>
                   <select
                     value={editPosId ?? ''}
                     onChange={e =>
@@ -1097,12 +1048,7 @@ export default function AdminUsers() {
                         e.target.value ? Number(e.target.value) : null,
                       )
                     }
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                     disabled={editDeptId == null}
                   >
                     <option value="">—</option>
@@ -1118,114 +1064,64 @@ export default function AdminUsers() {
               </div>
 
               {/* Dates */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Start date</div>
+                  <div className={LABEL_CLASS}>Start date</div>
                   <input
                     type="date"
                     value={editStart}
                     onChange={e => setEditStart(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   />
                 </label>
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>End date</div>
+                  <div className={LABEL_CLASS}>End date</div>
                   <input
                     type="date"
                     value={editEnd}
                     onChange={e => setEditEnd(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   />
                 </label>
               </div>
 
               {/* Contact */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Phone</div>
+                  <div className={LABEL_CLASS}>Phone</div>
                   <input
                     value={editPhone}
                     onChange={e => setEditPhone(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   />
                 </label>
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>
-                    Personal email
-                  </div>
+                  <div className={LABEL_CLASS}>Personal email</div>
                   <input
                     type="email"
                     value={editPersonalEmail}
                     onChange={e => setEditPersonalEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   />
                 </label>
               </div>
 
               {/* Demographics */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  gap: 12,
-                }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Country</div>
+                  <div className={LABEL_CLASS}>Country</div>
                   <input
                     value={editNationality}
                     onChange={e => setEditNationality(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   />
                 </label>
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Gender</div>
+                  <div className={LABEL_CLASS}>Gender</div>
                   <select
                     value={editGender}
                     onChange={e => setEditGender(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   >
                     <option value="">—</option>
                     <option value="male">Male</option>
@@ -1234,17 +1130,12 @@ export default function AdminUsers() {
                   </select>
                 </label>
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Birthdate</div>
+                  <div className={LABEL_CLASS}>Birthdate</div>
                   <input
                     type="date"
                     value={editBirthdate}
                     onChange={e => setEditBirthdate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   />
                 </label>
               </div>
@@ -1252,16 +1143,11 @@ export default function AdminUsers() {
               {/* Role (SA only) */}
               {isSA && edit?.userId && (
                 <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Role</div>
+                  <div className={LABEL_CLASS}>Role</div>
                   <select
                     value={editRole}
                     onChange={e => setEditRole(e.target.value as any)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className={INPUT_CLASS}
                   >
                     <option value="intern">EMP</option>
                     <option value="hr">hr</option>
@@ -1270,67 +1156,47 @@ export default function AdminUsers() {
                 </label>
               )}
               {/* Supervisor */}
-              <label style={{display: 'block', marginTop: 12}}>
-                <div className="text-sm text-gray-600 mb-1">Supervisor</div>
+              <label className="block">
+                <div className={LABEL_CLASS}>Supervisor</div>
                 <input
                   value={editSupervisor}
                   onChange={e => setEditSupervisor(e.target.value)}
                   placeholder="e.g. Antonio"
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    border: '1px solid #ddd',
-                    borderRadius: 8,
-                  }}
+                  className={INPUT_CLASS}
                 />
               </label>
 
               {/* Emp Type */}
-              <label style={{display: 'block', marginTop: 12}}>
-                <div className="text-sm text-gray-600 mb-1">Emp Type</div>
+              <label className="block">
+                <div className={LABEL_CLASS}>Emp Type</div>
                 <select
                   value={editEmpType}
                   onChange={e => setEditEmpType(e.target.value as EmpType)}
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    border: '1px solid #ddd',
-                    borderRadius: 8,
-                  }}
+                  className={INPUT_CLASS}
                   disabled={!edit?.userId}
                 >
-                  {// HR and SA can set team_lead
-                  (user?.role === 'super_admin' || user?.role === 'hr'
-                    ? (['intern', 'employee', 'team_lead'] as EmpType[])
-                    : (['intern', 'employee'] as EmpType[])
-                  ).map(opt => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
+                  {
+                    // HR and SA can set team_lead
+                    (user?.role === 'super_admin' || user?.role === 'hr'
+                      ? (['intern', 'employee', 'team_lead'] as EmpType[])
+                      : (['intern', 'employee'] as EmpType[])
+                    ).map(opt => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))
+                  }
                 </select>
               </label>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 10,
-                marginTop: 16,
-              }}
-            >
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => {
                   setEdit(null);
                   setPendingDelete(null);
                 }}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  background: '#fff',
-                }}
+                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
@@ -1339,13 +1205,7 @@ export default function AdminUsers() {
                 <button
                   onClick={() => saveEdit({thenDelete: true})}
                   disabled={!edit?.internId || !editEnd}
-                  style={{
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: 8,
-                    background: '#ef4444',
-                    color: '#fff',
-                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save & Delete
                 </button>
@@ -1354,20 +1214,14 @@ export default function AdminUsers() {
               <button
                 onClick={() => saveEdit()}
                 disabled={!edit?.internId}
-                style={{
-                  padding: '8px 12px',
-                  border: 'none',
-                  borderRadius: 8,
-                  background: '#10b981',
-                  color: '#fff',
-                }}
+                className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save
               </button>
             </div>
 
             {!edit?.internId && (
-              <p style={{marginTop: 8, color: '#b45309'}}>
+              <p className="mt-2 text-sm text-amber-600">
                 (This looks like a staff account. Edit for staff isn’t wired
                 yet.)
               </p>
@@ -1378,48 +1232,15 @@ export default function AdminUsers() {
 
       {/* Details Modal */}
       {view && (
-        <div
-          onClick={() => setView(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.35)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 1100,
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: 640,
-              maxWidth: '95vw',
-              maxHeight: '85vh',
-              overflow: 'auto',
-              background: '#fff',
-              borderRadius: 12,
-              padding: 18,
-              boxShadow: '0 10px 30px rgba(0,0,0,.15)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 8,
-              }}
-            >
-              <h3 style={{margin: 0}}>Details: {view.name}</h3>
+        <div onClick={() => setView(null)} className={MODAL_OVERLAY}>
+          <div onClick={e => e.stopPropagation()} className={MODAL_CARD}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Details: {view.name}
+              </h3>
               <button
                 onClick={() => setView(null)}
-                style={{
-                  border: '1px solid #ddd',
-                  background: '#fff',
-                  borderRadius: 8,
-                  padding: '6px 10px',
-                  cursor: 'pointer',
-                }}
+                className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Close
               </button>
@@ -1435,46 +1256,37 @@ export default function AdminUsers() {
               } | null;
 
               return (
-                <>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '180px 1fr',
-                      gap: '10px 16px',
-                    }}
-                  >
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {items.map((it, idx) => (
-                      <FragmentRow
-                        key={idx}
-                        label={it.label}
-                        value={it.value}
-                      />
+                      <div key={idx}>
+                        <FragmentRow label={it.label} value={it.value} />
+                      </div>
                     ))}
                   </div>
 
-                  <hr
-                    style={{
-                      margin: '16px 0',
-                      border: 0,
-                      borderTop: '1px solid #eee',
-                    }}
-                  />
+                  <hr className="border-gray-100 dark:border-gray-700" />
 
-                  <h4 style={{margin: '0 0 8px'}}>Emergency Contact (SOS)</h4>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '180px 1fr',
-                      gap: '10px 16px',
-                    }}
-                  >
-                    <FragmentRow label="SOS Phone" value={sos?.phone ?? '—'} />
-                    <FragmentRow
-                      label="SOS Relation"
-                      value={sos?.relation ?? '—'}
-                    />
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                      Emergency Contact (SOS)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <FragmentRow
+                          label="SOS Phone"
+                          value={sos?.phone ?? '—'}
+                        />
+                      </div>
+                      <div>
+                        <FragmentRow
+                          label="SOS Relation"
+                          value={sos?.relation ?? '—'}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </>
+                </div>
               );
             })()}
           </div>
@@ -1483,173 +1295,91 @@ export default function AdminUsers() {
 
       {/* Update Log Modal */}
       {showUpdateLog && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              background: 'white',
-              borderRadius: 12,
-              width: '90%',
-              maxWidth: 900,
-              maxHeight: '80vh',
-              overflow: 'auto',
-              padding: 24,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 20,
-              }}
-            >
-              <h2 style={{margin: 0, fontSize: 20, fontWeight: 600}}>
+        <div className={MODAL_OVERLAY}>
+          <div className={`${MODAL_CARD} max-w-4xl`}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Update History: {updateLogUser?.name || 'User'}
               </h2>
               <button
                 onClick={() => setShowUpdateLog(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: 24,
-                  cursor: 'pointer',
-                }}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl leading-none"
               >
                 ×
               </button>
             </div>
 
             {loadingLogs ? (
-              <div style={{textAlign: 'center', padding: 40}}>Loading...</div>
+              <div className="text-center py-10 text-gray-500">Loading...</div>
             ) : updateLogs.length === 0 ? (
-              <div style={{textAlign: 'center', padding: 40, color: '#6b7280'}}>
+              <div className="text-center py-10 text-gray-500">
                 No update history found
               </div>
             ) : (
-              <div style={{overflowX: 'auto'}}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: 14,
-                  }}
-                >
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
                   <thead>
-                    <tr
-                      style={{
-                        borderBottom: '2px solid #e5e7eb',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <th style={{padding: 12, fontWeight: 600}}>
+                    <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                      <th className="p-3 font-semibold text-gray-900 dark:text-gray-100">
                         Date & Time
                       </th>
-                      <th style={{padding: 12, fontWeight: 600}}>Field</th>
-                      <th style={{padding: 12, fontWeight: 600}}>Old Value</th>
-                      <th style={{padding: 12, fontWeight: 600}}>New Value</th>
-                      <th style={{padding: 12, fontWeight: 600}}>Updated By</th>
-                      <th style={{padding: 12, fontWeight: 600}}>IP</th>
+                      <th className="p-3 font-semibold text-gray-900 dark:text-gray-100">
+                        Field
+                      </th>
+                      <th className="p-3 font-semibold text-gray-900 dark:text-gray-100">
+                        Old Value
+                      </th>
+                      <th className="p-3 font-semibold text-gray-900 dark:text-gray-100">
+                        New Value
+                      </th>
+                      <th className="p-3 font-semibold text-gray-900 dark:text-gray-100">
+                        Updated By
+                      </th>
+                      <th className="p-3 font-semibold text-gray-900 dark:text-gray-100">
+                        IP
+                      </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                     {updateLogs.map(log => (
                       <tr
                         key={log.id}
-                        style={{borderBottom: '1px solid #f3f4f6'}}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
-                        <td
-                          style={{
-                            padding: 12,
-                            color: '#4b5563',
-                            fontSize: 13,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        <td className="p-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                           {new Date(log.updatedAt).toLocaleString()}
                         </td>
-                        <td style={{padding: 12}}>
-                          <span style={{fontWeight: 600, color: '#1f2937'}}>
-                            {log.fieldName}
-                          </span>
+                        <td className="p-3 font-medium text-gray-800 dark:text-gray-200">
+                          {log.fieldName}
                         </td>
-                        <td
-                          style={{
-                            padding: 12,
-                            color: '#dc2626',
-                            maxWidth: 200,
-                            wordBreak: 'break-word',
-                          }}
-                        >
+                        <td className="p-3 text-red-600 dark:text-red-400 max-w-[200px] break-all">
                           {log.oldValue || (
-                            <span style={{color: '#9ca3af'}}>—</span>
+                            <span className="text-gray-400">—</span>
                           )}
                         </td>
-                        <td
-                          style={{
-                            padding: 12,
-                            color: '#059669',
-                            maxWidth: 200,
-                            wordBreak: 'break-word',
-                          }}
-                        >
+                        <td className="p-3 text-emerald-600 dark:text-emerald-400 max-w-[200px] break-all">
                           {log.newValue || (
-                            <span style={{color: '#9ca3af'}}>—</span>
+                            <span className="text-gray-400">—</span>
                           )}
                         </td>
-                        <td style={{padding: 12}}>
-                          <div style={{fontWeight: 500, color: '#1f2937'}}>
+                        <td className="p-3">
+                          <div className="font-medium text-gray-800 dark:text-gray-200">
                             {log.updatedByName}
                           </div>
                           {log.updatedByRole && (
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: '#6b7280',
-                                marginTop: 2,
-                              }}
-                            >
-                              <span
-                                style={{
-                                  padding: '2px 6px',
-                                  background: '#e5e7eb',
-                                  borderRadius: 4,
-                                  marginRight: 4,
-                                }}
-                              >
+                            <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1">
+                              <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
                                 {log.updatedByRole}
                               </span>
                               {log.updatedByEmpType && (
-                                <span
-                                  style={{
-                                    padding: '2px 6px',
-                                    background: '#dbeafe',
-                                    borderRadius: 4,
-                                  }}
-                                >
+                                <span className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
                                   {log.updatedByEmpType.replace('_', ' ')}
                                 </span>
                               )}
                             </div>
                           )}
                         </td>
-                        <td
-                          style={{
-                            padding: 12,
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                            color: '#6b7280',
-                          }}
-                        >
+                        <td className="p-3 font-mono text-xs text-gray-500">
                           {log.ip || '—'}
                         </td>
                       </tr>
@@ -1659,24 +1389,10 @@ export default function AdminUsers() {
               </div>
             )}
 
-            <div
-              style={{
-                marginTop: 20,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowUpdateLog(false)}
-                style={{
-                  padding: '10px 20px',
-                  background: '#2d8cf0',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
+                className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
                 Close
               </button>
@@ -1690,10 +1406,12 @@ export default function AdminUsers() {
 
 function FragmentRow({label, value}: {label: string; value: string}) {
   return (
-    <>
-      <strong>{label}</strong>
-      <div style={{overflowWrap: 'anywhere'}}>{value}</div>
-    </>
+    <div>
+      <div className={LABEL_CLASS}>{label}</div>
+      <div className="text-sm text-gray-900 dark:text-gray-100 font-medium break-all">
+        {value}
+      </div>
+    </div>
   );
 }
 

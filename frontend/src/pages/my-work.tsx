@@ -208,7 +208,10 @@ export default function MyWorkPage() {
     <div className="flex-1 p-8 bg-gray-50 h-screen overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-medium text-gray-900">My Work</h1>
-        <Link href="/projects" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+        <Link
+          href="/projects"
+          className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+        >
           ← Back to Projects
         </Link>
       </div>
@@ -228,12 +231,19 @@ export default function MyWorkPage() {
             const projectProgress = getProjectProgress(p.id);
 
             return (
-              <div key={p.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+              <div
+                key={p.id}
+                className="bg-white rounded-lg border border-gray-200 shadow-sm p-6"
+              >
                 <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-4">
                   <div className="flex-1">
-                    <h2 className="text-xl font-medium text-gray-900">{p.title}</h2>
+                    <h2 className="text-xl font-medium text-gray-900">
+                      {p.title}
+                    </h2>
                     {p.description && (
-                      <p className="text-sm text-gray-500 mt-1">{p.description}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {p.description}
+                      </p>
                     )}
                     <div className="flex gap-4 mt-2 text-xs text-gray-500">
                       <div className="flex items-center gap-1">
@@ -303,7 +313,9 @@ export default function MyWorkPage() {
                             }}
                           >
                             <div className="flex-1">
-                              <h3 className="text-sm font-medium text-gray-900">{t.title}</h3>
+                              <h3 className="text-sm font-medium text-gray-900">
+                                {t.title}
+                              </h3>
                               <div className="flex flex-wrap gap-3 mt-2">
                                 {t.dueDate && (
                                   <div
@@ -337,7 +349,9 @@ export default function MyWorkPage() {
                           {expanded && (
                             <div className="border-t border-gray-100 p-4 bg-gray-50 rounded-b-lg">
                               <div className="mb-4">
-                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Update Status</h4>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                                  Update Status
+                                </h4>
                                 <div className="flex flex-wrap gap-2">
                                   {(
                                     [
