@@ -1,6 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --primary: #1a73e8;
   --background: #f8f9fa;
+  --foreground: #202124;
+  --primary: #1a73e8;
   --surface: #ffffff;
   --text-high: #202124;
   --text-medium: #5f6368;
@@ -11,7 +16,8 @@
 
 .dark,
 [data-theme='dark'] {
-  --background: #202124;
+  --background: #0a0a0a;
+  --foreground: #ededed;
   --surface: #2d2e31;
   --text-high: #e8eaed;
   --text-medium: #9aa0a6;
