@@ -61,8 +61,7 @@ export default function AlertsPage() {
     setLoading(false);
   }
   useEffect(() => {
-    if (ready && isAuthenticated && user?.role === 'super_admin')
-      load(); /* eslint-disable-next-line */
+    if (ready && isAuthenticated && user?.role === 'super_admin') load();
   }, [qs, ready, isAuthenticated, user?.role]);
 
   async function setAlertResolved(id: number, val: boolean) {
