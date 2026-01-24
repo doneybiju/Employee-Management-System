@@ -112,7 +112,7 @@ const fullname = (u?: Pick<UserRow, 'firstName' | 'surname'> | null) =>
 export default function AdminDocumentManagement() {
   const [users, setUsers] = useState<UserRow[]>([]);
 
-  // filters
+  // filters - restored searchText
   const [searchText, setSearchText] = useState('');
   const [searchField, setSearchField] = useState<SearchField>('firstName');
   const [docFilter, setDocFilter] = useState<DocFilter>('all');
