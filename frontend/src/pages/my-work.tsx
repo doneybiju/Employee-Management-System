@@ -1,8 +1,16 @@
-// frontend/src/pages/my-work.tsx
 import {useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {fetchWithAuth} from '@/lib/api';
 import {useAuth} from '@/context/AuthContext';
+import {
+  CheckCircle,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  Loader2,
+  ArrowLeft,
+} from 'lucide-react';
 
 type Member = {id: number; name: string};
 type ProjectSummary = {
@@ -25,27 +33,29 @@ type MyTask = {
   checklistEnabled: boolean;
 };
 
-const statusIcons = {
-  NOT_STARTED: '⏳',
-  IN_PROGRESS: '🔄',
-  BLOCKED: '🚫',
-  COMPLETED: '✅',
-};
-
-function getStatusClasses(status: string) {
+const getStatusColor = (status: string) => {
   switch (status) {
     case 'NOT_STARTED':
-      return 'bg-gray-100 text-gray-500';
+      return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     case 'IN_PROGRESS':
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
     case 'BLOCKED':
-      return 'bg-red-100 text-red-600';
+      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
     case 'COMPLETED':
-      return 'bg-green-100 text-green-800';
+      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
     default:
-      return 'bg-gray-100 text-gray-500';
+      return 'bg-gray-100 text-gray-600';
   }
-}
+};
+
+const getPriorityColor = (dueDate?: string | null) => {
+  if (!dueDate) return 'bg-gray-400';
+  const days =
+    (new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24);
+  if (days < 3) return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]'; // High
+  if (days < 7) return 'bg-yellow-500'; // Medium
+  return 'bg-blue-400'; // Low/Normal
+};
 
 export default function MyWorkPage() {
   const {user} = useAuth();
@@ -178,7 +188,6 @@ export default function MyWorkPage() {
     }));
   }
 
-  // Calculate progress for each project
   const getProjectProgress = (projectId: number) => {
     const projectTasks = tasksByProject[projectId] || [];
     if (projectTasks.length === 0) return 0;
@@ -191,23 +200,24 @@ export default function MyWorkPage() {
 
   if (loading)
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-30 text-center bg-gray-50 rounded-2xl">
-        <div className="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-        <p>Loading your work...</p>
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
 
   if (err)
     return (
-      <div className="text-center py-20 px-10 max-w-[500px] mx-auto mt-10 bg-white rounded-2xl shadow-sm">
-        <div className="text-6xl mb-6">⚠️</div>
-        <h2 className="text-2xl text-red-600 mb-4 font-bold">
-          Error Loading Your Work
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+        <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle size={32} />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          Error Loading Work
         </h2>
-        <p>{err}</p>
+        <p className="text-gray-500 mb-6">{err}</p>
         <button
-          className="bg-blue-600 text-white border-none py-3 px-6 rounded-lg mt-6 cursor-pointer font-semibold transition-colors hover:bg-blue-700"
           onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
         >
           Try Again
         </button>
@@ -215,269 +225,281 @@ export default function MyWorkPage() {
     );
 
   return (
-    <div className="max-w-[1200px] mx-auto p-6 text-gray-900 bg-gray-50 min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b-2 border-gray-200 gap-4">
-        <h1 className="text-4xl font-extrabold m-0 text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-cyan-500">
-          My Work
-        </h1>
+    <div className="p-8 max-w-[1200px] mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            My Work
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Track your tasks and project progress.
+          </p>
+        </div>
         <Link
           href="/projects"
-          className="inline-flex items-center gap-2 text-gray-500 font-semibold px-5 py-3 rounded-lg bg-white shadow-sm transition-all hover:text-blue-600 hover:-translate-y-0.5 hover:shadow-md no-underline"
+          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#222] transition-colors"
         >
-          ← Back to Projects
+          <ArrowLeft size={16} /> Back to Projects
         </Link>
       </div>
 
       {memberProjects.length === 0 ? (
-        <div className="text-center py-20 px-10 bg-white rounded-[20px] shadow-sm border-2 border-dashed border-gray-200">
-          <div className="text-6xl mb-5 opacity-70">📊</div>
-          <h2 className="text-2xl text-gray-600 mb-3">No Projects Assigned</h2>
-          <p className="text-lg text-gray-500">
-            You&apos;re not a member of any projects yet.
+        <div className="text-center py-20 bg-white dark:bg-[#111] rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+          <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-[#222] rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="text-gray-400" size={24} />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            No work assigned
+          </h3>
+          <p className="text-gray-500 mt-1">
+            You are not a member of any projects yet.
           </p>
         </div>
       ) : (
-        memberProjects.map(p => {
-          const myTasksForProject = (tasksByProject[p.id] || []).sort(
-            (a, b) => a.id - b.id,
-          );
-          const projectProgress = getProjectProgress(p.id);
+        <div className="space-y-8">
+          {memberProjects.map(p => {
+            const myTasksForProject = (tasksByProject[p.id] || []).sort(
+              (a, b) => a.id - b.id,
+            );
+            const projectProgress = getProjectProgress(p.id);
 
-          return (
-            <div
-              key={p.id}
-              className="bg-white rounded-[20px] mb-6 shadow-sm border border-gray-200 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 flex flex-col md:flex-row justify-between items-start gap-5">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold mb-2 text-gray-800 leading-tight">
-                    {p.title}
-                  </h2>
+            return (
+              <div
+                key={p.id}
+                className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm"
+              >
+                {/* Project Header */}
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-[#1A1A1A]/30">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                        {p.title}
+                        <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                          {p.members.length} members
+                        </span>
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                      <div className="flex-1 md:w-48">
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-gray-500 font-medium">
+                            Your Progress
+                          </span>
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {projectProgress}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                            style={{width: `${projectProgress}%`}}
+                          />
+                        </div>
+                      </div>
+                      <Link href={`/projects/${p.id}`} className="shrink-0">
+                        <button className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-[#333] transition-colors">
+                          View Project
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+
                   {p.description && (
-                    <p className="text-gray-500 mb-3 leading-relaxed text-base">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
                       {p.description}
                     </p>
                   )}
-                  <div className="flex gap-5 flex-wrap">
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                      <span className="text-base">👥</span>
-                      <span>{p.members?.length || 0} members</span>
-                    </div>
-                    {p.dueDate && (
-                      <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                        <span className="text-base">📅</span>
-                        <span>
-                          Due {new Date(p.dueDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                      <span className="text-base">📋</span>
-                      <span>
-                        {myTasksForProject.length} tasks assigned to you
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  {myTasksForProject.length > 0 && (
-                    <div className="py-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider m-0">
-                          Your Progress
-                        </h3>
-                        <span>{projectProgress}%</span>
-                      </div>
-                      <div className="w-full h-2 bg-gray-200 rounded overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-600 to-cyan-500 rounded transition-[width] duration-300 ease-in-out"
-                          style={{width: `${projectProgress}%`}}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                <Link
-                  href={`/projects/${p.id}`}
-                  className="inline-flex items-center gap-2 text-blue-600 font-semibold px-4 py-2.5 rounded-lg bg-blue-500/10 transition-all flex-shrink-0 hover:bg-blue-500/20 hover:translate-x-1 no-underline self-start md:self-auto"
-                >
-                  Open Project →
-                </Link>
-              </div>
+                {/* Task List */}
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {myTasksForProject.length > 0 ? (
+                    myTasksForProject.map(t => {
+                      const expanded = isExpanded(t.id);
+                      const detail = taskDetail[t.id];
 
-              <div className="p-6">
-                {myTasksForProject.length ? (
-                  myTasksForProject.map(t => {
-                    const detail = taskDetail[t.id];
-                    const expanded = isExpanded(t.id);
-                    const statusIcon = statusIcons[t.status];
-                    const statusClass = getStatusClasses(t.status);
-
-                    return (
-                      <div
-                        key={t.id}
-                        className={`bg-white border-2 rounded-2xl mb-4 transition-all overflow-hidden hover:shadow-lg ${
-                          expanded
-                            ? 'border-blue-500 shadow-[0_12px_40px_rgba(0,112,243,0.15)]'
-                            : 'border-gray-100 hover:border-gray-200'
-                        }`}
-                      >
+                      return (
                         <div
-                          className="p-5 cursor-pointer flex flex-col md:flex-row items-start md:items-center gap-4 bg-gradient-to-br from-gray-50 to-white transition-colors hover:from-gray-100 hover:to-gray-50"
-                          onClick={() => {
-                            toggleExpanded(t.id);
-                            if (!isExpanded(t.id))
-                              ensureTaskDetail(t).catch(() => {});
-                          }}
+                          key={t.id}
+                          className="group hover:bg-gray-50 dark:hover:bg-[#1A1A1A]/50 transition-colors"
                         >
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold mb-1.5 text-gray-800 leading-snug">
-                              {t.title}
-                            </h3>
-                            <div className="flex gap-4 flex-wrap flex-col md:flex-row">
-                              {t.dueDate && (
-                                <div
-                                  className={`flex items-center gap-1.5 text-sm ${new Date(t.dueDate) < new Date() ? 'text-red-600 font-semibold' : 'text-gray-500'}`}
-                                >
-                                  <span>📅</span>
-                                  <span>
-                                    Due{' '}
-                                    {new Date(t.dueDate).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              )}
-                              <div
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusClass}`}
-                              >
-                                {statusIcon} {t.status.replace('_', ' ')}
-                              </div>
-                            </div>
-                          </div>
                           <div
-                            className={`text-xl text-gray-500 transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`}
+                            className="p-4 flex items-start gap-4 cursor-pointer"
+                            onClick={() => {
+                              toggleExpanded(t.id);
+                              if (!isExpanded(t.id))
+                                ensureTaskDetail(t).catch(() => {});
+                            }}
                           >
-                            ▼
-                          </div>
-                        </div>
+                            {/* Priority Dot */}
+                            <div
+                              className={`mt-2 w-2.5 h-2.5 rounded-full shrink-0 ${getPriorityColor(t.dueDate)}`}
+                              title="Priority Indicator"
+                            />
 
-                        {expanded && (
-                          <div className="p-5 border-t border-gray-100 animate-[slideDown_0.3s_ease]">
-                            <div className="mb-5 p-5 bg-gray-50 rounded-xl">
-                              <h4 className="m-0 mb-3 text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                                Update Status
-                              </h4>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                                {(
-                                  [
-                                    'NOT_STARTED',
-                                    'IN_PROGRESS',
-                                    'BLOCKED',
-                                    'COMPLETED',
-                                  ] as const
-                                ).map(s => {
-                                  const sIcon = statusIcons[s];
-                                  const sClass = getStatusClasses(s);
-                                  return (
-                                    <button
-                                      key={s}
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        updateStatus(t.id, s).catch(err =>
-                                          alert(err.message),
-                                        );
-                                      }}
-                                      disabled={t.status === s}
-                                      className={`p-2.5 border-2 rounded-lg bg-white cursor-pointer transition-all text-xs font-semibold text-center flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:scale-[1.02] ${
-                                        t.status === s
-                                          ? `${sClass} font-bold border-transparent`
-                                          : 'border-gray-200 hover:border-blue-500 hover:-translate-y-px hover:shadow-md'
-                                      }`}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start gap-4">
+                                <div>
+                                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                                    {t.title}
+                                  </h3>
+                                  <div className="flex items-center gap-3 mt-1.5">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getStatusColor(t.status)}`}
                                     >
-                                      {sIcon} {s.replace('_', ' ')}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Checklist */}
-                            {detail ? (
-                              detail.checklistEnabled ? (
-                                <div className="p-5 bg-gray-50 rounded-xl">
-                                  <div className="flex items-center gap-3 mb-4">
-                                    <span className="text-xl">📋</span>
-                                    <h4 className="text-base font-semibold m-0 text-gray-800">
-                                      Checklist
-                                    </h4>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {detail.checklistItems.length ? (
-                                      detail.checklistItems
-                                        .sort(
-                                          (a, b) =>
-                                            a.sort - b.sort || a.id - b.id,
-                                        )
-                                        .map(i => (
-                                          <div
-                                            key={i.id}
-                                            className="flex items-center gap-3 p-3 bg-white border-2 border-gray-100 rounded-lg transition-all hover:border-gray-200 hover:translate-x-1"
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={i.done}
-                                              onChange={e => {
-                                                e.stopPropagation();
-                                                toggleChecklistItem(
-                                                  t,
-                                                  i.id,
-                                                  e.target.checked,
-                                                ).catch(err =>
-                                                  alert(err.message),
-                                                );
-                                              }}
-                                              className="w-5 h-5 rounded-md border-2 border-gray-300 cursor-pointer relative flex-shrink-0 appearance-none checked:bg-blue-600 checked:border-blue-600 after:content-['✓'] after:text-white after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-xs after:font-bold"
-                                            />
-                                            <span
-                                              className={`text-sm flex-1 font-medium ${i.done ? 'line-through text-gray-400' : ''}`}
-                                            >
-                                              {i.title}
-                                            </span>
-                                          </div>
-                                        ))
-                                    ) : (
-                                      <div className="text-center p-5 text-gray-500 italic">
-                                        No checklist items yet.
-                                      </div>
+                                      {t.status.replace('_', ' ')}
+                                    </span>
+                                    {t.dueDate && (
+                                      <span
+                                        className={`flex items-center gap-1 text-xs ${
+                                          new Date(t.dueDate) < new Date()
+                                            ? 'text-red-500 font-medium'
+                                            : 'text-gray-500'
+                                        }`}
+                                      >
+                                        <Calendar size={12} />
+                                        {new Date(
+                                          t.dueDate,
+                                        ).toLocaleDateString()}
+                                      </span>
                                     )}
                                   </div>
                                 </div>
-                              ) : (
-                                <div className="text-center p-5 text-gray-400 italic">
-                                  Checklist is disabled for this task.
+
+                                <div className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300">
+                                  {expanded ? (
+                                    <ChevronUp size={18} />
+                                  ) : (
+                                    <ChevronDown size={18} />
+                                  )}
                                 </div>
-                              )
-                            ) : (
-                              <div className="text-center p-5 text-gray-500">
-                                Loading checklist...
                               </div>
-                            )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center p-10 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                    <p className="m-0 text-base">
-                      No tasks assigned to you in this project.
-                    </p>
-                  </div>
-                )}
+
+                          {/* Expanded Content */}
+                          {expanded && (
+                            <div className="px-4 pb-4 pl-[3.25rem]">
+                              <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <div className="mb-4">
+                                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                                    Status
+                                  </label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {(
+                                      [
+                                        'NOT_STARTED',
+                                        'IN_PROGRESS',
+                                        'BLOCKED',
+                                        'COMPLETED',
+                                      ] as const
+                                    ).map(s => (
+                                      <button
+                                        key={s}
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          updateStatus(t.id, s);
+                                        }}
+                                        disabled={t.status === s}
+                                        className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                                          t.status === s
+                                            ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-transparent'
+                                            : 'bg-white dark:bg-[#222] border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                                        }`}
+                                      >
+                                        {s.replace('_', ' ')}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Checklist */}
+                                {detail ? (
+                                  detail.checklistEnabled ? (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <CheckCircle
+                                          size={14}
+                                          className="text-gray-400"
+                                        />
+                                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                          Checklist
+                                        </h4>
+                                      </div>
+                                      <div className="space-y-1">
+                                        {detail.checklistItems.length > 0 ? (
+                                          detail.checklistItems
+                                            .sort(
+                                              (a, b) =>
+                                                a.sort - b.sort || a.id - b.id,
+                                            )
+                                            .map(item => (
+                                              <div
+                                                key={item.id}
+                                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#1A1A1A] cursor-pointer group/item"
+                                                onClick={e => {
+                                                  e.stopPropagation();
+                                                  toggleChecklistItem(
+                                                    t,
+                                                    item.id,
+                                                    !item.done,
+                                                  );
+                                                }}
+                                              >
+                                                <div
+                                                  className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                                                    item.done
+                                                      ? 'bg-blue-600 border-blue-600 text-white'
+                                                      : 'border-gray-300 dark:border-gray-600 group-hover/item:border-blue-500'
+                                                  }`}
+                                                >
+                                                  {item.done && (
+                                                    <CheckCircle size={10} />
+                                                  )}
+                                                </div>
+                                                <span
+                                                  className={`text-sm ${item.done ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'}`}
+                                                >
+                                                  {item.title}
+                                                </span>
+                                              </div>
+                                            ))
+                                        ) : (
+                                          <p className="text-sm text-gray-500 italic pl-7">
+                                            No checklist items.
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : null
+                                ) : (
+                                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Loader2
+                                      size={14}
+                                      className="animate-spin"
+                                    />{' '}
+                                    Loading details...
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-8 text-center text-gray-500">
+                      <p className="text-sm">
+                        No tasks assigned to you in this project.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })
+            );
+          })}
+        </div>
       )}
     </div>
   );
