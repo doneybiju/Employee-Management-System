@@ -1,5 +1,15 @@
 import {useMemo, useState} from 'react';
 import {Deadline} from '@/types/dashboard';
+import {
+  Clock,
+  ChevronUp,
+  ChevronDown,
+  CheckCircle,
+  ListTodo,
+  Flag,
+  File,
+  Calendar,
+} from 'lucide-react';
 
 function daysLeft(iso: string) {
   return Math.ceil(
@@ -30,10 +40,10 @@ export default function UpcomingDeadlines({
   );
 
   return (
-    <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+    <section className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6 shadow-sm">
       <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
-          <i className="fas fa-clock text-blue-600" />
+          <Clock className="w-5 h-5 text-blue-600" />
           {title}
           <span className="bg-blue-600 text-white px-2 py-0.5 rounded-xl text-xs font-semibold">
             {deadlines.length}
@@ -46,7 +56,11 @@ export default function UpcomingDeadlines({
             onClick={() => setShowAll(v => !v)}
           >
             {showAll ? 'Show Less' : 'View All'}
-            <i className={`fas fa-chevron-${showAll ? 'up' : 'down'}`} />
+            {showAll ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
           </button>
         )}
       </div>
@@ -54,8 +68,8 @@ export default function UpcomingDeadlines({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
         {visible.length === 0 ? (
           <div className="col-span-full text-center py-12 px-5">
-            <div className="text-5xl text-gray-300 mb-4">
-              <i className="fas fa-check-circle" />
+            <div className="text-5xl text-gray-300 mb-4 flex justify-center">
+              <CheckCircle className="w-12 h-12" />
             </div>
             <h3 className="text-gray-500 text-base font-semibold mb-2">
               No upcoming deadlines
@@ -86,19 +100,17 @@ export default function UpcomingDeadlines({
             return (
               <div
                 key={i}
-                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:-translate-y-px transition-transform shadow-sm hover:shadow-md ${borderClass}`}
+                className={`bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:border-blue-500/50 transition-colors shadow-sm ${borderClass}`}
               >
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 capitalize">
-                    <i
-                      className={`fas ${
-                        d.kind === 'task'
-                          ? 'fa-tasks'
-                          : d.kind === 'internship_end'
-                            ? 'fa-flag'
-                            : 'fa-file'
-                      }`}
-                    />
+                    {d.kind === 'task' ? (
+                      <ListTodo className="w-3.5 h-3.5" />
+                    ) : d.kind === 'internship_end' ? (
+                      <Flag className="w-3.5 h-3.5" />
+                    ) : (
+                      <File className="w-3.5 h-3.5" />
+                    )}
                     {d.kind.replace('_', ' ')}
                   </div>
                   <div
@@ -117,7 +129,7 @@ export default function UpcomingDeadlines({
                 )}
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <i className="fas fa-calendar" />
+                    <Calendar className="w-3.5 h-3.5" />
                     {new Date(d.dueDate).toLocaleDateString()}
                   </div>
                 </div>
