@@ -1,8 +1,24 @@
 // frontend/src/pages/admin/deprovision.tsx
 import {useEffect, useRef, useState} from 'react';
-import styles from './deprovision.module.css';
 import {fetchWithAuth} from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import {
+  Clock,
+  Trash2,
+  Settings,
+  Mail,
+  RefreshCw,
+  Check,
+  X,
+  UserMinus,
+  FileX,
+  History,
+  AlertTriangle,
+  Play,
+  Bell,
+  AlertCircle,
+} from 'lucide-react';
+
 /* ========= Types ========= */
 type Policy = {
   id: number;
@@ -119,8 +135,6 @@ function DeprovisionSettings() {
   };
 
   /* ----- Deprovision state ----- */
-  const emailRef = useRef<HTMLInputElement | null>(null);
-
   const [transferEnabled, setTransferEnabled] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [delayAmount, setDelayAmount] = useState(0);
@@ -170,10 +184,6 @@ function DeprovisionSettings() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function isEmail(v: string) {
-    return /\S+@\S+\.\S+/.test(v.trim());
   }
 
   async function toggleTransfer(next: boolean) {
@@ -654,22 +664,12 @@ function DeprovisionSettings() {
 
   /* ========= Render ========= */
   return (
-    <div className={styles.wrapper}>
-      {/* toast */}
+    <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-[#0a0a0a]">
+      {/* Toast */}
       {toast && (
         <div
           role="alert"
-          style={{
-            position: 'fixed',
-            top: 16,
-            right: 16,
-            zIndex: 1000,
-            background: '#111',
-            color: '#fff',
-            padding: '10px 14px',
-            borderRadius: 8,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-          }}
+          className="fixed top-4 right-4 z-50 bg-[#111] text-white px-4 py-2.5 rounded-lg shadow-xl animate-fade-in"
         >
           {toast}
         </div>
@@ -677,61 +677,27 @@ function DeprovisionSettings() {
 
       {/* Bottom notification bar for "Send now" */}
       {noticeOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            left: '50%',
-            bottom: 20,
-            transform: 'translateX(-50%)',
-            width: 'min(94vw, 640px)',
-            background: '#fff',
-            borderRadius: 12,
-            padding: 16,
-            display: 'flex',
-            gap: 12,
-            alignItems: 'center',
-            boxShadow: '0 12px 30px rgba(0,0,0,.18)',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 999,
-              display: 'grid',
-              placeItems: 'center',
-              background: '#fef3c7',
-              color: '#d97706',
-              flexShrink: 0,
-            }}
-          >
-            !
+        <div className="fixed left-1/2 bottom-5 -translate-x-1/2 w-[min(94vw,640px)] bg-white dark:bg-[#1A1A1A] rounded-xl p-4 flex gap-3 items-center shadow-2xl z-50 border border-gray-100 dark:border-gray-800">
+          <div className="w-10 h-10 rounded-full grid place-items-center bg-amber-100 text-amber-600 shrink-0">
+            <AlertTriangle size={20} />
           </div>
-          <div style={{flex: 1}}>
-            <div style={{fontWeight: 600, color: '#2c3e50'}}>
+          <div className="flex-1">
+            <div className="font-semibold text-gray-800 dark:text-gray-100">
               Document Reminder
             </div>
-            <div style={{color: '#6b7280', fontSize: 14}}>{noticeMsg}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {noticeMsg}
+            </div>
           </div>
-          <div style={{display: 'flex', gap: 8}}>
+          <div className="flex gap-2">
             <button
-              className={styles.btn}
-              style={{background: '#f3f4f6', color: '#374151', border: 'none'}}
+              className="px-3 py-1.5 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               onClick={() => setNoticeOpen(false)}
             >
               Dismiss
             </button>
             <a
-              className={styles.btn}
-              style={{
-                background: '#4a6cf7',
-                color: '#fff',
-                border: 'none',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
               href="/admin/document-management"
             >
               Open Docs
@@ -741,285 +707,272 @@ function DeprovisionSettings() {
       )}
 
       {/* Sidebar */}
-      <aside className={styles.navbar}>
-        <div className={styles.navHeader}>
-          <div className={styles.navTitle}>
-            <span>⚙️</span>
-            <span>Cron Manager</span>
+      <aside className="w-72 bg-white dark:bg-[#111] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+              <Settings size={20} />
+            </div>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+              Cron Manager
+            </h1>
           </div>
-          <div className={styles.navDesc}>
-            Manage all your scheduled tasks in one place
-          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            Manage automated tasks and policies
+          </p>
         </div>
 
-        <div className={styles.navItems}>
-          {/* Intern Deprovisioning */}
-          <div
-            className={`${styles.navItem} ${section === 'deprov' ? styles.active : ''}`}
-            role="button"
-            tabIndex={0}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          {/* Deprovisioning */}
+          <button
             onClick={() => setSection('deprov')}
+            className={`w-full text-left p-3 rounded-xl transition-all border ${
+              section === 'deprov'
+                ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900/30'
+                : 'bg-transparent border-transparent hover:bg-gray-50 dark:hover:bg-white/5'
+            }`}
           >
-            <div className={styles.itemTitle}>
-              <span>👩‍🎓</span>
-              <span> Deprovisioning</span>
-            </div>
-            <div className={styles.itemDesc}>Manage account deprovisioning</div>
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={e => {
-                  e.stopPropagation();
-                  runDeprovNow();
-                }}
-                disabled={running || loading}
+            <div className="flex items-center gap-3 mb-1">
+              <UserMinus
+                size={18}
+                className={
+                  section === 'deprov'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-400'
+                }
+              />
+              <span
+                className={`font-medium ${
+                  section === 'deprov'
+                    ? 'text-blue-900 dark:text-blue-100'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}
               >
-                {running ? 'Running…' : 'Run Now'}
-              </button>
-              {enabled ? (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSuccess}`}
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleDeprov(false);
-                  }}
-                  disabled={saving || loading}
-                >
-                  ✓ Enabled
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleDeprov(true);
-                  }}
-                  disabled={saving || loading}
-                >
-                  ✕ Disabled
-                </button>
-              )}
+                Deprovisioning
+              </span>
             </div>
-          </div>
+            <p className="text-xs text-gray-500 pl-8">
+              Account removal automation
+            </p>
+          </button>
 
-          {/* NEW: Document Deletion */}
-          <div
-            className={`${styles.navItem} ${section === 'docdel' ? styles.active : ''}`}
-            role="button"
-            tabIndex={0}
+          {/* Document Deletion */}
+          <button
             onClick={() => setSection('docdel')}
+            className={`w-full text-left p-3 rounded-xl transition-all border ${
+              section === 'docdel'
+                ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900/30'
+                : 'bg-transparent border-transparent hover:bg-gray-50 dark:hover:bg-white/5'
+            }`}
           >
-            <div className={styles.itemTitle}>
-              <span>🧹</span>
-              <span>Document Deletion</span>
-            </div>
-            <div className={styles.itemDesc}>
-              Auto-delete docs after end date
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={e => {
-                  e.stopPropagation();
-                  runDocCleanupNow();
-                }}
-                disabled={docRunning || !docEnabled}
+            <div className="flex items-center gap-3 mb-1">
+              <FileX
+                size={18}
+                className={
+                  section === 'docdel'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-400'
+                }
+              />
+              <span
+                className={`font-medium ${
+                  section === 'docdel'
+                    ? 'text-blue-900 dark:text-blue-100'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}
               >
-                {docRunning ? 'Running…' : 'Run Now'}
-              </button>
-              {docEnabled ? (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSuccess}`}
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleDoc(false);
-                  }}
-                  disabled={docSaving}
-                >
-                  ✓ Enabled
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleDoc(true);
-                  }}
-                  disabled={docSaving}
-                >
-                  ✕ Disabled
-                </button>
-              )}
+                Document Cleanup
+              </span>
             </div>
-          </div>
+            <p className="text-xs text-gray-500 pl-8">
+              Expired document purging
+            </p>
+          </button>
 
-          {/* Document Reminders */}
-          <div
-            className={`${styles.navItem} ${section === 'reminders' ? styles.active : ''}`}
-            role="button"
-            tabIndex={0}
+          {/* Reminders */}
+          <button
             onClick={() => setSection('reminders')}
+            className={`w-full text-left p-3 rounded-xl transition-all border ${
+              section === 'reminders'
+                ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900/30'
+                : 'bg-transparent border-transparent hover:bg-gray-50 dark:hover:bg-white/5'
+            }`}
           >
-            <div className={styles.itemTitle}>
-              <span>📨</span>
-              <span>Document Reminders</span>
-            </div>
-            <div className={styles.itemDesc}>
-              Send & schedule missing-doc notifications
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPrimary}`}
-                onClick={e => {
-                  e.stopPropagation();
-                  runRemNow();
-                }}
-                disabled={remRunning || remLoading}
+            <div className="flex items-center gap-3 mb-1">
+              <Bell
+                size={18}
+                className={
+                  section === 'reminders'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-400'
+                }
+              />
+              <span
+                className={`font-medium ${
+                  section === 'reminders'
+                    ? 'text-blue-900 dark:text-blue-100'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}
               >
-                {remRunning ? 'Sending…' : 'Send now'}
-              </button>
-
-              {remLoading ? (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  disabled
-                >
-                  Loading…
-                </button>
-              ) : rem?.enabled ? (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSuccess}`}
-                  onClick={e => {
-                    e.stopPropagation();
-                    saveRem({enabled: false});
-                  }}
-                  disabled={remSaving}
-                >
-                  ✓ Enabled
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  onClick={e => {
-                    e.stopPropagation();
-                    saveRem({enabled: true});
-                  }}
-                  disabled={remSaving}
-                >
-                  ✕ Disabled
-                </button>
-              )}
+                Reminders
+              </span>
             </div>
-          </div>
-        </div>
+            <p className="text-xs text-gray-500 pl-8">
+              Missing document notifications
+            </p>
+          </button>
+        </nav>
       </aside>
 
-      {/* Right content */}
-      <main className={styles.content}>
-        {section === 'deprov' ? (
-          <>
-            <div className={styles.contentHeader}>
-              <h1 className={styles.contentTitle}> Deprovisioning</h1>
-              <p className={styles.contentDesc}>
-                Manage account deprovisioning settings and delayed delete
-                options.
-              </p>
-            </div>
-
-            <section className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-lg font-semibold text-[#2c3e50]">
-                Deprovisioning Settings
-              </h2>
-
-              <div className={styles.statusBar}>
-                <div className={styles.statusGrid}>
-                  <div className={styles.statusItem}>
-                    <span className={`${styles.statusIcon} ${styles.iconSky}`}>
-                      <i>⏳</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Last run</div>
-                      <div className={styles.statusValue}>
-                        {fmtDT(lastRunAt)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.statusItem}>
-                    <span
-                      className={`${styles.statusIcon} ${styles.iconAmber}`}
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-5xl mx-auto pb-12">
+          {section === 'deprov' && (
+            <div className="animate-fade-in space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Deprovisioning
+                  </h2>
+                  <p className="text-gray-500 mt-1">
+                    Manage automatic account deprovisioning policies.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
+                    <button
+                      onClick={() => toggleDeprov(true)}
+                      disabled={enabled || saving}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        enabled
+                          ? 'bg-white dark:bg-[#222] text-green-600 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
                     >
-                      <i>🗑</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Deleted last run</div>
-                      <div className={styles.statusValue}>
-                        {lastDeleted ?? 0} account
-                        {(lastDeleted ?? 0) === 1 ? '' : 's'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.statusItem}>
-                    <span
-                      className={`${styles.statusIcon} ${styles.iconEmerald}`}
+                      Active
+                    </button>
+                    <button
+                      onClick={() => toggleDeprov(false)}
+                      disabled={!enabled || saving}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        !enabled
+                          ? 'bg-white dark:bg-[#222] text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
                     >
-                      <i>✓</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Status</div>
-                      <span
-                        className={`${styles.badge} ${enabled ? styles.badgeActive : styles.badgeInactive}`}
-                      >
-                        {enabled ? 'Active' : 'Inactive'}
-                      </span>
+                      Paused
+                    </button>
+                  </div>
+                  <button
+                    onClick={runDeprovNow}
+                    disabled={running || loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {running ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <Play size={16} />
+                    )}
+                    {running ? 'Running...' : 'Run Now'}
+                  </button>
+                </div>
+              </div>
+
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Last Run
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {fmtDT(lastRunAt)}
                     </div>
                   </div>
-                  <div className={styles.statusItem}>
-                    <span className={`${styles.statusIcon} ${styles.iconGray}`}>
-                      <i>⚙</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Worker</div>
-                      <div className={styles.statusValue}>
-                        {loading
-                          ? 'Loading…'
-                          : saving
-                            ? 'Saving…'
-                            : running
-                              ? 'Running…'
-                              : 'Idle'}
-                      </div>
+                </div>
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Trash2 size={24} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Deleted Last Run
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {lastDeleted ?? 0}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
+                      enabled
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    {enabled ? <Check size={24} /> : <X size={24} />}
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Status
+                    </div>
+                    <div
+                      className={`text-lg font-bold ${
+                        enabled
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {enabled ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
+                    {running ? (
+                      <RefreshCw size={24} className="animate-spin" />
+                    ) : (
+                      <Settings size={24} />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Worker State
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {loading
+                        ? 'Loading...'
+                        : saving
+                          ? 'Saving...'
+                          : running
+                            ? 'Running...'
+                            : 'Idle'}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-lg bg-[#f8f9fa] p-4">
-                <div className="text-base font-medium text-[#2c3e50] mb-3">
-                  Delayed Delete Option
-                </div>
-
-                <div className={styles.fieldRow}>
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">
-                      Delete after
-                    </div>
+              {/* Settings */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Configuration
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Delete Delay Amount
+                    </label>
                     <select
-                      className={styles.select}
                       value={delayAmount}
                       onChange={e =>
                         onChangeAmount(parseInt(e.target.value, 10))
                       }
                       disabled={loading || saving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
                     >
                       {Array.from({length: 31}, (_, i) => i).map(n => (
                         <option key={n} value={n}>
@@ -1027,269 +980,415 @@ function DeprovisionSettings() {
                         </option>
                       ))}
                     </select>
-                  </label>
-
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">Time unit</div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Time Unit
+                    </label>
                     <select
-                      className={styles.select}
                       value={delayUnit}
                       onChange={e => onChangeUnit(e.target.value as any)}
                       disabled={delayAmount === 0 || loading || saving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all disabled:opacity-50"
                     >
                       <option value="days">Days</option>
                       <option value="weeks">Weeks</option>
                       <option value="months">Months</option>
                     </select>
-                  </label>
-                </div>
-
-                <div className="block mt-3">
-                  <div className="text-sm text-gray-600 mb-1">
-                    Transfer Drive files
-                  </div>
-
-                  <div className={styles.inlineRow}>
-                    <input
-                      id="transfer-toggle"
-                      className={styles.toggle}
-                      type="checkbox"
-                      checked={transferEnabled}
-                      onChange={e => toggleTransfer(e.target.checked)}
-                      disabled={loading || saving}
-                    />
-                    <label
-                      htmlFor="transfer-toggle"
-                      className={styles.inlineRowLabel}
-                    >
-                      Enable transfer of Drive files to:
-                    </label>
-                  </div>
-
-                  <input
-                    className={styles.input}
-                    type="email"
-                    placeholder="manager@extramus.eu"
-                    value={transferTargetEmail}
-                    onChange={e => setTransferTargetEmail(e.target.value)}
-                    onBlur={() => {
-                      if (transferEnabled) {
-                        void saveDeprov({
-                          transferTargetEmail: transferTargetEmail.trim() || '',
-                        });
-                      }
-                    }}
-                    disabled={!transferEnabled || loading || saving}
-                  />
-
-                  <div className="text-xs text-gray-500 mt-1">
-                    {transferEnabled
-                      ? 'PRIVATE Drive files will be transferred here before deletion.'
-                      : 'Disabled — files will NOT be transferred on deprovision.'}
                   </div>
                 </div>
 
-                <div className={styles.info}>{delayText}</div>
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center h-5 mt-1">
+                      <input
+                        id="transfer-toggle"
+                        type="checkbox"
+                        checked={transferEnabled}
+                        onChange={e => toggleTransfer(e.target.checked)}
+                        disabled={loading || saving}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label
+                        htmlFor="transfer-toggle"
+                        className="font-medium text-gray-900 dark:text-white"
+                      >
+                        Drive Files Transfer
+                      </label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Transfer private Google Drive files to a manager before
+                        deletion.
+                      </p>
+                      {transferEnabled && (
+                        <div className="mt-3">
+                          <input
+                            type="email"
+                            placeholder="manager@extramus.eu"
+                            value={transferTargetEmail}
+                            onChange={e =>
+                              setTransferTargetEmail(e.target.value)
+                            }
+                            onBlur={() => {
+                              if (transferEnabled) {
+                                void saveDeprov({
+                                  transferTargetEmail:
+                                    transferTargetEmail.trim() || '',
+                                });
+                              }
+                            }}
+                            disabled={!transferEnabled || loading || saving}
+                            className="w-full max-w-md bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-blue-50 dark:bg-blue-900/10 text-blue-800 dark:text-blue-200 p-4 rounded-lg text-sm flex gap-3 items-start">
+                  <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block mb-1">
+                      Policy Summary
+                    </span>
+                    {delayText}
+                  </div>
+                </div>
               </div>
-            </section>
 
-            <section className={`${styles.card} ${styles.tableCard}`}>
-              <h2 className="text-lg font-semibold text-[#2c3e50]">
-                Upcoming Deprovisioning
-              </h2>
-              <p className="text-sm text-gray-600">
-                Interns whose end date is in the next 7 days. Scheduled date
-                includes the delay.
-              </p>
-
-              {loadingUpcoming ? (
-                <div className="mt-3 text-sm text-gray-600">Loading…</div>
-              ) : (
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th className={styles.th}>Name</th>
-                      <th className={styles.th}>Department</th>
-                      <th className={styles.th}>End Date</th>
-                      <th className={styles.th}>Scheduled Delete</th>
-                      <th className={styles.th}>Email</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(upcoming?.items ?? []).length === 0 ? (
-                      <tr>
-                        <td className={styles.td} colSpan={5}>
-                          No records in the next 7 days.
-                        </td>
-                      </tr>
-                    ) : (
-                      upcoming!.items.map((it, idx) => (
-                        <tr key={idx}>
-                          <td className={styles.td}>
-                            {[it.firstName, it.surname]
-                              .filter(Boolean)
-                              .join(' ') ||
-                              it.email ||
-                              (it.internId != null ? `ID ${it.internId}` : '-')}
-                          </td>
-                          <td className={styles.td}>{it.department ?? '-'}</td>
-                          <td className={styles.td}>{fmt(it.endDate)}</td>
-                          <td className={styles.td}>
-                            {fmt(it.scheduledDelete)}
-                          </td>
-                          <td className={styles.td}>{it.email ?? '-'}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              )}
-
-              {Boolean(upcoming?.overdue?.length) && (
-                <div style={{marginTop: 16}}>
-                  <h2 className="text-lg font-semibold text-[#2c3e50]">
-                    Overdue Deprovisioning
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    These users’ scheduled delete date has already passed (not
-                    whitelisted).
+              {/* Upcoming Table */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Upcoming Deprovisioning (Next 7 Days)
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Interns scheduled for deletion based on the current delay
+                    policy.
                   </p>
-                  <table className={styles.table} style={{marginTop: 8}}>
-                    <thead>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50/50 dark:bg-[#111] sticky top-0 z-10">
                       <tr>
-                        <th className={styles.th}>Name</th>
-                        <th className={styles.th}>Department</th>
-                        <th className={styles.th}>End Date</th>
-                        <th className={styles.th}>Scheduled Delete</th>
-                        <th className={styles.th}>Email</th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Name
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Department
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          End Date
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Scheduled Delete
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Email
+                        </th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {upcoming!.overdue!.map((it, idx) => (
-                        <tr key={`od-${idx}`}>
-                          <td className={styles.td}>
-                            {[it.firstName, it.surname]
-                              .filter(Boolean)
-                              .join(' ') ||
-                              it.email ||
-                              (it.internId != null ? `ID ${it.internId}` : '-')}
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {loadingUpcoming ? (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="p-8 text-center text-gray-500"
+                          >
+                            Loading...
                           </td>
-                          <td className={styles.td}>{it.department ?? '-'}</td>
-                          <td className={styles.td}>{fmt(it.endDate)}</td>
-                          <td className={styles.td}>
-                            {fmt(it.scheduledDelete)}
-                          </td>
-                          <td className={styles.td}>{it.email ?? '-'}</td>
                         </tr>
-                      ))}
+                      ) : (upcoming?.items ?? []).length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="p-8 text-center text-gray-500"
+                          >
+                            No records found.
+                          </td>
+                        </tr>
+                      ) : (
+                        upcoming!.items.map((it, idx) => (
+                          <tr
+                            key={idx}
+                            className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-6 text-sm text-gray-900 dark:text-gray-100 font-medium">
+                              {[it.firstName, it.surname]
+                                .filter(Boolean)
+                                .join(' ') ||
+                                it.email ||
+                                (it.internId != null
+                                  ? `ID ${it.internId}`
+                                  : '-')}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {it.department ?? '-'}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {fmt(it.endDate)}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {fmt(it.scheduledDelete)}
+                            </td>
+                            <td className="p-6 text-sm text-gray-500 dark:text-gray-400">
+                              {it.email ?? '-'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Overdue Table */}
+              {Boolean(upcoming?.overdue?.length) && (
+                <div className="bg-white dark:bg-[#111] border border-red-200 dark:border-red-900/30 rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-red-100 dark:border-red-900/20 bg-red-50/30 dark:bg-red-900/10">
+                    <h3 className="text-lg font-semibold text-red-700 dark:text-red-400 flex items-center gap-2">
+                      <AlertCircle size={20} />
+                      Overdue Deprovisioning
+                    </h3>
+                    <p className="text-sm text-red-600/80 dark:text-red-400/70">
+                      These users’ scheduled delete date has passed. Check
+                      system logs.
+                    </p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-gray-50/50 dark:bg-[#111] sticky top-0 z-10">
+                        <tr>
+                          <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                            Name
+                          </th>
+                          <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                            Department
+                          </th>
+                          <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                            End Date
+                          </th>
+                          <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                            Scheduled Delete
+                          </th>
+                          <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                            Email
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {upcoming!.overdue!.map((it, idx) => (
+                          <tr
+                            key={`od-${idx}`}
+                            className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-6 text-sm text-gray-900 dark:text-gray-100 font-medium">
+                              {[it.firstName, it.surname]
+                                .filter(Boolean)
+                                .join(' ') ||
+                                it.email ||
+                                (it.internId != null
+                                  ? `ID ${it.internId}`
+                                  : '-')}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {it.department ?? '-'}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {fmt(it.endDate)}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {fmt(it.scheduledDelete)}
+                            </td>
+                            <td className="p-6 text-sm text-gray-500 dark:text-gray-400">
+                              {it.email ?? '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
-            </section>
 
-            <section
-              className="bg-white rounded-xl shadow p-6"
-              style={{marginTop: 16}}
-            >
-              <h3 className="text-base font-semibold text-[#2c3e50]">
-                Deprovision Whitelist
-              </h3>
-              <p className="text-sm text-gray-600">
-                Users here will not be deleted when their end date is reached.
-              </p>
+              {/* Whitelist */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Deprovision Whitelist
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Users here will NOT be deleted when their end date is
+                    reached.
+                  </p>
+                </div>
 
-              <div className={styles.fieldRow}>
-                <input
-                  className={styles.select}
-                  placeholder="Search by name, email, emp_id…"
-                  value={depQuery}
-                  onChange={e => void searchUsersDep(e.target.value)}
-                />
+                <div className="mb-6 space-y-3">
+                  <div className="relative">
+                    <input
+                      placeholder="Search users to whitelist..."
+                      value={depQuery}
+                      onChange={e => void searchUsersDep(e.target.value)}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 pl-4 pr-4 transition-all"
+                    />
+                  </div>
+                  {depOpts.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 dark:bg-[#1A1A1A] rounded-lg border border-gray-100 dark:border-gray-800">
+                      {depOpts.slice(0, 6).map(u => (
+                        <button
+                          key={u.id}
+                          onClick={() => addToDeprovWhitelist(u.id)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-600 transition-colors shadow-sm"
+                        >
+                          <span>
+                            {u.firstName} {u.surname}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({u.role})
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50/50 dark:bg-[#111] sticky top-0 z-10">
+                      <tr>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          User
+                        </th>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Email
+                        </th>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Role
+                        </th>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 text-right">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {wlDep.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="p-8 text-center text-gray-500"
+                          >
+                            No whitelist entries.
+                          </td>
+                        </tr>
+                      ) : (
+                        wlDep.map((w: any) => (
+                          <tr
+                            key={w.user.id}
+                            className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">
+                              {w.user.firstName} {w.user.surname}
+                              <span className="text-gray-500 font-normal ml-2">
+                                • {w.user.empId}
+                              </span>
+                            </td>
+                            <td className="p-4 text-sm text-gray-600 dark:text-gray-400">
+                              {w.user.companyEmail}
+                            </td>
+                            <td className="p-4 text-sm text-gray-600 dark:text-gray-400 capitalize">
+                              {w.user.role}
+                            </td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() =>
+                                  removeFromDeprovWhitelist(w.user.id)
+                                }
+                                className="text-red-600 hover:text-red-700 font-medium text-sm hover:underline"
+                              >
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {section === 'docdel' && (
+            <div className="animate-fade-in space-y-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  {depOpts.slice(0, 6).map(u => (
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Document Cleanup
+                  </h2>
+                  <p className="text-gray-500 mt-1">
+                    Automatically delete documents after a set period.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
                     <button
-                      key={u.id}
-                      className={styles.btn}
-                      style={{
-                        border: '1px solid #ddd',
-                        background: '#fff',
-                        marginRight: 8,
-                      }}
-                      onClick={() => addToDeprovWhitelist(u.id)}
+                      onClick={() => toggleDoc(true)}
+                      disabled={docEnabled || docSaving}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        docEnabled
+                          ? 'bg-white dark:bg-[#222] text-green-600 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
                     >
-                      Add {u.firstName} {u.surname} ({u.role}) • {u.empId}
+                      Active
                     </button>
-                  ))}
+                    <button
+                      onClick={() => toggleDoc(false)}
+                      disabled={!docEnabled || docSaving}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        !docEnabled
+                          ? 'bg-white dark:bg-[#222] text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Paused
+                    </button>
+                  </div>
+                  <button
+                    onClick={runDocCleanupNow}
+                    disabled={docRunning}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {docRunning ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <Play size={16} />
+                    )}
+                    {docRunning ? 'Running...' : 'Run Now'}
+                  </button>
                 </div>
               </div>
 
-              <table className={styles.table} style={{marginTop: 12}}>
-                <thead>
-                  <tr>
-                    <th className={styles.th}>User</th>
-                    <th className={styles.th}>Email</th>
-                    <th className={styles.th}>Role</th>
-                    <th className={styles.th}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {wlDep.length === 0 ? (
-                    <tr>
-                      <td className={styles.td} colSpan={4}>
-                        No whitelist entries.
-                      </td>
-                    </tr>
-                  ) : (
-                    wlDep.map((w: any) => (
-                      <tr key={w.user.id}>
-                        <td className={styles.td}>
-                          {w.user.firstName} {w.user.surname} • {w.user.empId}
-                        </td>
-                        <td className={styles.td}>{w.user.companyEmail}</td>
-                        <td className={styles.td}>{w.user.role}</td>
-                        <td className={styles.td}>
-                          <button
-                            className={styles.btn}
-                            onClick={() => removeFromDeprovWhitelist(w.user.id)}
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </section>
-          </>
-        ) : section === 'docdel' ? (
-          <>
-            <div className={styles.contentHeader}>
-              <h1 className={styles.contentTitle}>Document Deletion</h1>
-              <p className={styles.contentDesc}>
-                Delete documents after a configurable grace period from their
-                end date.
-              </p>
-            </div>
+              {/* Settings */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Deletion Settings
+                </h3>
 
-            <section className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-lg font-semibold text-[#2c3e50]">
-                Deletion Settings
-              </h2>
-
-              <div className="mt-4 rounded-lg bg-[#f8f9fa] p-4">
-                <div className={styles.fieldRow}>
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">
-                      Delete after
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Delete After
+                    </label>
                     <select
-                      className={styles.select}
                       value={docDelayAmount}
                       onChange={e =>
                         onDocChangeAmount(parseInt(e.target.value || '0', 10))
                       }
+                      disabled={docSaving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
                     >
                       {Array.from({length: 31}, (_, i) => i).map(n => (
                         <option key={n} value={n}>
@@ -1297,493 +1396,588 @@ function DeprovisionSettings() {
                         </option>
                       ))}
                     </select>
-                  </label>
-
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">Time unit</div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Time Unit
+                    </label>
                     <select
-                      className={styles.select}
                       value={docDelayUnit}
                       onChange={e => onDocChangeUnit(e.target.value as any)}
-                      disabled={docDelayAmount === 0}
+                      disabled={docDelayAmount === 0 || docSaving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all disabled:opacity-50"
                     >
                       <option value="days">Days</option>
                       <option value="weeks">Weeks</option>
                       <option value="months">Months</option>
                     </select>
-                  </label>
-
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      marginTop: 8,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={docIncludeAvatar}
-                      onChange={async e => {
-                        const checked = e.target.checked;
-                        setDocIncludeAvatar(checked); // optimistic
-                        try {
-                          await saveDocPolicy({
-                            includeAvatar: checked,
-                            includeProfileImage: checked, // backend compatibility
-                          });
-                        } catch {
-                          setDocIncludeAvatar(!checked);
-                        }
-                      }}
-                      disabled={docSaving}
-                    />
-                    <span className="text-sm text-gray-700">
-                      Include profile image
-                    </span>
-                  </label>
-
-                  <div style={{display: 'flex', alignItems: 'end', gap: 10}}>
-                    <button
-                      type="button"
-                      className={`${styles.btn} ${styles.btnPrimary}`}
-                      onClick={() => runDocCleanupNow()}
-                      disabled={docRunning}
-                    >
-                      {docRunning ? 'Running…' : 'Run Now (ignore delay)'}
-                    </button>
                   </div>
                 </div>
 
-                <div className={styles.info}>
-                  {docDelayAmount === 0
-                    ? 'Documents will be deleted immediately after the end date.'
-                    : `Documents will be deleted ${docDelayAmount} ${docDelayUnit.replace(/s$/, '')}${docDelayAmount === 1 ? '' : 's'} after the end date.`}
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center h-5 mt-1">
+                      <input
+                        id="avatar-toggle"
+                        type="checkbox"
+                        checked={docIncludeAvatar}
+                        onChange={async e => {
+                          const checked = e.target.checked;
+                          setDocIncludeAvatar(checked); // optimistic
+                          try {
+                            await saveDocPolicy({
+                              includeAvatar: checked,
+                              includeProfileImage: checked,
+                            });
+                          } catch {
+                            setDocIncludeAvatar(!checked);
+                          }
+                        }}
+                        disabled={docSaving}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label
+                        htmlFor="avatar-toggle"
+                        className="font-medium text-gray-900 dark:text-white"
+                      >
+                        Include Profile Image
+                      </label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        If checked, user avatars will also be deleted along with
+                        documents.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 bg-blue-50 dark:bg-blue-900/10 text-blue-800 dark:text-blue-200 p-4 rounded-lg text-sm flex gap-3 items-start">
+                  <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block mb-1">
+                      Policy Summary
+                    </span>
+                    {docDelayAmount === 0
+                      ? 'Documents will be deleted immediately after the end date.'
+                      : `Documents will be deleted ${docDelayAmount} ${docDelayUnit.replace(/s$/, '')}${docDelayAmount === 1 ? '' : 's'} after the end date.`}
+                  </div>
                 </div>
               </div>
 
-              <section className="bg-white rounded-xl shadow p-6 mt-6">
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
+              {/* Upcoming Table */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-[#2c3e50]">
-                      Upcoming deletions (next 30 days)
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      Based on End Date + delay (
-                      {docUpcoming?.policy.delayAmount ?? docDelayAmount}{' '}
-                      {docUpcoming?.policy.delayUnit ?? docDelayUnit})
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Upcoming Deletions (Next 30 Days)
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Based on End Date + delay.
                     </p>
                   </div>
-
                   <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnSecondary}`}
                     onClick={() => loadDocUpcoming(30)}
                     disabled={loadingDocUpcoming}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
                   >
-                    {loadingDocUpcoming ? 'Loading…' : 'Refresh'}
+                    <RefreshCw
+                      size={14}
+                      className={loadingDocUpcoming ? 'animate-spin' : ''}
+                    />
+                    Refresh
                   </button>
                 </div>
 
-                <div className="mt-4">
-                  {!docUpcoming || docUpcoming.items.length === 0 ? (
-                    <div className="text-sm text-gray-600">
-                      No upcoming document deletions.
-                    </div>
-                  ) : (
-                    <div style={{overflowX: 'auto'}}>
-                      <table className={styles.table}>
-                        <thead>
-                          <tr>
-                            <th className={styles.th}>Intern</th>
-                            <th className={styles.th}>Email</th>
-                            <th className={styles.th}>End date</th>
-                            <th className={styles.th}>Delete on</th>
-                            <th className={styles.th}>Docs</th>
-                            <th className={styles.th}>Profile pic</th>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50/50 dark:bg-[#111] sticky top-0 z-10">
+                      <tr>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Intern
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Email
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          End Date
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Delete On
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Docs
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Profile Pic
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {!docUpcoming || docUpcoming.items.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="p-8 text-center text-gray-500"
+                          >
+                            No upcoming document deletions.
+                          </td>
+                        </tr>
+                      ) : (
+                        docUpcoming.items.map(it => (
+                          <tr
+                            key={it.internId}
+                            className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-6 text-sm font-medium text-gray-900 dark:text-white">
+                              {it.name}
+                            </td>
+                            <td className="p-6 text-sm text-gray-500 dark:text-gray-400">
+                              {it.email ?? '—'}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {new Date(it.endDate).toLocaleDateString()}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {new Date(it.deleteAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {it.docsCount}
+                            </td>
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {it.hasProfilePicture ? (
+                                it.includeAvatarByPolicy ? (
+                                  <span className="text-red-600 dark:text-red-400 font-medium">
+                                    Will delete
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-500">
+                                    Exists (policy OFF)
+                                  </span>
+                                )
+                              ) : (
+                                '—'
+                              )}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {docUpcoming.items.map(it => (
-                            <tr key={it.internId}>
-                              <td className={styles.td}>{it.name}</td>
-                              <td className={styles.td}>{it.email ?? '—'}</td>
-                              <td className={styles.td}>
-                                {new Date(it.endDate).toLocaleDateString()}
-                              </td>
-                              <td className={styles.td}>
-                                {new Date(it.deleteAt).toLocaleDateString()}
-                              </td>
-                              <td className={styles.td}>{it.docsCount}</td>
-                              <td className={styles.td}>
-                                {it.hasProfilePicture
-                                  ? it.includeAvatarByPolicy
-                                    ? 'Will delete'
-                                    : 'Exists (policy OFF)'
-                                  : '—'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              </section>
-            </section>
-          </>
-        ) : (
-          /* ===== Document Reminders right pane ===== */
-          <>
-            <div className={styles.contentHeader}>
-              <h1 className={styles.contentTitle}>Document Reminders</h1>
-              <p className={styles.contentDesc}>
-                Configure missing-document notifications and send them
-                immediately.
-              </p>
+              </div>
             </div>
+          )}
 
-            <section className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-lg font-semibold text-[#2c3e50]">
-                Reminder Settings
-              </h2>
+          {section === 'reminders' && (
+            <div className="animate-fade-in space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Document Reminders
+                  </h2>
+                  <p className="text-gray-500 mt-1">
+                    Configure notifications for missing required documents.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
+                    <button
+                      onClick={() => saveRem({enabled: true})}
+                      disabled={rem?.enabled || remSaving}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        rem?.enabled
+                          ? 'bg-white dark:bg-[#222] text-green-600 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      onClick={() => saveRem({enabled: false})}
+                      disabled={!rem?.enabled || remSaving}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        !rem?.enabled
+                          ? 'bg-white dark:bg-[#222] text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Paused
+                    </button>
+                  </div>
+                  <button
+                    onClick={runRemNow}
+                    disabled={remRunning || remLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {remRunning ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <Mail size={16} />
+                    )}
+                    {remRunning ? 'Sending...' : 'Send Now'}
+                  </button>
+                </div>
+              </div>
 
-              <div className={styles.statusBar}>
-                <div className={styles.statusGrid}>
-                  <div className={styles.statusItem}>
-                    <span
-                      className={`${styles.statusIcon} ${styles.iconEmerald}`}
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
+                      rem?.enabled
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    {rem?.enabled ? <Check size={24} /> : <X size={24} />}
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Status
+                    </div>
+                    <div
+                      className={`text-lg font-bold ${
+                        rem?.enabled
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
                     >
-                      <i>✓</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Status</div>
-                      <span
-                        className={`${styles.badge} ${rem?.enabled ? styles.badgeActive : styles.badgeInactive}`}
-                      >
-                        {rem?.enabled ? 'Active' : 'Inactive'}
-                      </span>
+                      {rem?.enabled ? 'Active' : 'Inactive'}
                     </div>
                   </div>
-                  <div className={styles.statusItem}>
-                    <span className={`${styles.statusIcon} ${styles.iconSky}`}>
-                      <i>⏰</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Frequency</div>
-                      <div className={styles.statusValue}>
-                        {rem?.everyDays ?? 7} day(s)
-                      </div>
+                </div>
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Frequency
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      Every {rem?.everyDays ?? 7} Days
                     </div>
                   </div>
-                  <div className={styles.statusItem}>
-                    <span className={`${styles.statusIcon} ${styles.iconGray}`}>
-                      <i>📬</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Email</div>
-                      <div className={styles.statusValue}>
-                        {rem?.emailEnabled ? 'Enabled' : 'Disabled'}
-                      </div>
+                </div>
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
+                    <Mail size={24} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Email
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {rem?.emailEnabled ? 'Enabled' : 'Disabled'}
                     </div>
                   </div>
-                  <div className={styles.statusItem}>
-                    <span
-                      className={`${styles.statusIcon} ${styles.iconAmber}`}
-                    >
-                      <i>🕒</i>
-                    </span>
-                    <div>
-                      <div className={styles.statusLabel}>Last run</div>
-                      <div className={styles.statusValue}>
-                        {fmtDT(rem?.lastRunAt)}
-                      </div>
+                </div>
+                <div className="bg-white dark:bg-[#111] p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <History size={24} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Last Run
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {fmtDT(rem?.lastRunAt)}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-lg bg-[#f8f9fa] p-4">
-                <div className={styles.fieldRow}>
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">Enabled</div>
+              {/* Settings */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Reminder Policy
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Enabled
+                    </label>
                     <select
-                      className={styles.select}
                       value={rem?.enabled ? '1' : '0'}
                       onChange={e => saveRem({enabled: e.target.value === '1'})}
                       disabled={remSaving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
                     >
                       <option value="1">Yes</option>
                       <option value="0">No</option>
                     </select>
-                  </label>
-
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">Every</div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Every
+                    </label>
                     <select
-                      className={styles.select}
                       value={rem?.everyDays ?? 7}
                       onChange={e =>
                         saveRem({everyDays: parseInt(e.target.value, 10) || 7})
                       }
                       disabled={remSaving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
                     >
                       {[3, 5, 7, 10, 14, 21, 28].map(n => (
                         <option key={n} value={n}>
-                          {n} day(s)
+                          {n} days
                         </option>
                       ))}
                     </select>
-                  </label>
-
-                  <label>
-                    <div className="text-sm text-gray-600 mb-1">
-                      Email notifications
-                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Email Notifications
+                    </label>
                     <select
-                      className={styles.select}
                       value={rem?.emailEnabled ? '1' : '0'}
                       onChange={e =>
                         saveRem({emailEnabled: e.target.value === '1'})
                       }
                       disabled={remSaving}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
                     >
                       <option value="1">Enabled</option>
                       <option value="0">Disabled</option>
                     </select>
-                  </label>
-                </div>
-
-                <div style={{display: 'flex', gap: 10, marginTop: 10}}>
-                  <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnPrimary}`}
-                    onClick={() => runRemNow()}
-                    disabled={remRunning}
-                  >
-                    {remRunning ? 'Sending…' : 'Send now'}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btn}
-                    onClick={() => {
-                      void Promise.all([loadRem(), loadRemHistory()]);
-                      showToast('Reloaded');
-                    }}
-                    style={{border: '1px solid #ddd', background: '#fff'}}
-                  >
-                    Refresh
-                  </button>
+                  </div>
                 </div>
               </div>
-            </section>
 
-            {/* History Retention */}
-            <section
-              className="bg-white rounded-xl shadow p-6"
-              style={{marginTop: 16}}
-            >
-              <h3 className="text-base font-semibold text-[#2c3e50]">
-                History Retention
-              </h3>
-              <p className="text-sm text-gray-600">
-                Remove old reminder items (Inbox &amp; Send History) older than
-                the selected period.
-              </p>
+              {/* History Retention */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  History Retention
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  Manage retention of reminder logs (Inbox & Send History).
+                </p>
 
-              <div className={styles.fieldRow}>
-                <label>
-                  <div className="text-sm text-gray-600 mb-1">Keep for</div>
-                  <select
-                    className={styles.select}
-                    value={retentionMonths}
-                    onChange={e =>
-                      setRetentionMonths(parseInt(e.target.value, 10))
-                    }
-                  >
-                    {[1, 2, 3, 4, 5, 6].map(m => (
-                      <option key={m} value={m}>
-                        {m} month{m === 1 ? '' : 's'} ({m * 30} days)
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <div style={{display: 'flex', gap: 10, alignItems: 'end'}}>
-                  <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnPrimary}`}
-                    onClick={() => purgeReminders('both')} // deletes both buckets by retention
-                  >
-                    Delete older now
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.btn}
-                    style={{border: '1px solid #ddd', background: '#fff'}}
-                    onClick={deleteAllReminders} // new helper below
-                    title="Delete all reminder logs"
-                  >
-                    Delete all
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.btn}
-                    style={{border: '1px solid #ddd', background: '#fff'}}
-                    onClick={saveAutoPurgeSettings}
-                    title="Save auto-delete settings"
-                  >
-                    Save Auto-delete
-                  </button>
+                <div className="flex flex-col md:flex-row items-end gap-4">
+                  <div className="flex-1 w-full">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Keep history for
+                    </label>
+                    <select
+                      value={retentionMonths}
+                      onChange={e =>
+                        setRetentionMonths(parseInt(e.target.value, 10))
+                      }
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map(m => (
+                        <option key={m} value={m}>
+                          {m} month{m === 1 ? '' : 's'} ({m * 30} days)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-3 w-full md:w-auto">
+                    <button
+                      onClick={() => purgeReminders('both')}
+                      className="px-4 py-2.5 bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors"
+                    >
+                      Delete Older
+                    </button>
+                    <button
+                      onClick={deleteAllReminders}
+                      className="px-4 py-2.5 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      Delete All
+                    </button>
+                    <button
+                      onClick={saveAutoPurgeSettings}
+                      className="px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Save Settings
+                    </button>
+                  </div>
                 </div>
 
-                <label style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                <div className="mt-6 flex items-center gap-3">
                   <input
                     type="checkbox"
+                    id="auto-purge"
                     checked={autoPurgeEnabled}
                     onChange={e => setAutoPurgeEnabled(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">
-                    Auto delete (server)
-                  </span>
-                </label>
-              </div>
-
-              <div className="text-xs text-gray-500 mt-2">
-                “Delete older now” runs a manual cleanup. If Auto delete is
-                enabled, the server will purge items older than the selected
-                retention automatically.
-              </div>
-            </section>
-
-            <section
-              className="bg-white rounded-xl shadow p-6"
-              style={{marginTop: 16}}
-            >
-              <h3 className="text-base font-semibold text-[#2c3e50]">
-                Whitelist
-              </h3>
-              <p className="text-sm text-gray-600">
-                Users here will not receive document reminders.
-              </p>
-
-              <div className={styles.fieldRow}>
-                <input
-                  className={styles.select}
-                  placeholder="Search by name, email, emp_id…"
-                  value={uQuery}
-                  onChange={e => void searchUsers(e.target.value)}
-                />
-                <div>
-                  {uOpts.slice(0, 6).map(u => (
-                    <button
-                      key={u.id}
-                      className={styles.btn}
-                      style={{
-                        border: '1px solid #ddd',
-                        background: '#fff',
-                        marginRight: 8,
-                      }}
-                      onClick={() => addToWhitelist(u.id)}
-                    >
-                      Add {u.firstName} {u.surname} ({u.role}) • {u.empId}
-                    </button>
-                  ))}
+                  <label
+                    htmlFor="auto-purge"
+                    className="text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    Enable automatic daily cleanup (server-side)
+                  </label>
                 </div>
               </div>
 
-              <table className={styles.table} style={{marginTop: 12}}>
-                <thead>
-                  <tr>
-                    <th className={styles.th}>User</th>
-                    <th className={styles.th}>Email</th>
-                    <th className={styles.th}>Role</th>
-                    <th className={styles.th}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {wl.length === 0 ? (
-                    <tr>
-                      <td className={styles.td} colSpan={4}>
-                        No whitelist entries.
-                      </td>
-                    </tr>
-                  ) : (
-                    wl.map((w: any) => (
-                      <tr key={w.user.id}>
-                        <td className={styles.td}>
-                          {w.user.firstName} {w.user.surname} • {w.user.empId}
-                        </td>
-                        <td className={styles.td}>{w.user.companyEmail}</td>
-                        <td className={styles.td}>{w.user.role}</td>
-                        <td className={styles.td}>
-                          <button
-                            className={styles.btn}
-                            onClick={() => removeFromWhitelist(w.user.id)}
+              {/* Whitelist */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Reminder Whitelist
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Users here will NOT receive document reminders.
+                  </p>
+                </div>
+
+                <div className="mb-6 space-y-3">
+                  <div className="relative">
+                    <input
+                      placeholder="Search users to whitelist..."
+                      value={uQuery}
+                      onChange={e => void searchUsers(e.target.value)}
+                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 pl-4 pr-4 transition-all"
+                    />
+                  </div>
+                  {uOpts.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 bg-gray-50 dark:bg-[#1A1A1A] rounded-lg border border-gray-100 dark:border-gray-800">
+                      {uOpts.slice(0, 6).map(u => (
+                        <button
+                          key={u.id}
+                          onClick={() => addToWhitelist(u.id)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-600 transition-colors shadow-sm"
+                        >
+                          <span>
+                            {u.firstName} {u.surname}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({u.role})
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50/50 dark:bg-[#111] sticky top-0 z-10">
+                      <tr>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          User
+                        </th>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Email
+                        </th>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Role
+                        </th>
+                        <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 text-right">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {wl.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="p-8 text-center text-gray-500"
                           >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </section>
+                            No whitelist entries.
+                          </td>
+                        </tr>
+                      ) : (
+                        wl.map((w: any) => (
+                          <tr
+                            key={w.user.id}
+                            className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">
+                              {w.user.firstName} {w.user.surname}
+                              <span className="text-gray-500 font-normal ml-2">
+                                • {w.user.empId}
+                              </span>
+                            </td>
+                            <td className="p-4 text-sm text-gray-600 dark:text-gray-400">
+                              {w.user.companyEmail}
+                            </td>
+                            <td className="p-4 text-sm text-gray-600 dark:text-gray-400 capitalize">
+                              {w.user.role}
+                            </td>
+                            <td className="p-4 text-right">
+                              <button
+                                onClick={() => removeFromWhitelist(w.user.id)}
+                                className="text-red-600 hover:text-red-700 font-medium text-sm hover:underline"
+                              >
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-            <section className={`${styles.card} ${styles.tableCard}`}>
-              <h2 className="text-lg font-semibold text-[#2c3e50]">
-                Send History
-              </h2>
-              <p className="text-sm text-gray-600">
-                Recent reminder runs. (This will populate as your backend starts
-                storing history.)
-              </p>
-
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th className={styles.th}>Sent At</th>
-                    <th className={styles.th}>Recipients</th>
-                    <th className={styles.th}>Breakdown</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.length === 0 ? (
-                    <tr>
-                      <td className={styles.td} colSpan={3}>
-                        No history yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    history.map((h, i) => (
-                      <tr key={h.id ?? i}>
-                        <td className={styles.td}>{fmtDT(h.sentAt)}</td>
-                        <td className={styles.td}>{h.totalRecipients}</td>
-                        <td className={styles.td}>
-                          {h.missingBreakdown
-                            ? Object.entries(h.missingBreakdown)
-                                .map(([k, v]) => `${k}: ${v}`)
-                                .join(' • ')
-                            : '—'}
-                        </td>
+              {/* History Table */}
+              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Send History
+                  </h3>
+                  <p className="text-sm text-gray-500">Recent reminder runs.</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50/50 dark:bg-[#111] sticky top-0 z-10">
+                      <tr>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Sent At
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Recipients
+                        </th>
+                        <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                          Breakdown
+                        </th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </section>
-          </>
-        )}
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {history.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            className="p-8 text-center text-gray-500"
+                          >
+                            No history yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        history.map((h, i) => (
+                          <tr
+                            key={h.id ?? i}
+                            className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                          >
+                            <td className="p-6 text-sm text-gray-700 dark:text-gray-300">
+                              {fmtDT(h.sentAt)}
+                            </td>
+                            <td className="p-6 text-sm font-medium text-gray-900 dark:text-white">
+                              {h.totalRecipients}
+                            </td>
+                            <td className="p-6 text-sm text-gray-500 dark:text-gray-400">
+                              {h.missingBreakdown
+                                ? Object.entries(h.missingBreakdown)
+                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .join(' • ')
+                                : '—'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
