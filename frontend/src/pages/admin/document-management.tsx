@@ -505,7 +505,7 @@ export default function AdminDocumentManagement() {
       });
     }
     return rows;
-  }, [users, searchText, searchField, docFilter, docSummary]);
+  }, [users, q, searchField, docFilter, docSummary]); // <--- FIXED (Changed to 'q')
 
   const hasAnyDocs = !!(
     docs?.acceptanceLetter ||

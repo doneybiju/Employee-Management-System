@@ -61,6 +61,11 @@ type Profile = {
   documents?: Docs;
 };
 
+const toProxy = (url: string | null | undefined) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `http://localhost:4000${url}`;
+};
+
 const normDocs = (d?: Partial<Docs> | null): Docs => ({
   acceptanceLetter: d?.acceptanceLetter ?? null,
   learningAgreement: d?.learningAgreement ?? null,
