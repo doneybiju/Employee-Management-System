@@ -102,12 +102,41 @@ export async function loadAdminSummary() {
   const total = internUsers.length;
   const percent = total > 0 ? Math.round((missingCount / total) * 100) : 0;
 
+  // New stats for Command Center
+  const pendingRequestsCount = await prisma.employeeRequest.count({
+    where: { status: 'PENDING' },
+  });
+
+  const activeProjectsCount = await prisma.project.count({
+    where: { status: 'IN_PROGRESS' },
+  });
+
+  const recentLogins = await prisma.loginEvent.findMany({
+    where: { success: true, user: { isNot: null } },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    include: {
+      user: {
+        select: { firstName: true, surname: true, companyEmail: true },
+      },
+    },
+  });
+
   return {
     activeInterns,
     activeEmployees,
     activeTeamLeads,
     missingDocs: { count: missingCount, total, percent },
     timeline: [] as Array<{ date: string; count: number }>, // keep as placeholder for now
+    pendingRequestsCount,
+    activeProjectsCount,
+    recentLogins: recentLogins.map(l => ({
+      id: l.id,
+      user: `${l.user?.firstName ?? ''} ${l.user?.surname ?? ''}`.trim() || l.user?.companyEmail,
+      email: l.user?.companyEmail,
+      time: l.createdAt.toISOString(),
+      ip: l.ip,
+    })),
   };
 }
 
