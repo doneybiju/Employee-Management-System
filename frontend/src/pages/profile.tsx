@@ -26,6 +26,12 @@ import {
   Camera,
 } from 'lucide-react';
 
+const toProxy = (url: string | null | undefined) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}${url}`;
+};
+
 type EmpType = 'intern' | 'employee' | 'team_lead';
 
 type Role = 'intern' | 'hr' | 'super_admin';
