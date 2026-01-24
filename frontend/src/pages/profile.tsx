@@ -6,6 +6,16 @@ import {fetchWithAuth} from '@/lib/api';
 import {useAuth} from '@/context/AuthContext';
 import AvatarCropper from '@/components/AvatarCropper';
 
+const toProxy = (url: string | null) => {
+  if (!url) return '';
+  // Handle Google Drive links
+  const m = url.match(/[?&]id=([^&]+)/) || url.match(/\/file\/d\/([^/]+)/);
+  if (m) return `/api/uploads/drive/file/${m[1]}?name=document`;
+
+  // Handle relative URLs (prepend backend)
+  return url.startsWith('http') ? url : `http://localhost:4000${url}`;
+};
+
 type EmpType = 'intern' | 'employee' | 'team_lead';
 
 type Role = 'intern' | 'hr' | 'super_admin';
@@ -600,12 +610,6 @@ function Field({label, children}: {label: string; children: React.ReactNode}) {
       {children}
     </div>
   );
-}
-
-function toProxy(url?: string | null) {
-  if (!url) return null;
-  const m = url.match(/[?&]id=([^&]+)/) || url.match(/\/file\/d\/([^/]+)/);
-  return m ? `/api/uploads/drive/file/${m[1]}?name=document` : url;
 }
 
 function sanitizeName(s: string) {
