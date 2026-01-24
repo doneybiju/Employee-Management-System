@@ -1,10 +1,9 @@
-// frontend/src/pages/change-password.tsx
 import {useState, FormEvent} from 'react';
 import {useRouter} from 'next/router';
 import {fetchWithAuth} from '@/lib/api';
 import {useAuth} from '@/context/AuthContext';
-
-const ruleMsg = 'Min 12 chars, include upper, lower, digit, symbol. No spaces.';
+import Layout from '@/components/Layout';
+import {Lock, Eye, EyeOff, Check, AlertCircle} from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
@@ -24,21 +23,30 @@ export default function ChangePasswordPage() {
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const valid =
-    newPassword.length >= 12 &&
-    /[A-Z]/.test(newPassword) &&
-    /[a-z]/.test(newPassword) &&
-    /\d/.test(newPassword) &&
-    /[^A-Za-z0-9]/.test(newPassword) &&
-    !/\s/.test(newPassword) &&
-    newPassword === confirm;
+  // visibility toggles
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const rules = [
+    {label: '12+ characters', valid: newPassword.length >= 12},
+    {label: 'Uppercase letter', valid: /[A-Z]/.test(newPassword)},
+    {label: 'Lowercase letter', valid: /[a-z]/.test(newPassword)},
+    {label: 'Number', valid: /\d/.test(newPassword)},
+    {label: 'Symbol', valid: /[^A-Za-z0-9]/.test(newPassword)},
+    {label: 'No spaces', valid: !/\s/.test(newPassword)},
+  ];
+
+  const allRulesPassed = rules.every(r => r.valid);
+  const passwordsMatch = newPassword === confirm && confirm.length > 0;
+  const valid = allRulesPassed && passwordsMatch;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(null);
     setOk(false);
     if (!valid) {
-      setErr('Password does not meet rules or confirm mismatch');
+      setErr('Please ensure all password rules are met.');
       return;
     }
     setLoading(true);
@@ -53,8 +61,8 @@ export default function ChangePasswordPage() {
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(j.error || 'Reset failed');
         setOk(true);
-        alert('Password updated. Please log in.');
-        router.replace('/login');
+        // Delay redirect slightly so user sees success message
+        setTimeout(() => router.replace('/login'), 2000);
       } else {
         // authenticated change
         const res = (await fetchWithAuth('/api/auth/change-password', {
@@ -79,198 +87,176 @@ export default function ChangePasswordPage() {
     }
   }
 
-  const ruleOk = (r: boolean) =>
-    ({
-      display: 'inline-block',
-      width: 8,
-      height: 8,
-      borderRadius: 9999,
-      background: r ? '#10b981' : '#d1d5db',
-      marginRight: 8,
-    }) as const;
-
   return (
-    <main style={{maxWidth: 520, margin: '2rem auto', padding: 16}}>
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #eee',
-          borderRadius: 10,
-          padding: 16,
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-        }}
-      >
-        <h1 style={{marginTop: 0, marginBottom: 8}}>
-          {isReset ? 'Set a new password' : 'Change Password'}
-        </h1>
-        <p style={{color: '#6b7280', marginTop: 0}}>{ruleMsg}</p>
-
-        {/* live rule hints */}
-        <ul
-          style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: '8px 0 14px',
-            color: '#6b7280',
-            fontSize: 13,
-          }}
-        >
-          <li>
-            <span style={ruleOk(newPassword.length >= 12)} />
-            12+ characters
-          </li>
-          <li>
-            <span style={ruleOk(/[A-Z]/.test(newPassword))} />
-            Uppercase letter
-          </li>
-          <li>
-            <span style={ruleOk(/[a-z]/.test(newPassword))} />
-            Lowercase letter
-          </li>
-          <li>
-            <span style={ruleOk(/\d/.test(newPassword))} />
-            Number
-          </li>
-          <li>
-            <span style={ruleOk(/[^A-Za-z0-9]/.test(newPassword))} />
-            Symbol
-          </li>
-          <li>
-            <span style={ruleOk(!/\s/.test(newPassword))} />
-            No spaces
-          </li>
-          <li>
-            <span
-              style={ruleOk(newPassword === confirm && confirm.length > 0)}
-            />
-            Matches confirm
-          </li>
-        </ul>
+    <Layout hideNav={isReset}>
+      <div className="max-w-md mx-auto mt-10 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {isReset ? 'Set New Password' : 'Change Password'}
+          </h1>
+        </div>
 
         {err && (
-          <div
-            style={{
-              background: '#fdecea',
-              color: '#b91c1c',
-              padding: 10,
-              borderRadius: 8,
-              marginBottom: 10,
-            }}
-          >
-            {err}
-          </div>
-        )}
-        {ok && (
-          <div
-            style={{
-              background: '#ecfdf5',
-              color: '#065f46',
-              padding: 10,
-              borderRadius: 8,
-              marginBottom: 10,
-            }}
-          >
-            Password updated.
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-red-600 dark:text-red-400">{err}</p>
           </div>
         )}
 
-        <form onSubmit={onSubmit} noValidate style={{display: 'grid', gap: 12}}>
+        {ok && (
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-3">
+            <Check className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-green-600 dark:text-green-400">
+              Password updated successfully. Redirecting to login...
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="space-y-5">
           {!isReset && (
-            <label>
-              <div style={{fontSize: 13, color: '#6b7280'}}>
-                Current password
+            <div>
+              <label
+                htmlFor="current-password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
+                Current Password
+              </label>
+              <div className="relative">
+                <input
+                  id="current-password"
+                  type={showCurrent ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-blue-500 focus:ring-2 ring-blue-500/20 rounded-lg transition-all pr-10 outline-none"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+                >
+                  {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: 10,
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                }}
-                required
-              />
-            </label>
+            </div>
           )}
 
-          <label>
-            <div style={{fontSize: 13, color: '#6b7280'}}>New password</div>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #ddd',
-                borderRadius: 8,
-              }}
-              required
-            />
-          </label>
-
-          <label>
-            <div style={{fontSize: 13, color: '#6b7280'}}>
-              Confirm new password
+          <div>
+            <label
+              htmlFor="new-password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                id="new-password"
+                type={showNew ? 'text' : 'password'}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-blue-500 focus:ring-2 ring-blue-500/20 rounded-lg transition-all pr-10 outline-none"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+              >
+                {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
-            <input
-              type="password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #ddd',
-                borderRadius: 8,
-              }}
-              required
-            />
-          </label>
+          </div>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 10,
-              marginTop: 6,
-            }}
-          >
+          <div>
+            <label
+              htmlFor="confirm-password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirm-password"
+                type={showConfirm ? 'text' : 'password'}
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border ${
+                  confirm && !passwordsMatch
+                    ? 'border-red-300 focus:border-red-500 ring-red-500/20'
+                    : 'border-transparent focus:border-blue-500 ring-blue-500/20'
+                } focus:bg-white dark:focus:bg-[#1A1A1A] focus:ring-2 rounded-lg transition-all pr-10 outline-none`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+              >
+                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {confirm && !passwordsMatch && (
+              <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+                Passwords do not match
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Password Requirements
+            </p>
+            <ul className="grid grid-cols-2 gap-2">
+              {rules.map((rule, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <div
+                    className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                      rule.valid
+                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'
+                    }`}
+                  >
+                    {rule.valid && <Check size={10} strokeWidth={3} />}
+                  </div>
+                  <span
+                    className={
+                      rule.valid
+                        ? 'text-gray-700 dark:text-gray-300'
+                        : 'text-gray-500 dark:text-gray-500'
+                    }
+                  >
+                    {rule.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="pt-4 flex gap-3">
             <button
               type="button"
               onClick={() => router.back()}
-              style={{
-                padding: '10px 14px',
-                border: '1px solid #ddd',
-                borderRadius: 8,
-                background: '#fff',
-                cursor: 'pointer',
-              }}
+              className="flex-1 px-4 py-2.5 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!valid || loading}
-              style={{
-                padding: '10px 14px',
-                border: 'none',
-                borderRadius: 8,
-                background: valid ? '#1e90ff' : '#9ca3af',
-                color: '#fff',
-                cursor: valid && !loading ? 'pointer' : 'not-allowed',
-              }}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading
-                ? 'Saving…'
+                ? 'Updating...'
                 : isReset
-                  ? 'Set password'
-                  : 'Change password'}
+                  ? 'Set Password'
+                  : 'Update Password'}
             </button>
           </div>
         </form>
       </div>
-    </main>
+    </Layout>
   );
 }
