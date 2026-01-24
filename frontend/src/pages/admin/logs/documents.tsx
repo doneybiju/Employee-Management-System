@@ -1,5 +1,14 @@
 import {useEffect, useState} from 'react';
 import {fetchWithAuth} from '@/lib/api';
+import {
+  FileText,
+  Trash2,
+  RefreshCw,
+  UploadCloud,
+  ChevronLeft,
+  ChevronRight,
+  User,
+} from 'lucide-react';
 
 interface DocumentLog {
   id: number;
@@ -60,145 +69,165 @@ export default function DocumentLogsPage() {
   };
 
   return (
-    <main className="p-6 max-w-[1400px] mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Document Activity Logs</h1>
-        <p className="text-sm text-gray-500">
-          Track all document uploads and deletions by HR and admins
-        </p>
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 mb-6 shrink-0 pl-16">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Document Logs
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Audit trail of document uploads and deletions
+          </p>
+        </div>
+        <button
+          onClick={() => fetchLogs(page)}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+        >
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          Refresh
+        </button>
       </div>
 
-      {loading && logs.length === 0 ? (
-        <div className="text-center p-16">Loading...</div>
-      ) : (
-        <>
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b-2 border-gray-200">
-                    <th className="p-3 text-left font-semibold text-sm">
-                      Date & Time
-                    </th>
-                    <th className="p-3 text-left font-semibold text-sm">
-                      Action
-                    </th>
-                    <th className="p-3 text-left font-semibold text-sm">
-                      Document
-                    </th>
-                    <th className="p-3 text-left font-semibold text-sm">
-                      For User
-                    </th>
-                    <th className="p-3 text-left font-semibold text-sm">
-                      Performed By
-                    </th>
-                    <th className="p-3 text-left font-semibold text-sm">
-                      IP Address
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map(log => (
-                    <tr
-                      key={log.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="p-3 text-[13px] text-gray-600 whitespace-nowrap">
-                        {formatDate(log.performedAt)}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-xl text-xs font-semibold ${
-                            log.action === 'upload'
-                              ? 'bg-green-100 text-green-800'
-                              : log.action === 'replace'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {log.action === 'upload'
-                            ? '📤 Upload'
+      {/* Table */}
+      <div className="flex-1 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#111] shadow-sm flex flex-col">
+        <div className="overflow-y-auto flex-1">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50/90 dark:bg-[#111]/90 backdrop-blur sticky top-0 z-10">
+              <tr>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 w-[180px]">
+                  Time
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 w-[120px]">
+                  Action
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                  Document
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                  User
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                  Performed By
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 text-right">
+                  IP Address
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {loading && logs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                    Loading logs...
+                  </td>
+                </tr>
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                    No logs found.
+                  </td>
+                </tr>
+              ) : (
+                logs.map(log => (
+                  <tr
+                    key={log.id}
+                    className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <td className="p-4 text-xs text-gray-500 font-mono whitespace-nowrap">
+                      {formatDate(log.performedAt)}
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                          log.action === 'upload'
+                            ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
                             : log.action === 'replace'
-                              ? '🔄 Replace'
-                              : '🗑️ Delete'}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <div className="font-semibold text-gray-800 mb-1">
-                          {formatDocumentType(log.documentType)}
-                        </div>
-                        <div className="text-xs text-gray-500 max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {log.fileName}
-                        </div>
-                        {log.expiryDate && (
-                          <div className="text-[11px] text-gray-400 mt-0.5">
-                            Expires:{' '}
-                            {new Date(log.expiryDate).toLocaleDateString()}
-                          </div>
+                              ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                              : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30'
+                        }`}
+                      >
+                        {log.action === 'upload' ? (
+                          <UploadCloud size={12} />
+                        ) : log.action === 'replace' ? (
+                          <RefreshCw size={12} />
+                        ) : (
+                          <Trash2 size={12} />
                         )}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-800">
+                        {log.action.charAt(0).toUpperCase() +
+                          log.action.slice(1)}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500">
+                          <FileText size={16} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {formatDocumentType(log.documentType)}
+                          </div>
+                          <div
+                            className="text-xs text-gray-500 max-w-[200px] truncate"
+                            title={log.fileName}
+                          >
+                            {log.fileName}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {log.employeeName || 'Unknown'}
                         </div>
-                        <div className="text-[11px] text-gray-500 font-mono">
+                        <div className="text-xs text-gray-500 font-mono mt-0.5">
                           {log.employeeId.substring(0, 8)}...
                         </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-800 mb-1">
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                          <User size={12} />
+                        </div>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
                           {log.performedByName}
-                        </div>
-                        <div className="flex gap-1">
-                          <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[11px] font-medium">
-                            {log.performedByRole}
-                          </span>
-                          <span className="px-1.5 py-0.5 bg-blue-100 rounded text-[11px] font-medium">
-                            {log.performedByEmpType.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3 font-mono text-xs text-gray-500">
-                        {log.ip || '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right text-xs text-gray-500 font-mono">
+                      {log.ip || '—'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 mt-6">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className={`px-4 py-2 text-sm font-medium rounded-lg border border-transparent ${
-                  page === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-500">
-                Page {page} of {totalPages} ({total} total)
-              </span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className={`px-4 py-2 text-sm font-medium rounded-lg border border-transparent ${
-                  page === totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
-    </main>
+        {/* Footer */}
+        <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 p-4 bg-gray-50/50 dark:bg-[#111] flex items-center justify-between">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft size={16} /> Previous
+          </button>
+          <span className="text-sm text-gray-500">
+            Page {page} of {totalPages || 1}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
