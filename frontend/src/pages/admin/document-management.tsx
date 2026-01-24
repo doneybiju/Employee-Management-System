@@ -555,7 +555,7 @@ export default function AdminDocumentManagement() {
                 placeholder="Search users..."
                 value={q}
                 onChange={e => setQ(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
             </div>
             <div className="flex gap-1 p-1 bg-gray-50 dark:bg-[#1A1A1A] rounded-lg">
@@ -583,7 +583,7 @@ export default function AdminDocumentManagement() {
             <select
               value={docFilter}
               onChange={e => setDocFilter(e.target.value as DocFilter)}
-              className="w-full p-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full p-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             >
               <option value="all">All Users</option>
               <option value="missing_any">Missing Any Document</option>
@@ -740,7 +740,7 @@ export default function AdminDocumentManagement() {
                     type="date"
                     value={passportExpiry}
                     onChange={e => setPassportExpiry(e.target.value)}
-                    className="w-full p-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
+                    className="w-full p-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
                   />
                 </div>
               )}
@@ -869,7 +869,7 @@ export default function AdminDocumentManagement() {
               <select
                 value={expiryMonths}
                 onChange={e => setExpiryMonths(parseInt(e.target.value, 10))}
-                className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
                 {[1, 2, 3, 4, 5, 6].map(m => (
                   <option key={m} value={m}>

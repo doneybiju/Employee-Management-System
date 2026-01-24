@@ -972,8 +972,7 @@ function DeprovisionSettings() {
                         onChangeAmount(parseInt(e.target.value, 10))
                       }
                       disabled={loading || saving}
-                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border-transparent focus:bg-white dark:focus:bg-[#111] focus:ring-2 ring-blue-500/20 rounded-lg py-2.5 px-3 transition-all"
-                    >
+                      className="w-full pl-3 pr-10 py-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"                    >
                       {Array.from({length: 31}, (_, i) => i).map(n => (
                         <option key={n} value={n}>
                           {n}

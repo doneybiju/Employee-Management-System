@@ -130,7 +130,7 @@ export default function ChangePasswordPage() {
                   type={showCurrent ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-blue-500 focus:ring-2 ring-blue-500/20 rounded-lg transition-all pr-10 outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-blue-500 focus:ring-2 ring-blue-500/20 rounded-lg transition-all pr-10 outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   required
                 />
                 <button
@@ -157,7 +157,7 @@ export default function ChangePasswordPage() {
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-blue-500 focus:ring-2 ring-blue-500/20 rounded-lg transition-all pr-10 outline-none"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-blue-500 focus:ring-2 ring-blue-500/20 rounded-lg transition-all pr-10 outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 required
               />
               <button
