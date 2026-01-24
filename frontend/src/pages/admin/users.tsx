@@ -469,7 +469,10 @@ export default function AdminUsers() {
           />
         </div>
         <div className="text-sm text-gray-500">
-          Showing <span className="font-medium text-gray-900 dark:text-white">{filteredRows.length}</span>{' '}
+          Showing{' '}
+          <span className="font-medium text-gray-900 dark:text-white">
+            {filteredRows.length}
+          </span>{' '}
           users
         </div>
       </div>
@@ -883,7 +886,9 @@ export default function AdminUsers() {
               <div className="grid grid-cols-2 gap-y-4 text-sm">
                 <div>
                   <p className="text-gray-500 text-xs">Department</p>
-                  <p className="font-medium">{selectedUser.department || '—'}</p>
+                  <p className="font-medium">
+                    {selectedUser.department || '—'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Position</p>
