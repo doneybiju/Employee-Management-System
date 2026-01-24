@@ -3,7 +3,17 @@ import {useEffect, useState} from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
-import s from './smtp.module.css';
+import {
+  Server,
+  Save,
+  Send,
+  CheckCircle,
+  AlertCircle,
+  Lock,
+  Globe,
+  Mail,
+  User,
+} from 'lucide-react';
 
 type Form = {
   host: string;
@@ -50,9 +60,18 @@ function PageInner() {
     })();
   }, []);
 
-  if (loading || !form) return <main style={{padding: 24}}>Loading…</main>;
+  if (loading || !form)
+    return (
+      <div className="flex h-screen items-center justify-center text-gray-500">
+        Loading...
+      </div>
+    );
   if (!user || user.role !== 'super_admin')
-    return <main style={{padding: 24}}>Forbidden.</main>;
+    return (
+      <div className="flex h-screen items-center justify-center text-red-600">
+        Access Denied
+      </div>
+    );
 
   const onChange = (k: keyof Form, v: any) => setForm({...form, [k]: v});
 
@@ -60,7 +79,6 @@ function PageInner() {
     if (!form) return;
     setSaving(true);
     setMsg(null);
-    // add this helper inside save()
     const resolveEnc = (
       enc: Form['encryption'],
       port: number | '',
@@ -81,7 +99,7 @@ function PageInner() {
         fromName: form.fromName,
         fromEmail: form.fromEmail,
       };
-      if (form.pass) body.pass = form.pass; // only send if changed
+      if (form.pass) body.pass = form.pass;
 
       const res = await fetchWithAuth('/api/admin/smtp', {
         method: 'PUT',
@@ -126,183 +144,238 @@ function PageInner() {
     <>
       <Head>
         <title>SMTP Settings | Admin</title>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
       </Head>
 
-      <main className={s['admin-container']}>
-        <div className={s['admin-header']}>
-          <h1 className={s['admin-title']}>SMTP Settings</h1>
-          <p className={s['admin-subtitle']}>
+      <main className="max-w-4xl mx-auto p-6 font-sans my-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
+            SMTP Settings
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">
             Configure your email server settings for system notifications
           </p>
         </div>
 
-        <section className={s.card}>
-          <h2 className={s['card-title']}>
-            <i className="fas fa-server" aria-hidden="true" />
-            SMTP Configuration
-          </h2>
+        <div className="space-y-8">
+          {/* SMTP Config Card */}
+          <section className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <Server className="text-blue-600 dark:text-blue-400" size={20} />
+              SMTP Configuration
+            </h2>
 
-          <div className={s['form-grid']}>
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>Host</label>
-              <input
-                className={s['form-input']}
-                value={form.host}
-                onChange={e => onChange('host', e.target.value)}
-                placeholder="smtp.example.com"
-              />
-            </div>
-
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>Port</label>
-              <input
-                className={s['form-input']}
-                type="number"
-                placeholder="465 or 587"
-                value={form.port === '' ? '' : String(form.port)}
-                onChange={e => {
-                  const v = e.target.value;
-                  onChange('port', v === '' ? '' : Number(v));
-                }}
-              />
-            </div>
-
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>Encryption</label>
-              <small className={s['form-hint']}>
-                AUTO picks TLS if port is 465, STARTTLS if 587, otherwise None.
-              </small>
-
-              <select
-                className={s['form-select']}
-                value={form.encryption}
-                onChange={e => onChange('encryption', e.target.value as any)}
-              >
-                <option value="AUTO">AUTO (detect by port)</option>
-                <option value="STARTTLS">STARTTLS (587)</option>
-                <option value="TLS">TLS implicit (465)</option>
-                <option value="NONE">None (25)</option>
-              </select>
-            </div>
-
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>SMTP Username</label>
-              <input
-                className={s['form-input']}
-                value={form.user}
-                onChange={e => onChange('user', e.target.value)}
-                placeholder="no-reply@example.com"
-              />
-            </div>
-
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>
-                SMTP Password <small>(leave blank to keep current)</small>
-              </label>
-              <input
-                className={s['form-input']}
-                type="password"
-                value={form.pass}
-                onChange={e => onChange('pass', e.target.value)}
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>From Name</label>
-              <input
-                className={s['form-input']}
-                value={form.fromName}
-                onChange={e => onChange('fromName', e.target.value)}
-                placeholder="Extramus IT"
-              />
-            </div>
-
-            <div className={s['form-group']}>
-              <label className={s['form-label']}>From Email</label>
-              <input
-                className={s['form-input']}
-                type="email"
-                value={form.fromEmail}
-                onChange={e => onChange('fromEmail', e.target.value)}
-                placeholder="no-reply@example.com"
-              />
-            </div>
-          </div>
-
-          <div style={{display: 'flex', alignItems: 'center', marginTop: 24}}>
-            <button
-              className={s['save-button']}
-              onClick={save}
-              disabled={saving}
-            >
-              <i
-                className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-save'}`}
-                aria-hidden="true"
-              />
-              {saving ? 'Saving…' : 'Save Settings'}
-            </button>
-
-            {msg && (
-              <div
-                className={`${s.message} ${msg.ok ? s.success : s.error}`}
-                role="status"
-              >
-                {msg.text}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Host
+                </label>
+                <div className="relative">
+                  <Globe
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    className="w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    value={form.host}
+                    onChange={e => onChange('host', e.target.value)}
+                    placeholder="smtp.example.com"
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        </section>
 
-        <section className={s.card}>
-          <h2 className={s['card-title']}>
-            <i className="fas fa-paper-plane" aria-hidden="true" />
-            Test Email Configuration
-          </h2>
-
-          <p className={s['test-description']}>
-            Send a test email to verify your SMTP settings are working
-            correctly.
-          </p>
-
-          <div className={s['form-group']}>
-            <label className={s['form-label']}>Recipient Email</label>
-            <input
-              className={s['form-input']}
-              type="email"
-              placeholder="you@company.com"
-              value={testTo}
-              onChange={e => setTestTo(e.target.value)}
-            />
-          </div>
-
-          <div style={{display: 'flex', alignItems: 'center', marginTop: 16}}>
-            <button
-              className={s['test-button']}
-              onClick={sendTest}
-              disabled={testing || !testTo}
-            >
-              <i
-                className={`fas ${testing ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}
-                aria-hidden="true"
-              />
-              {testing ? 'Sending…' : 'Send Test Email'}
-            </button>
-
-            {testMsg && (
-              <div
-                className={`${s.message} ${testMsg.ok ? s.success : s.error}`}
-                role="status"
-              >
-                {testMsg.text}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Port
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  type="number"
+                  placeholder="465 or 587"
+                  value={form.port === '' ? '' : String(form.port)}
+                  onChange={e => {
+                    const v = e.target.value;
+                    onChange('port', v === '' ? '' : Number(v));
+                  }}
+                />
               </div>
-            )}
-          </div>
-        </section>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Encryption
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <select
+                    className="w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
+                    value={form.encryption}
+                    onChange={e =>
+                      onChange('encryption', e.target.value as any)
+                    }
+                  >
+                    <option value="AUTO">AUTO (detect by port)</option>
+                    <option value="STARTTLS">STARTTLS (587)</option>
+                    <option value="TLS">TLS implicit (465)</option>
+                    <option value="NONE">None (25)</option>
+                  </select>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  AUTO picks TLS if port is 465, STARTTLS if 587.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Username
+                </label>
+                <div className="relative">
+                  <User
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    className="w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    value={form.user}
+                    onChange={e => onChange('user', e.target.value)}
+                    placeholder="no-reply@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Password{' '}
+                  <span className="text-xs text-gray-500 font-normal">
+                    (leave blank to keep current)
+                  </span>
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  type="password"
+                  value={form.pass}
+                  onChange={e => onChange('pass', e.target.value)}
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  From Name
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  value={form.fromName}
+                  onChange={e => onChange('fromName', e.target.value)}
+                  placeholder="Extramus IT"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  From Email
+                </label>
+                <div className="relative">
+                  <Mail
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    className="w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    type="email"
+                    value={form.fromEmail}
+                    onChange={e => onChange('fromEmail', e.target.value)}
+                    placeholder="no-reply@example.com"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+              <button
+                onClick={save}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                <Save size={18} className={saving ? 'animate-spin' : ''} />
+                {saving ? 'Saving...' : 'Save Settings'}
+              </button>
+
+              {msg && (
+                <div
+                  className={`flex items-center gap-2 text-sm font-medium ${
+                    msg.ok
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
+                  {msg.ok ? (
+                    <CheckCircle size={18} />
+                  ) : (
+                    <AlertCircle size={18} />
+                  )}
+                  {msg.text}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Test Email Card */}
+          <section className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+              <Send className="text-blue-600 dark:text-blue-400" size={20} />
+              Test Email Configuration
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+              Send a test email to verify your SMTP settings are working
+              correctly.
+            </p>
+
+            <div className="flex items-start gap-4">
+              <div className="flex-1 max-w-md">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Recipient Email
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  type="email"
+                  placeholder="you@company.com"
+                  value={testTo}
+                  onChange={e => setTestTo(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 mt-6">
+              <button
+                onClick={sendTest}
+                disabled={testing || !testTo}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                <Send size={18} className={testing ? 'animate-pulse' : ''} />
+                {testing ? 'Sending...' : 'Send Test Email'}
+              </button>
+
+              {testMsg && (
+                <div
+                  className={`flex items-center gap-2 text-sm font-medium ${
+                    testMsg.ok
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
+                  {testMsg.ok ? (
+                    <CheckCircle size={18} />
+                  ) : (
+                    <AlertCircle size={18} />
+                  )}
+                  {testMsg.text}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </main>
     </>
   );

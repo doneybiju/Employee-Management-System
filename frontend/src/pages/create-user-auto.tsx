@@ -1,11 +1,10 @@
 // frontend/src/pages/create-user-auto.tsx
 import {useEffect, useMemo, useState} from 'react';
-
-import s from './create-user-auto.module.css';
 import {fetchWithAuth} from '@/lib/api';
 import {useAuth} from '@/context/AuthContext';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import {CheckCircle, AlertCircle, RefreshCw} from 'lucide-react';
 
 const CountrySelect = dynamic(() => import('@/components/CountrySelect'), {
   ssr: false,
@@ -55,8 +54,8 @@ type CreateAutoResult = {
 type ProvisionResp = {
   ok?: boolean;
   companyEmail?: string;
-  empID?: string; // some endpoints use empID
-  empId?: string; // some use empId
+  empID?: string;
+  empId?: string;
   tempPasswords?: {google?: string; site?: string};
 
   google?: {
@@ -104,11 +103,19 @@ export default function CreateUserAuto() {
 
   if (!isLoggedIn)
     return (
-      <div>
-        <Link href="/login">Login</Link> required.
+      <div className="flex h-screen items-center justify-center text-gray-500">
+        <Link href="/login" className="text-blue-600 hover:underline mr-1">
+          Login
+        </Link>
+        required.
       </div>
     );
-  if (!isAllowed) return <div>Forbidden.</div>;
+  if (!isAllowed)
+    return (
+      <div className="flex h-screen items-center justify-center text-red-600">
+        Forbidden.
+      </div>
+    );
 
   useEffect(() => {
     if (!isAllowed) return;
@@ -116,14 +123,12 @@ export default function CreateUserAuto() {
     (async () => {
       setLoadingDepts(true);
       try {
-        // helper to fetch+json
         const getJson = async (url: string) => {
           const res = await fetchWithAuth(url);
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           return res.json();
         };
 
-        // try full first, then fallback
         let raw: any[] = [];
         try {
           raw = await getJson('/api/departments/full');
@@ -133,7 +138,6 @@ export default function CreateUserAuto() {
 
         if (dead) return;
 
-        // normalize to Dept[]
         const norm: Dept[] = Array.isArray(raw)
           ? raw
               .map((d: any) => ({
@@ -187,7 +191,6 @@ export default function CreateUserAuto() {
     setSelectedPosId('');
   };
 
-  // ---- helpers ----
   async function postJSON(path: string, payload: any): Promise<ProvisionResp> {
     const res = await fetchWithAuth(path, {
       method: 'POST',
@@ -199,19 +202,19 @@ export default function CreateUserAuto() {
       try {
         const j = await res.json();
         if (j?.error) msg = j.error;
-      } catch {}
+      } catch {
+        // ignore
+      }
       const err = new Error(msg) as any;
-      err.status = res.status; // so callers can check e.status === 409
+      err.status = res.status;
       throw err;
     }
     return res.json();
   }
 
-  // Try several historical endpoints; first one that works wins.
-  // Try primary endpoint; only fall back if it's truly missing (404/Not Found).
   async function postProvisionWithFallback(payload: any) {
     const paths = [
-      '/api/gsuite/provision/auto', // put this first
+      '/api/gsuite/provision/auto',
       '/api/admin/provision/auto',
       '/api/provision/auto',
       '/api/users/create-auto',
@@ -220,7 +223,7 @@ export default function CreateUserAuto() {
     let lastErr: any = null;
     for (const p of paths) {
       try {
-        return await postJSON(p, payload); // returns ProvisionResp
+        return await postJSON(p, payload);
       } catch (e: any) {
         const msg = String(e?.message || '');
         if (
@@ -237,8 +240,6 @@ export default function CreateUserAuto() {
     }
     throw lastErr || new Error('Provision endpoint not found');
   }
-
-  // ---- end helpers ----
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,24 +259,22 @@ export default function CreateUserAuto() {
         phone: phone || null,
         departmentId: Number(selectedDeptId),
         positionId: Number(selectedPosId),
-        joiningDate, // keep as-is, or joiningDate || null if you prefer
-        endDate: endDate || null, // optional
+        joiningDate,
+        endDate: endDate || null,
         supervisor: supervisor || null,
         empType,
       };
 
       const data: ProvisionResp = await postProvisionWithFallback(payload);
 
-      // Map backend response into our UI result object, including statuses
       const mapped: CreateAutoResult = {
         companyEmail: data.companyEmail,
         empID: data.empID ?? data.empId ?? undefined,
         tempPasswords: data.tempPasswords ?? {},
-        ok: data.ok ?? true, // if backend omits ok but returned 200, assume success
+        ok: data.ok ?? true,
         google: data.google
           ? {
               created: data.google.created,
-              // keep error for internal use / retry logic, but do not show directly to user
               error: data.google.error ?? null,
             }
           : undefined,
@@ -288,23 +287,17 @@ export default function CreateUserAuto() {
 
       setResult(mapped);
 
-      // Build a human-readable notice summarising the 3 outcomes
       if (data?.ok) {
         const summaryParts: string[] = [];
-
-        // 1) Website / portal user
         summaryParts.push('Portal user created.');
 
-        // 2) Google Workspace user
         const googleCreated = data.google?.created;
         if (googleCreated === true) {
           summaryParts.push('Google Workspace account created.');
         } else if (googleCreated === false) {
-          // keep this generic; don't show low-level errors like "invalid_grant"
           summaryParts.push('Google Workspace account not created yet.');
         }
 
-        // 3) Onboarding email
         const emailSent = data.email?.sent;
         if (emailSent === true) {
           summaryParts.push(`Onboarding email sent to ${personalEmail}.`);
@@ -350,7 +343,7 @@ export default function CreateUserAuto() {
     try {
       const res = await fetchWithAuth('/api/gsuite/provision/retry/google', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'}, // ← ADD THIS
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           companyEmail: result.companyEmail,
           firstName,
@@ -411,285 +404,359 @@ export default function CreateUserAuto() {
     nationality;
 
   return (
-    <div className={s.wrap}>
-      <header className={s.head}>
-        <h1>Create User (Auto-provision)</h1>
-        <div className={s.emailPreview}>
-          Email preview: <strong>{finalEmail}</strong>
-          <div className={s.emailNote}>
+    <div className="max-w-4xl mx-auto p-6 my-8 font-sans">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
+          Create User (Auto-provision)
+        </h1>
+        <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-4 rounded-xl border border-blue-100 dark:border-blue-800 text-sm">
+          Email preview: <strong className="font-mono">{finalEmail}</strong>
+          <div className="text-xs mt-1 opacity-80">
             Final email and EMP ID are generated on submit to ensure uniqueness.
           </div>
         </div>
       </header>
 
-      <div className={s.formWrap}>
+      <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden">
         {notice && (
           <div
-            className={`${s.notice} ${notice.kind === 'success' ? s.success : s.error}`}
+            className={`p-4 border-b flex items-start gap-3 ${
+              notice.kind === 'success'
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800 text-green-800 dark:text-green-300'
+                : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800 text-red-800 dark:text-red-300'
+            }`}
           >
-            {notice.msg}
+            {notice.kind === 'success' ? (
+              <CheckCircle size={20} className="shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle size={20} className="shrink-0 mt-0.5" />
+            )}
+            <div className="text-sm font-medium">{notice.msg}</div>
           </div>
         )}
 
-        <form onSubmit={onSubmit}>
-          <div className={s.grid}>
-            <div className="form-group">
-              <label className={`${s.required}`}>First name</label>
-              <input
-                className={s.input}
-                required
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-              />
-            </div>
+        <form onSubmit={onSubmit} className="p-8 space-y-8">
+          {/* Section: Personal Info */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide border-b border-gray-100 dark:border-gray-800 pb-3 mb-6">
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  First Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className={s.required}>Surname</label>
-              <input
-                className={s.input}
-                required
-                value={surname}
-                onChange={e => setSurname(e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Surname <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  value={surname}
+                  onChange={e => setSurname(e.target.value)}
+                />
+              </div>
 
-            <div className={`${s.full}`}>
-              <label className={s.required}>Personal email</label>
-              <input
-                className={s.input}
-                required
-                type="email"
-                value={personalEmail}
-                onChange={e => setPersonalEmail(e.target.value)}
-              />
-            </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Personal Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  type="email"
+                  value={personalEmail}
+                  onChange={e => setPersonalEmail(e.target.value)}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className={s.required}>Nationality</label>
-              <CountrySelect
-                label=""
-                value={nationality}
-                onChange={setNationality}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Nationality <span className="text-red-500">*</span>
+                </label>
+                <CountrySelect
+                  label=""
+                  value={nationality}
+                  onChange={setNationality}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className={s.required}>Gender</label>
-              <select
-                className={s.select}
-                required
-                value={gender}
-                onChange={e => setGender(e.target.value)}
-              >
-                <option value="">-- Select Gender --</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="others">Others</option>
-              </select>
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Gender <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  value={gender}
+                  onChange={e => setGender(e.target.value)}
+                >
+                  <option value="">-- Select Gender --</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="others">Others</option>
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label>Phone (optional)</label>
-              <input
-                className={s.input}
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Phone (optional)
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Birthdate (optional)</label>
-              <input
-                className={s.input}
-                type="date"
-                value={birthdate}
-                onChange={e => setBirthdate(e.target.value)}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Birthdate (optional)
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  type="date"
+                  value={birthdate}
+                  onChange={e => setBirthdate(e.target.value)}
+                />
+              </div>
             </div>
+          </div>
 
-            <div className="form-group">
-              <label className={s.required}>Department</label>
-              <select
-                className={s.select}
-                required
-                value={selectedDeptId}
-                onChange={e => onDeptChange(e.target.value)}
-              >
-                <option value="">
-                  {loadingDepts
-                    ? 'Loading…'
-                    : deptError
-                      ? 'Failed to load'
-                      : '-- Select Department --'}
-                </option>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>
-                    {d.departmentName}
+          {/* Section: Employment Details */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide border-b border-gray-100 dark:border-gray-800 pb-3 mb-6">
+              Employment Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  value={selectedDeptId}
+                  onChange={e => onDeptChange(e.target.value)}
+                >
+                  <option value="">
+                    {loadingDepts
+                      ? 'Loading…'
+                      : deptError
+                        ? 'Failed to load'
+                        : '-- Select Department --'}
                   </option>
-                ))}
-              </select>
-            </div>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.departmentName}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label className={s.required}>Position</label>
-              <select
-                className={s.select}
-                required
-                value={selectedPosId}
-                onChange={e =>
-                  setSelectedPosId(e.target.value ? Number(e.target.value) : '')
-                }
-                disabled={!selectedDeptId || positionsForDept.length === 0}
-              >
-                <option value="">
-                  {!selectedDeptId
-                    ? 'Select a department first'
-                    : positionsForDept.length
-                      ? '-- Select Position --'
-                      : 'No positions'}
-                </option>
-                {positionsForDept.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Position <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50"
+                  required
+                  value={selectedPosId}
+                  onChange={e =>
+                    setSelectedPosId(
+                      e.target.value ? Number(e.target.value) : '',
+                    )
+                  }
+                  disabled={!selectedDeptId || positionsForDept.length === 0}
+                >
+                  <option value="">
+                    {!selectedDeptId
+                      ? 'Select a department first'
+                      : positionsForDept.length
+                        ? '-- Select Position --'
+                        : 'No positions'}
                   </option>
-                ))}
-              </select>
-            </div>
+                  {positionsForDept.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label className={s.required}>Start date</label>
-              <input
-                className={s.input}
-                required
-                type="date"
-                value={joiningDate}
-                onChange={e => setJoiningDate(e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Start Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  type="date"
+                  value={joiningDate}
+                  onChange={e => setJoiningDate(e.target.value)}
+                />
+              </div>
 
-            <div className="form-group">
-              <label>End date (optional)</label>
-              <input
-                className={s.input}
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  End Date (optional)
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  type="date"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className={s.required}>Employee Type</label>
-              <select
-                className={s.select}
-                required
-                value={empType}
-                onChange={e => setEmpType(e.target.value as EmpType)}
-              >
-                <option value="intern">Intern</option>
-                <option value="employee">Employee</option>
-                <option value="team_lead">Team Lead</option>
-              </select>
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Employee Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  required
+                  value={empType}
+                  onChange={e => setEmpType(e.target.value as EmpType)}
+                >
+                  <option value="intern">Intern</option>
+                  <option value="employee">Employee</option>
+                  <option value="team_lead">Team Lead</option>
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label>Supervisor (optional)</label>
-              <input
-                className={s.input}
-                value={supervisor}
-                onChange={e => setSupervisor(e.target.value)}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Supervisor (optional)
+                </label>
+                <input
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  value={supervisor}
+                  onChange={e => setSupervisor(e.target.value)}
+                />
+              </div>
             </div>
+          </div>
 
-            <div className={`${s.full}`}>
-              <button
-                type="submit"
-                className={s.submitBtn}
-                disabled={submitting || !canSubmit}
-              >
-                {submitting ? 'Creating…' : 'Create Google Account + Site User'}
-              </button>
-            </div>
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+              disabled={submitting || !canSubmit}
+            >
+              {submitting ? 'Creating...' : 'Create Google Account + Site User'}
+            </button>
           </div>
         </form>
 
-        {err && <div className={s.errorText}>{err}</div>}
+        {err && (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border-t border-red-100 dark:border-red-800 text-red-600 dark:text-red-300 text-sm text-center">
+            {err}
+          </div>
+        )}
 
         {result && (
-          <div className={s.resultBox}>
-            <h3>Account provisioning result</h3>
+          <div className="bg-gray-50 dark:bg-white/5 border-t border-gray-200 dark:border-gray-800 p-8 space-y-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              Account Provisioning Result
+            </h3>
 
-            {/* Portal user status */}
-            <div className={s.resultItem}>
-              <div className={s.resultLabel}>Portal user:</div>
-              <div>{result.ok === false ? 'Not created' : 'Created'}</div>
-            </div>
-
-            {/* Google Workspace status (no raw OAuth error shown to the user) */}
-            <div className={s.resultItem}>
-              <div className={s.resultLabel}>Google Workspace user:</div>
-              <div>
-                {result.google
-                  ? result.google.created
-                    ? 'Created'
-                    : 'Not created yet – please contact HR/IT or retry below.'
-                  : 'Not available'}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Portal user status */}
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Portal User
+                </div>
+                <div className="font-semibold text-gray-900 dark:text-white">
+                  {result.ok === false ? 'Not created' : 'Created'}
+                </div>
               </div>
-            </div>
 
-            {/* Onboarding email status */}
-            <div className={s.resultItem}>
-              <div className={s.resultLabel}>Onboarding email:</div>
-              <div>
-                {result.email
-                  ? result.email.sent
-                    ? 'Sent'
-                    : 'Not sent'
-                  : 'Not available'}
-              </div>
-            </div>
-
-            {/* Retry actions – only show when relevant */}
-            {result.companyEmail &&
-              result.google &&
-              result.google.created === false && (
-                <div className={s.resultItem}>
+              {/* Google Workspace status */}
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Google Workspace
+                </div>
+                <div className="font-semibold text-gray-900 dark:text-white">
+                  {result.google
+                    ? result.google.created
+                      ? 'Created'
+                      : 'Not created'
+                    : 'Not available'}
+                </div>
+                {result.google?.created === false && (
                   <button
-                    type="button"
-                    className={s.retryButton}
                     onClick={retryGoogle}
                     disabled={submitting}
+                    className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
                   >
-                    Retry Google account
+                    <RefreshCw size={12} /> Retry Google Creation
                   </button>
+                )}
+              </div>
+
+              {/* Email status */}
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Onboarding Email
                 </div>
+                <div className="font-semibold text-gray-900 dark:text-white">
+                  {result.email
+                    ? result.email.sent
+                      ? 'Sent'
+                      : 'Not sent'
+                    : 'Not available'}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="p-4 flex justify-between">
+                <span className="text-sm font-medium text-gray-500">
+                  Company Email
+                </span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                  {result.companyEmail ?? '—'}
+                </span>
+              </div>
+              <div className="p-4 flex justify-between">
+                <span className="text-sm font-medium text-gray-500">
+                  Employee ID
+                </span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                  {result.empID ?? '—'}
+                </span>
+              </div>
+              {result.tempPasswords && (
+                <>
+                  <div className="p-4 flex justify-between bg-yellow-50 dark:bg-yellow-900/10">
+                    <span className="text-sm font-medium text-yellow-800 dark:text-yellow-500">
+                      Google Temp Password
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                      {result.tempPasswords.google ?? '—'}
+                    </span>
+                  </div>
+                  <div className="p-4 flex justify-between bg-yellow-50 dark:bg-yellow-900/10">
+                    <span className="text-sm font-medium text-yellow-800 dark:text-yellow-500">
+                      Site Temp Password
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                      {result.tempPasswords.site ?? '—'}
+                    </span>
+                  </div>
+                </>
               )}
-
-            {/* Existing details */}
-            <div className={s.resultItem}>
-              <div className={s.resultLabel}>Company Email:</div>
-              <div>{result.companyEmail ?? '—'}</div>
             </div>
-            <div className={s.resultItem}>
-              <div className={s.resultLabel}>Employee ID:</div>
-              <div>{result.empID ?? '—'}</div>
-            </div>
-
-            {result.tempPasswords && (
-              <>
-                <div className={s.resultItem}>
-                  <div className={s.resultLabel}>Google temp password:</div>
-                  <div className={s.code}>
-                    {result.tempPasswords.google ?? '—'}
-                  </div>
-                </div>
-                <div className={s.resultItem}>
-                  <div className={s.resultLabel}>Site temp password:</div>
-                  <div className={s.code}>
-                    {result.tempPasswords.site ?? '—'}
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         )}
       </div>

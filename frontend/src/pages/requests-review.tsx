@@ -1,8 +1,16 @@
 // frontend/src/pages/requests-review.tsx
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth, getJson} from '@/lib/api';
-import Link from 'next/link';
 import {useEffect, useState} from 'react';
+import {
+  Check,
+  X,
+  FileSpreadsheet,
+  RefreshCw,
+  Search,
+  Calendar,
+  Clock,
+} from 'lucide-react';
 
 type Row = {
   id: number;
@@ -48,6 +56,9 @@ export default function RequestsReview() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isActing, setIsActing] = useState(false);
 
+  const [approvedSheetUrl, setApprovedSheetUrl] = useState<string | null>(null);
+  const [q, setQ] = useState('');
+
   const load = async () => {
     setIsLoading(true);
     try {
@@ -80,19 +91,28 @@ export default function RequestsReview() {
     }
   }, [loading, user]);
 
-  // Filter rows based on active tab
+  // Filter rows based on active tab and search
   const filteredRows = rows.filter(row => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'absence') return row.kind === 'ABSENCE';
-    if (activeTab === 'extra') return row.kind === 'EXTRA_HOURS';
+    // Tab filter
+    if (activeTab === 'absence' && row.kind !== 'ABSENCE') return false;
+    if (activeTab === 'extra' && row.kind !== 'EXTRA_HOURS') return false;
+
+    // Search filter
+    if (q.trim()) {
+      const needle = q.trim().toLowerCase();
+      const match =
+        row.name.toLowerCase().includes(needle) ||
+        (row.email || '').toLowerCase().includes(needle) ||
+        (row.reason || '').toLowerCase().includes(needle);
+      if (!match) return false;
+    }
+
     return true;
   });
 
   const absenceCount = rows.filter(r => r.kind === 'ABSENCE').length;
   const extraCount = rows.filter(r => r.kind === 'EXTRA_HOURS').length;
   const totalCount = rows.length;
-
-  const [approvedSheetUrl, setApprovedSheetUrl] = useState<string | null>(null);
 
   const act = async (id: number, action: 'approve' | 'reject') => {
     try {
@@ -157,388 +177,298 @@ export default function RequestsReview() {
     setRejectionReason('');
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-[400px] text-lg text-gray-500">
-        Loading...
-      </div>
-    );
+  if (loading) return null;
 
   if (!user)
     return (
-      <div className="max-w-[400px] mx-auto my-16 p-8 bg-white rounded-xl shadow-sm text-center">
-        <p className="mb-6 text-gray-500 text-base">
-          Authentication required to access this page
-        </p>
-        <Link
-          href="/login"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700 no-underline"
-        >
-          Login to Continue
-        </Link>
+      <div className="flex justify-center items-center h-screen text-gray-500">
+        Authentication required.
       </div>
     );
 
   if (!(user.role === 'hr' || user.role === 'super_admin'))
     return (
-      <div className="max-w-[400px] mx-auto my-16 p-8 bg-white rounded-xl shadow-sm text-center text-red-600 font-medium">
-        Access Denied. You don't have permission to view this page.
+      <div className="flex justify-center items-center h-screen text-red-600 font-medium">
+        Access Denied.
       </div>
     );
 
   return (
-    <>
-      <main className="max-w-[1200px] mx-auto p-4 font-sans my-8">
-        {/* Header */}
-        <div className="bg-white rounded-xl p-8 mb-6 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="m-0 mb-2 text-[28px] font-bold text-gray-800">
-                Request Review
-              </h1>
-              <p className="m-0 text-gray-500 text-base">
-                Review and manage employee time off and extra hours requests
-              </p>
-            </div>
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => {
-                  if (approvedSheetUrl)
-                    window.open(
-                      approvedSheetUrl,
-                      '_blank',
-                      'noopener,noreferrer',
-                    );
-                }}
-                disabled={!approvedSheetUrl}
-                className={`py-2.5 px-5 text-white rounded-lg font-medium border-none transition-all ${
-                  approvedSheetUrl
-                    ? 'bg-teal-700 hover:bg-teal-800 cursor-pointer'
-                    : 'bg-slate-400 cursor-not-allowed opacity-80'
-                }`}
-                title={
-                  approvedSheetUrl
-                    ? 'Open the Google Sheet where approved requests are stored'
-                    : 'Google Sheets is not configured'
-                }
-              >
-                Open Google Sheet
-              </button>
-
-              <button
-                onClick={() => {
-                  void load();
-                  void loadApprovedSheetUrl();
-                }}
-                disabled={isLoading}
-                className={`py-2.5 px-5 bg-blue-600 text-white rounded-lg font-medium border-none transition-all ${
-                  isLoading
-                    ? 'opacity-60 cursor-not-allowed'
-                    : 'cursor-pointer hover:bg-blue-700'
-                }`}
-              >
-                {isLoading ? 'Refreshing...' : 'Refresh'}
-              </button>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 text-center">
-              <div className="text-[32px] font-bold text-blue-600">
-                {totalCount}
-              </div>
-              <div className="text-slate-500 text-sm font-medium mt-1">
-                Total Pending
-              </div>
-            </div>
-            <div className="bg-sky-50 p-6 rounded-lg border border-sky-200 text-center">
-              <div className="text-[32px] font-bold text-sky-700">
-                {absenceCount}
-              </div>
-              <div className="text-sky-900 text-sm font-medium mt-1">
-                Absence Requests
-              </div>
-            </div>
-            <div className="bg-green-50 p-6 rounded-lg border border-green-200 text-center">
-              <div className="text-[32px] font-bold text-green-600">
-                {extraCount}
-              </div>
-              <div className="text-green-800 text-sm font-medium mt-1">
-                Extra Hours
-              </div>
-            </div>
-          </div>
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0 pl-16">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Request Review
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage employee time off and extra hours
+          </p>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* Tab Navigation */}
-          <div className="flex bg-slate-50 border-b border-slate-200 px-8">
+        <div className="flex items-center gap-3">
+          {approvedSheetUrl && (
             <button
-              onClick={() => setActiveTab('all')}
-              className={`py-4 px-6 border-none font-medium cursor-pointer transition-all flex items-center gap-2 border-b-2 ${
-                activeTab === 'all'
-                  ? 'bg-white text-blue-600 border-blue-600'
-                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700'
-              }`}
+              onClick={() =>
+                window.open(approvedSheetUrl, '_blank', 'noopener,noreferrer')
+              }
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-green-700 dark:text-green-400"
             >
-              All Requests
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  activeTab === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
-                }`}
-              >
-                {totalCount}
-              </span>
+              <FileSpreadsheet size={16} /> Google Sheet
             </button>
-            <button
-              onClick={() => setActiveTab('absence')}
-              className={`py-4 px-6 border-none font-medium cursor-pointer transition-all flex items-center gap-2 border-b-2 ${
-                activeTab === 'absence'
-                  ? 'bg-white text-blue-600 border-blue-600'
-                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700'
-              }`}
-            >
-              Absence
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  activeTab === 'absence'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
-                }`}
-              >
-                {absenceCount}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('extra')}
-              className={`py-4 px-6 border-none font-medium cursor-pointer transition-all flex items-center gap-2 border-b-2 ${
-                activeTab === 'extra'
-                  ? 'bg-white text-blue-600 border-blue-600'
-                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700'
-              }`}
-            >
-              Extra Hours
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  activeTab === 'extra'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 text-slate-600'
-                }`}
-              >
-                {extraCount}
-              </span>
-            </button>
+          )}
+          <button
+            onClick={() => {
+              void load();
+              void loadApprovedSheetUrl();
+            }}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-3 gap-4 mb-6 shrink-0">
+        <div className="bg-white dark:bg-[#111] p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {totalCount}
           </div>
+          <div className="text-gray-500 text-xs font-medium uppercase tracking-wide mt-1">
+            Total Pending
+          </div>
+        </div>
+        <div className="bg-white dark:bg-[#111] p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center">
+          <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
+            {absenceCount}
+          </div>
+          <div className="text-gray-500 text-xs font-medium uppercase tracking-wide mt-1">
+            Absence
+          </div>
+        </div>
+        <div className="bg-white dark:bg-[#111] p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {extraCount}
+          </div>
+          <div className="text-gray-500 text-xs font-medium uppercase tracking-wide mt-1">
+            Extra Hours
+          </div>
+        </div>
+      </div>
 
-          <div className="p-8">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-12 text-gray-500">
-                Loading requests...
-              </div>
-            ) : filteredRows.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-5xl mb-4">📋</div>
-                <h3 className="m-0 mb-2 text-gray-700">No pending requests</h3>
-                <p>
-                  There are no {activeTab !== 'all' ? activeTab : ''} requests
-                  waiting for review.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 border-b-2 border-slate-200">
-                      <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
-                        Employee
-                      </th>
-                      {activeTab === 'all' && (
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
-                          Type
-                        </th>
-                      )}
-                      <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
-                        Date(s)
-                      </th>
-                      {(activeTab === 'all' || activeTab === 'extra') && (
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
-                          Time Window
-                        </th>
-                      )}
-                      {(activeTab === 'all' || activeTab === 'absence') && (
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
-                          Reason & Details
-                        </th>
-                      )}
-                      <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider w-[300px]">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRows.map(r => {
-                      const dates = r.date
-                        ? r.date
-                        : r.rangeStart && r.rangeEnd
-                          ? `${r.rangeStart} to ${r.rangeEnd}`
-                          : '—';
-                      const windowLabel =
-                        r.startMin != null && r.endMin != null
-                          ? `${minToLabel(r.startMin)} – ${minToLabel(r.endMin)}`
-                          : '—';
+      {/* Toolbar */}
+      <div className="flex items-center gap-4 mb-4 shrink-0">
+        <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
+          {(['all', 'absence', 'extra'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all capitalize ${
+                activeTab === t
+                  ? 'bg-white dark:bg-[#222] text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
 
-                      return (
-                        <tr
-                          key={r.id}
-                          className="border-b border-slate-100 transition-colors hover:bg-slate-50"
-                        >
-                          <td className="px-4 py-4">
-                            <div className="font-medium text-gray-800">
+        <div className="relative flex-1 max-w-md">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search requests..."
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="flex-1 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#111] shadow-sm flex flex-col">
+        <div className="overflow-y-auto flex-1">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50/90 dark:bg-[#111]/90 backdrop-blur sticky top-0 z-10">
+              <tr>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                  Employee
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                  Type
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                  Details
+                </th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 w-[350px]">
+                  Review
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-gray-500">
+                    Loading...
+                  </td>
+                </tr>
+              ) : filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-gray-500">
+                    No requests found.
+                  </td>
+                </tr>
+              ) : (
+                filteredRows.map(r => {
+                  const dates = r.date
+                    ? r.date
+                    : r.rangeStart && r.rangeEnd
+                      ? `${r.rangeStart} → ${r.rangeEnd}`
+                      : '—';
+                  const windowLabel =
+                    r.startMin != null && r.endMin != null
+                      ? `${minToLabel(r.startMin)} – ${minToLabel(r.endMin)}`
+                      : null;
+
+                  return (
+                    <tr
+                      key={r.id}
+                      className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <td className="p-4 align-top">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+                            {r.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
                               {r.name}
                             </div>
-                            <div className="text-gray-500 text-xs mt-0.5">
+                            <div className="text-xs text-gray-500">
                               {r.email || '—'}
                             </div>
-                          </td>
-                          {activeTab === 'all' && (
-                            <td className="px-4 py-4">
-                              <span
-                                className={`inline-block px-2 py-1 rounded-md text-xs font-medium border ${
-                                  r.kind === 'EXTRA_HOURS'
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : 'bg-sky-50 text-sky-700 border-sky-200'
-                                }`}
-                              >
-                                {r.kind === 'EXTRA_HOURS'
-                                  ? 'Extra Hours'
-                                  : 'Absence'}
-                              </span>
-                            </td>
-                          )}
-                          <td className="px-4 py-4 text-gray-700 font-medium">
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 align-top">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                            r.kind === 'EXTRA_HOURS'
+                              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
+                              : 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-900/30'
+                          }`}
+                        >
+                          {r.kind === 'EXTRA_HOURS' ? 'Extra Hours' : 'Absence'}
+                        </span>
+                      </td>
+                      <td className="p-4 align-top">
+                        <div className="flex flex-col gap-1 text-sm">
+                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                            <Calendar size={14} className="text-gray-400" />
                             {dates}
-                          </td>
-                          {(activeTab === 'all' || activeTab === 'extra') && (
-                            <td className="px-4 py-4 text-gray-500">
+                          </div>
+                          {windowLabel && (
+                            <div className="flex items-center gap-2 text-gray-500 text-xs">
+                              <Clock size={14} className="text-gray-400" />
                               {windowLabel}
-                            </td>
-                          )}
-                          {(activeTab === 'all' || activeTab === 'absence') && (
-                            <td className="px-4 py-4">
-                              <div className="font-medium text-gray-800">
-                                {r.reason || '—'}
-                              </div>
-                              {r.comment && (
-                                <div className="text-gray-500 text-xs mt-1 italic">
-                                  {r.comment}
-                                </div>
-                              )}
-                            </td>
-                          )}
-                          <td className="px-4 py-4">
-                            <div className="flex gap-3 items-start">
-                              <input
-                                placeholder="Review notes..."
-                                value={note[r.id] ?? r.reviewNote ?? ''}
-                                onChange={e =>
-                                  setNote(s => ({...s, [r.id]: e.target.value}))
-                                }
-                                className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                              />
-                              <div className="flex flex-col gap-1">
-                                <button
-                                  onClick={() => act(r.id, 'approve')}
-                                  disabled={isActing}
-                                  className={`py-2 px-4 bg-green-600 text-white border-none rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-                                    isActing
-                                      ? 'opacity-60 cursor-not-allowed'
-                                      : 'hover:bg-green-700 cursor-pointer'
-                                  }`}
-                                >
-                                  Approve
-                                </button>
-
-                                <button
-                                  onClick={() => act(r.id, 'reject')}
-                                  disabled={isActing}
-                                  className={`py-2 px-4 bg-transparent text-red-600 border border-red-600 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-                                    isActing
-                                      ? 'opacity-60 cursor-not-allowed'
-                                      : 'hover:bg-red-50 cursor-pointer'
-                                  }`}
-                                >
-                                  Reject
-                                </button>
-                                {isActing && (
-                                  <div className="fixed inset-0 bg-black/35 z-[2000] flex items-center justify-center pointer-events-auto">
-                                    <div className="bg-white px-5 py-3.5 rounded-lg shadow-xl font-semibold text-gray-700 min-w-[160px] text-center">
-                                      Processing…
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                          )}
+                          {r.reason && (
+                            <div className="mt-1 text-gray-900 dark:text-gray-100 font-medium">
+                              {r.reason}
+                            </div>
+                          )}
+                          {r.comment && (
+                            <div className="text-gray-500 text-xs italic">
+                              "{r.comment}"
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 align-top">
+                        <div className="flex flex-col gap-2">
+                          <input
+                            placeholder="Add a note..."
+                            value={note[r.id] ?? r.reviewNote ?? ''}
+                            onChange={e =>
+                              setNote(s => ({...s, [r.id]: e.target.value}))
+                            }
+                            className="w-full p-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => act(r.id, 'approve')}
+                              disabled={isActing}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                            >
+                              <Check size={14} /> Approve
+                            </button>
+                            <button
+                              onClick={() => act(r.id, 'reject')}
+                              disabled={isActing}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white dark:bg-transparent border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg text-xs font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                            >
+                              <X size={14} /> Reject
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      </main>
+      </div>
 
-      {/* Rejection Reason Modal */}
+      {/* Rejection Modal */}
       {rejectModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[1000] p-4">
-          <div className="bg-white rounded-xl p-8 w-full max-w-[500px] shadow-2xl">
-            <div className="mb-6">
-              <h2 className="m-0 mb-2 text-xl font-bold text-gray-800">
-                Rejection Reason Required
-              </h2>
-              <p className="m-0 text-gray-500 text-sm">
-                Please provide a reason for rejecting {pendingRejection?.name}'s
-                request.
-              </p>
-            </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-800 p-6 animate-[scaleIn_0.2s_ease-out]">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Reject Request
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Please provide a reason for rejecting{' '}
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {pendingRejection?.name}
+              </span>
+              's request.
+            </p>
 
             <div className="mb-6">
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Rejection Reason *
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Reason *
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={e => setRejectionReason(e.target.value)}
-                placeholder="Explain why this request is being rejected..."
+                placeholder="e.g., Overlap with team meeting..."
                 rows={4}
-                className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-y transition-colors font-inherit focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full p-3 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
+                autoFocus
               />
-              <p className="mt-2 text-xs text-gray-500">
-                This reason will be visible to the employee.
-              </p>
             </div>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={handleRejectCancel}
-                className="py-2.5 px-5 bg-transparent text-gray-500 border border-gray-300 rounded-lg text-sm font-medium cursor-pointer transition-colors hover:bg-gray-50 hover:text-gray-700"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-sm font-medium transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRejectConfirm}
                 disabled={!rejectionReason.trim()}
-                className={`py-2.5 px-5 text-white border-none rounded-lg text-sm font-medium transition-colors ${
-                  !rejectionReason.trim()
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-red-600 hover:bg-red-700 cursor-pointer'
-                }`}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 Confirm Rejection
               </button>
@@ -546,6 +476,6 @@ export default function RequestsReview() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

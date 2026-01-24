@@ -3,6 +3,20 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import Head from 'next/head';
 import {fetchWithAuth} from '@/lib/api';
 import {useAuth} from '@/context/AuthContext';
+import {
+  Search,
+  FileText,
+  File,
+  Download,
+  Trash2,
+  UploadCloud,
+  CheckCircle,
+  Clock,
+  User as UserIcon,
+  X,
+  AlertCircle,
+  Briefcase,
+} from 'lucide-react';
 
 type Role = 'intern' | 'hr' | 'super_admin';
 type Kind = 'acceptance_letter' | 'learning_agreement' | 'passport_id' | 'cv';
@@ -40,8 +54,6 @@ type DocFilter =
 type EmpType = 'intern' | 'employee' | 'team_lead';
 
 const agreementLabelForEmpType = (empType?: EmpType | null) => {
-  // Intern => Internship Agreement
-  // Employee + Team lead => Employment Agreement
   return empType === 'intern' ? 'Internship Agreement' : 'Employment Agreement';
 };
 
@@ -60,22 +72,25 @@ const kindLabel = (kind: Kind, empType?: EmpType | null) => {
   }
 };
 
-const DOC_KEYS: Array<{kind: Kind; getter: keyof AdminDocs; icon: string}> = [
+const DOC_KEYS: Array<{
+  kind: Kind;
+  getter: keyof AdminDocs;
+  Icon: typeof FileText;
+}> = [
   {
     kind: 'acceptance_letter',
     getter: 'acceptanceLetter',
-    icon: 'fa-file-contract',
+    Icon: FileText,
   },
   {
     kind: 'learning_agreement',
     getter: 'learningAgreement',
-    icon: 'fa-handshake',
+    Icon: File,
   },
-  {kind: 'passport_id', getter: 'passportId', icon: 'fa-passport'},
-  {kind: 'cv', getter: 'cv', icon: 'fa-file-alt'},
+  {kind: 'passport_id', getter: 'passportId', Icon: Briefcase},
+  {kind: 'cv', getter: 'cv', Icon: UserIcon},
 ];
 
-// Map UI kinds → backend enum
 const DOC_TYPE_MAP: Record<
   Kind,
   'ACCEPTANCE_LETTER' | 'LEARNING_AGREEMENT' | 'ID_PASSPORT' | 'CV'
@@ -91,7 +106,7 @@ type ExpiringPassportRow = {
   userId: number | null;
   displayName: string;
   companyEmail: string | null;
-  expiryDate: string; // ISO string from API
+  expiryDate: string;
   daysLeft: number;
   filePath: string | null;
 };
@@ -112,8 +127,6 @@ const fullname = (u?: Pick<UserRow, 'firstName' | 'surname'> | null) =>
 export default function AdminDocumentManagement() {
   const [users, setUsers] = useState<UserRow[]>([]);
 
-  // filters
-  const [searchText, setSearchText] = useState('');
   const [searchField, setSearchField] = useState<SearchField>('firstName');
   const [docFilter, setDocFilter] = useState<DocFilter>('all');
   const [docSummary, setDocSummary] = useState<
@@ -139,9 +152,8 @@ export default function AdminDocumentManagement() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const [passportExpiry, setPassportExpiry] = useState<string>(''); // YYYY-MM-DD
+  const [passportExpiry, setPassportExpiry] = useState<string>('');
 
-  // Passport expiry panel (right-side layer)
   const [showExpiryPanel, setShowExpiryPanel] = useState(false);
   const [expiryMonths, setExpiryMonths] = useState<number>(1);
   const [expiryRows, setExpiryRows] = useState<ExpiringPassportRow[]>([]);
@@ -170,7 +182,6 @@ export default function AdminDocumentManagement() {
     toastTimer.current = window.setTimeout(() => setToast(null), 2500);
   };
 
-  // Load active interns list
   useEffect(() => {
     let dead = false;
     (async () => {
@@ -190,7 +201,6 @@ export default function AdminDocumentManagement() {
     };
   }, [q]);
 
-  // Load docs-summary for filters
   useEffect(() => {
     const employeeIds = users
       .filter(u => u.employeeId)
@@ -215,7 +225,6 @@ export default function AdminDocumentManagement() {
     };
   }, [users]);
 
-  // Load expiring passports when panel is open or months changes
   useEffect(() => {
     if (!showExpiryPanel) return;
 
@@ -247,7 +256,6 @@ export default function AdminDocumentManagement() {
     };
   }, [showExpiryPanel, expiryMonths]);
 
-  // turn any Drive link into our proxy if needed then blob it for auth’d <img>
   const toProxy = (u: string) => {
     const m =
       u.match(/[?&]id=([^&]+)/) ||
@@ -256,7 +264,6 @@ export default function AdminDocumentManagement() {
     return m ? `/api/uploads/drive/file/${m[1]}?name=avatar` : u;
   };
   useEffect(() => {
-    const dead = false;
     const toRevoke: string[] = [];
     (async () => {
       const next: Record<number, string> = {};
@@ -287,7 +294,6 @@ export default function AdminDocumentManagement() {
     };
   }, [users]);
 
-  // Load a user's document URLs
   async function loadDocs(u: UserRow | null) {
     setDocs(null);
     if (!u?.employeeId) return;
@@ -310,7 +316,6 @@ export default function AdminDocumentManagement() {
     }
   }
 
-  // Selected user's avatar preview
   useEffect(() => {
     let revoke: string | null = null;
     (async () => {
@@ -340,7 +345,6 @@ export default function AdminDocumentManagement() {
     };
   }, [sel?.avatarUrl]);
 
-  // Upload & replace
   async function upload() {
     if (!sel?.employeeId) return alert('Pick a user first');
     if (!file) return alert('Choose a file');
@@ -356,9 +360,8 @@ export default function AdminDocumentManagement() {
       fd.append('file', file);
       fd.append('employeeId', sel.employeeId);
 
-      // only send expiry for passport_id
       if (selectedKind === 'passport_id' && passportExpiry.trim()) {
-        fd.append('expiryDate', passportExpiry.trim()); // YYYY-MM-DD
+        fd.append('expiryDate', passportExpiry.trim());
       }
 
       const upRes = await fetchWithAuth(
@@ -415,7 +418,6 @@ export default function AdminDocumentManagement() {
     }
   }
 
-  // NEW: Deletions
   async function deleteDoc(kind: Kind) {
     if (!sel?.employeeId) return;
     if (
@@ -488,14 +490,7 @@ export default function AdminDocumentManagement() {
 
   const filtered = useMemo(() => {
     let rows = users;
-    if (searchText.trim()) {
-      const q = searchText.trim().toLowerCase();
-      rows = rows.filter(u =>
-        String(u[searchField] || '')
-          .toLowerCase()
-          .includes(q),
-      );
-    }
+    // Note: Text filtering is handled by API via 'q'
     if (docFilter !== 'all') {
       rows = rows.filter(u => {
         if (!u.employeeId) return false;
@@ -520,297 +515,208 @@ export default function AdminDocumentManagement() {
   );
 
   return (
-    <main className="container">
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
       <Head>
         <title>Document Management | Admin</title>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
       </Head>
 
-      <header className="header">
-        <h1 className="header-title">Document Management</h1>
-      </header>
-
-      {/* Filter bar */}
-      <div className="filter-bar">
-        <div className="filter-row">
-          <div className="seg">
-            <button
-              className={`seg-btn ${searchField === 'firstName' ? 'active' : ''}`}
-              onClick={() => setSearchField('firstName')}
-            >
-              First name
-            </button>
-            <button
-              className={`seg-btn ${searchField === 'surname' ? 'active' : ''}`}
-              onClick={() => setSearchField('surname')}
-            >
-              Surname
-            </button>
-          </div>
-
-          <div className="search-wide">
-            <i className="fas fa-search" />
-            <input
-              placeholder={`Search by ${searchField === 'firstName' ? 'first name' : 'surname'}…`}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-            />
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 mb-6 shrink-0 pl-16">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Document Management
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage intern documents and agreements
+          </p>
         </div>
-
-        <div className="tabs-row">
-          <div className="tabs">
-            {[
-              {k: 'all', label: 'All'},
-              {k: 'missing_any', label: 'Missing Any'},
-              {k: 'acceptance_letter', label: 'Acceptance Letter'},
-              {
-                k: 'learning_agreement',
-                label: agreementLabelForEmpType(sel?.empType),
-              },
-              {k: 'passport_id', label: 'Passport ID'},
-              {k: 'cv', label: 'CV / Resume'},
-            ].map(t => (
-              <button
-                key={t.k}
-                className={`tab ${docFilter === (t.k as DocFilter) ? 'active' : ''}`}
-                onClick={() => setDocFilter(t.k as DocFilter)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="tabs-right">
-            <button
-              className={`tab ${showExpiryPanel ? 'active' : ''}`}
-              onClick={() => setShowExpiryPanel(v => !v)}
-              title="Show interns with Passport ID expiring soon"
-            >
-              Passport expiring
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => setShowExpiryPanel(v => !v)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showExpiryPanel
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+              : 'bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/20'
+          }`}
+        >
+          <Clock size={16} /> Passport Expiry
+        </button>
       </div>
 
-      {showExpiryPanel && (
-        <section className="expiry-panel">
-          <div className="expiry-panel-head">
-            <div>
-              <div className="expiry-title">Passport ID expiring</div>
-              <div className="expiry-subtitle">
-                Shows interns with ID_PASSPORT expiring within the selected
-                range.
-              </div>
+      <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+        {/* Left: User List */}
+        <aside className="w-80 flex flex-col bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800 space-y-3">
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                placeholder="Search users..."
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              />
             </div>
-
-            <button className="tab" onClick={() => setShowExpiryPanel(false)}>
-              Close
-            </button>
-          </div>
-
-          <div className="expiry-controls">
-            <label className="expiry-label">
-              Within
-              <select
-                value={expiryMonths}
-                onChange={e => setExpiryMonths(parseInt(e.target.value, 10))}
-                className="expiry-select"
+            <div className="flex gap-1 p-1 bg-gray-50 dark:bg-[#1A1A1A] rounded-lg">
+              <button
+                className={`flex-1 py-1 text-xs font-medium rounded ${
+                  searchField === 'firstName'
+                    ? 'bg-white dark:bg-[#222] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                }`}
+                onClick={() => setSearchField('firstName')}
               >
-                {[1, 2, 3, 4, 5, 6].map(m => (
-                  <option key={m} value={m}>
-                    {m} month{m > 1 ? 's' : ''}
-                  </option>
-                ))}
-              </select>
-            </label>
+                First Name
+              </button>
+              <button
+                className={`flex-1 py-1 text-xs font-medium rounded ${
+                  searchField === 'surname'
+                    ? 'bg-white dark:bg-[#222] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                }`}
+                onClick={() => setSearchField('surname')}
+              >
+                Surname
+              </button>
+            </div>
+            <select
+              value={docFilter}
+              onChange={e => setDocFilter(e.target.value as DocFilter)}
+              className="w-full p-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            >
+              <option value="all">All Users</option>
+              <option value="missing_any">Missing Any Document</option>
+              <option value="acceptance_letter">
+                Missing Acceptance Letter
+              </option>
+              <option value="learning_agreement">Missing Agreement</option>
+              <option value="passport_id">Missing Passport ID</option>
+              <option value="cv">Missing CV</option>
+            </select>
           </div>
 
-          <div className="expiry-body">
-            {expiryLoading ? (
-              <div className="expiry-muted">Loading…</div>
-            ) : expiryError ? (
-              <div className="expiry-muted">{expiryError}</div>
-            ) : expiryRows.length === 0 ? (
-              <div className="expiry-muted">
-                No passport IDs expiring in this range.
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {loading ? (
+              <div className="text-center py-8 text-gray-500 text-sm">
+                Loading...
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 text-sm">
+                No users found.
               </div>
             ) : (
-              <div className="expiry-list">
-                {expiryRows.map(r => {
-                  const dateOnly = String(r.expiryDate).slice(0, 10);
-                  const leftLabel =
-                    r.daysLeft <= 0
-                      ? 'Expired'
-                      : `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left`;
-                  return (
-                    <div key={r.employeeId} className="expiry-row">
-                      <div className="expiry-row-main">
-                        <div className="expiry-name">{r.displayName}</div>
-                        {r.companyEmail && (
-                          <div className="expiry-email">{r.companyEmail}</div>
-                        )}
-                        <div className="expiry-meta">
-                          Expiry: <b>{dateOnly}</b> · {leftLabel}
-                        </div>
-                      </div>
-
-                      <div className="expiry-actions">
-                        <button
-                          className="tab"
-                          onClick={() => {
-                            const match = users.find(
-                              u => u.employeeId === r.employeeId,
-                            );
-                            if (match) {
-                              setSel(match);
-                              loadDocs(match);
-                            }
-                          }}
-                          title="Select this user"
-                        >
-                          Select
-                        </button>
-
-                        {r.filePath && (
-                          <a
-                            className="tab"
-                            href={withToken(r.filePath) || r.filePath}
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Open document"
-                          >
-                            Open
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      <div className="main-content">
-        {/* Left: user list */}
-        <aside className="user-selection">
-          <h2 className="section-title">Select User</h2>
-          <div className="search-box">
-            <i className="fas fa-search" />
-            <input
-              placeholder="Search users…"
-              value={q}
-              onChange={e => setQ(e.target.value)}
-            />
-          </div>
-
-          <div className="user-list">
-            {loading && <div style={{padding: 12}}>Loading…</div>}
-            {!loading &&
               filtered.map(u => {
-                const key = String(u.employeeId); // consistent key
-                const active = sel?.employeeId === u.employeeId; // consistent selection check
-
+                const active = sel?.employeeId === u.employeeId;
                 return (
-                  <div
-                    key={key}
-                    className={`user-item ${active ? 'active' : ''}`}
+                  <button
+                    key={String(u.employeeId)}
                     onClick={() => {
                       setSel(u);
                       loadDocs(u);
                     }}
-                    role="button"
-                    tabIndex={0}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                      active
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
+                        : 'hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent'
+                    }`}
                   >
-                    <img
-                      src={avatarMap[key] || '/account.png'} // read using same key
-                      alt=""
-                      onError={e => {
-                        e.currentTarget.src = '/account.png';
-                      }}
-                    />
-
-                    <div className="user-details">
-                      <div className="user-name">{fullname(u)}</div>
-                      <div className="user-role">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden shrink-0">
+                      <img
+                        src={avatarMap[String(u.employeeId)] || '/account.png'}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={e => {
+                          e.currentTarget.src = '/account.png';
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div
+                        className={`text-sm font-semibold truncate ${
+                          active
+                            ? 'text-blue-700 dark:text-blue-300'
+                            : 'text-gray-900 dark:text-gray-100'
+                        }`}
+                      >
+                        {fullname(u)}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
                         {[u.position, u.department]
                           .filter(Boolean)
                           .join(' · ') || 'Intern'}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
-              })}
-            {!loading && !filtered.length && (
-              <div style={{padding: 12, color: '#7f8c8d'}}>
-                No interns found.
-              </div>
+              })
             )}
           </div>
         </aside>
 
-        {/* Right: document area */}
-        <section className="document-management">
-          <div className="selected-user">
-            <img
-              src={selAvatarSrc || '/account.png'}
-              alt={sel ? fullname(sel) : 'User avatar'}
-              onError={e => {
-                e.currentTarget.src = '/account.png';
-              }}
-            />
-            <div className="user-info-text">
-              <h3>{sel ? fullname(sel) : '—'}</h3>
-              <p>
-                {sel
-                  ? [sel.position, sel.department]
-                      .filter(Boolean)
-                      .join(' · ') || 'Intern'
-                  : 'Pick a user from the left'}
-              </p>
+        {/* Right: Document Area */}
+        <section className="flex-1 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm flex flex-col overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border-2 border-white dark:border-[#222] shadow-sm">
+                <img
+                  src={selAvatarSrc || '/account.png'}
+                  alt={sel ? fullname(sel) : 'Avatar'}
+                  className="w-full h-full object-cover"
+                  onError={e => {
+                    e.currentTarget.src = '/account.png';
+                  }}
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {sel ? fullname(sel) : 'Select a User'}
+                </h2>
+                <p className="text-gray-500 text-sm">
+                  {sel
+                    ? [sel.position, sel.department]
+                        .filter(Boolean)
+                        .join(' · ') || 'Intern'
+                    : 'Pick a user from the left list to manage documents'}
+                </p>
+              </div>
             </div>
-            {/* Delete avatar */}
-            <div style={{marginLeft: 'auto'}}>
+            {sel?.employeeId && selAvatarSrc && (
               <button
-                className="mini-danger"
                 onClick={deleteAvatar}
-                disabled={!sel?.employeeId || !selAvatarSrc || busy}
-                title="Delete profile picture"
+                disabled={busy}
+                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
-                <i className="fas fa-trash" /> Delete avatar
+                <Trash2 size={16} /> Delete Avatar
               </button>
-            </div>
+            )}
           </div>
 
-          <div className="upload-section">
-            <h2 className="section-title">Upload Document</h2>
-
-            <div className="upload-card">
-              <div className="upload-icon">
-                <i className="fas fa-cloud-upload-alt" />
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Upload Area */}
+            <div className="bg-gray-50 dark:bg-[#1A1A1A] border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center mb-8 hover:border-blue-400 dark:hover:border-blue-600 transition-colors">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UploadCloud size={24} />
               </div>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                Upload Document
+              </h3>
+              <p className="text-gray-500 text-xs mb-4">
+                Supported: PDF only (Max 15MB)
+              </p>
 
-              <div className="upload-text">
-                <h4>Upload a document</h4>
-                <p>Supported: PDF only (Max 15MB)</p>
-              </div>
               <input
                 id="file-input"
-                className="file-input"
+                className="hidden"
                 type="file"
                 accept="application/pdf"
                 onChange={e => {
                   const f = e.target.files?.[0] || null;
                   if (!f) return setFile(null);
-                  const isPdf =
-                    (f.type || '').toLowerCase() === 'application/pdf' ||
-                    /\.pdf$/i.test(f.name);
-                  if (!isPdf) {
+                  if (
+                    (f.type || '').toLowerCase() !== 'application/pdf' &&
+                    !/\.pdf$/i.test(f.name)
+                  ) {
                     alert('Only PDF files are allowed.');
                     e.currentTarget.value = '';
                     return;
@@ -819,622 +725,251 @@ export default function AdminDocumentManagement() {
                 }}
               />
               <button
-                className="browse-btn"
                 onClick={() => document.getElementById('file-input')?.click()}
+                className="px-4 py-2 bg-white dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors shadow-sm"
               >
                 {file ? `Selected: ${file.name}` : 'Browse Files'}
               </button>
+
+              {selectedKind === 'passport_id' && (
+                <div className="mt-4 max-w-xs mx-auto text-left">
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
+                    Passport Expiry (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={passportExpiry}
+                    onChange={e => setPassportExpiry(e.target.value)}
+                    className="w-full p-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
+                  />
+                </div>
+              )}
             </div>
 
-            {selectedKind === 'passport_id' && (
-              <div style={{margin: '12px 0'}}>
-                <label
-                  style={{display: 'block', fontWeight: 600, marginBottom: 6}}
-                >
-                  Passport expiry date (optional)
-                </label>
-                <input
-                  type="date"
-                  value={passportExpiry}
-                  onChange={e => setPassportExpiry(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #ddd',
-                    borderRadius: 8,
-                  }}
-                />
-              </div>
-            )}
-
-            <div className="document-type">
+            {/* Document Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {DOC_KEYS.map(d => {
                 const url = docs ? docs[d.getter] : null;
                 const driveId = driveIdFromUrl(url || undefined);
                 const fname = `${sel?.firstName || 'User'}_${sel?.surname || ''}_${kindLabel(d.kind, sel?.empType).replace(/\s+/g, '_')}.pdf`;
-                const dlHrefRaw = driveId
-                  ? `/api/uploads/drive/file/${encodeURIComponent(driveId)}?name=${encodeURIComponent(fname)}`
-                  : '#';
-                const dlHref = withToken(dlHrefRaw) || undefined;
                 const uploaded = !!url;
+                const isActive = selectedKind === d.kind;
+
                 return (
                   <div
                     key={d.kind}
-                    className={`doc-type-btn ${selectedKind === d.kind ? 'active' : ''}`}
-                    role="button"
-                    tabIndex={0}
                     onClick={() => setSelectedKind(d.kind)}
+                    className={`relative p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                      isActive
+                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/10'
+                        : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] hover:border-blue-200 dark:hover:border-blue-800'
+                    }`}
                   >
-                    <div className="doc-icon">
-                      <i className={`fas ${d.icon}`} />
-                    </div>
-                    <div className="doc-info">
-                      <h4>{kindLabel(d.kind, sel?.empType)}</h4>
-                      <p>
-                        {d.kind === 'passport_id'
-                          ? 'Identification document'
-                          : d.kind === 'cv'
-                            ? 'Curriculum vitae'
-                            : d.kind === 'learning_agreement'
-                              ? sel?.empType === 'intern'
-                                ? 'Internship agreement terms'
-                                : 'Employment agreement terms'
-                              : 'Official acceptance document'}
-                      </p>
-                      <div className="doc-status">
-                        <span
-                          className={`status-indicator ${uploaded ? 'status-uploaded' : 'status-pending'}`}
-                        >
-                          <i
-                            className={`fas ${uploaded ? 'fa-check-circle' : 'fa-clock'}`}
-                          />{' '}
-                          {uploaded ? 'Uploaded' : 'Pending'}
-                        </span>
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`p-3 rounded-lg shrink-0 ${
+                          isActive
+                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                        }`}
+                      >
+                        <d.Icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
+                          {kindLabel(d.kind, sel?.empType)}
+                        </h4>
+                        <div className="flex items-center gap-2 mb-3">
+                          {uploaded ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
+                              <CheckCircle size={12} /> Uploaded
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
+                              <Clock size={12} /> Pending
+                            </span>
+                          )}
+                        </div>
+
+                        {uploaded && (
+                          <div className="flex gap-2">
+                            {driveId && (
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  const apiUrl = `/api/uploads/drive/file/${encodeURIComponent(driveId)}?name=${encodeURIComponent(fname)}`;
+                                  downloadWithAuth(apiUrl, fname);
+                                }}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                title="Download"
+                              >
+                                <Download size={16} />
+                              </button>
+                            )}
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                void deleteDoc(d.kind);
+                              }}
+                              disabled={busy || !sel?.employeeId}
+                              className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {/* Download */}
-                    {uploaded && driveId && (
-                      <button
-                        className="doc-action download-action"
-                        title="Download"
-                        onClick={e => {
-                          e.stopPropagation();
-                          const apiUrl = `/api/uploads/drive/file/${encodeURIComponent(driveId)}?name=${encodeURIComponent(fname)}`;
-                          downloadWithAuth(apiUrl, fname);
-                        }}
-                      >
-                        <i className="fas fa-download" />
-                      </button>
-                    )}
-
-                    {/* Delete */}
-                    {uploaded && (
-                      <button
-                        className="doc-action delete-action"
-                        title="Delete document"
-                        onClick={e => {
-                          e.stopPropagation();
-                          void deleteDoc(d.kind);
-                        }}
-                        disabled={busy || !sel?.employeeId}
-                      >
-                        <i className="fas fa-trash" />
-                      </button>
-                    )}
                   </div>
                 );
               })}
             </div>
 
-            <button
-              className="upload-btn"
-              disabled={!sel?.employeeId || !file || busy}
-              onClick={upload}
-            >
-              {busy ? 'Working…' : 'Upload / Replace'}
-            </button>
-
-            {/* Bulk actions */}
-            <div style={{display: 'flex', gap: 10, marginTop: 12}}>
+            <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <button
-                className="mini-danger"
+                onClick={upload}
+                disabled={!sel?.employeeId || !file || busy}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {busy ? 'Working...' : 'Upload / Replace'}
+              </button>
+              <button
                 onClick={deleteAllDocs}
                 disabled={!sel?.employeeId || !hasAnyDocs || busy}
-                title="Delete all 4 documents"
+                className="px-4 py-2.5 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
-                <i className="fas fa-trash" /> Delete all documents
+                Delete All
               </button>
             </div>
           </div>
         </section>
       </div>
 
-      {toast && <div className={'toast show'}>{toast}</div>}
+      {/* Expiry Panel */}
+      {showExpiryPanel && (
+        <div className="fixed inset-y-0 right-0 w-96 bg-white dark:bg-[#111] border-l border-gray-200 dark:border-gray-800 shadow-2xl z-50 transform transition-transform animate-[slideInRight_0.3s_ease]">
+          <div className="p-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                Passport Expiry
+              </h3>
+              <button
+                onClick={() => setShowExpiryPanel(false)}
+                className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-      <style jsx>{`
-        * {
-          box-sizing: border-box;
-        }
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid #e1e4e8;
-        }
-        .header-title {
-          font-size: 28px;
-          color: #2c3e50;
-          font-weight: 600;
-        }
-        .user-info {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: #fff;
-          padding: 10px 15px;
-          border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-        .main-content {
-          display: grid;
-          grid-template-columns: 300px 1fr;
-          gap: 25px;
-        }
-        .user-selection {
-          background: #fff;
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-          height: fit-content;
-        }
-        .section-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin-bottom: 20px;
-          padding-bottom: 10px;
-          border-bottom: 1px solid #e1e4e8;
-        }
-        .search-box {
-          position: relative;
-          margin-bottom: 20px;
-        }
-        .search-box i {
-          position: absolute;
-          left: 15px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #7f8c8d;
-        }
-        .search-box input {
-          width: 100%;
-          padding: 12px 15px 12px 45px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          font-size: 16px;
-        }
-        .user-list {
-          max-height: 430px;
-          overflow-y: auto;
-        }
-        .user-item {
-          display: flex;
-          align-items: center;
-          padding: 12px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background 0.3s;
-          margin-bottom: 8px;
-        }
-        .user-item:hover {
-          background: #f1f5f9;
-        }
-        .user-item.active {
-          background: #e3f2fd;
-        }
-        .user-item img {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          object-fit: cover;
-          margin-right: 12px;
-        }
-        .user-name {
-          font-weight: 500;
-          margin-bottom: 4px;
-        }
-        .user-role {
-          font-size: 12px;
-          color: #7f8c8d;
-        }
-        .document-management {
-          background: #fff;
-          border-radius: 12px;
-          padding: 25px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        .selected-user {
-          display: flex;
-          align-items: center;
-          margin-bottom: 25px;
-          padding-bottom: 20px;
-          border-bottom: 1px solid #e1e4e8;
-        }
-        .selected-user img {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          object-fit: cover;
-          margin-right: 15px;
-        }
-        .upload-section {
-          margin-bottom: 30px;
-        }
-        .upload-card {
-          background: #f8f9fa;
-          border: 2px dashed #d1d8e0;
-          border-radius: 12px;
-          padding: 25px;
-          text-align: center;
-          margin-bottom: 20px;
-        }
-        .upload-icon {
-          font-size: 40px;
-          color: #4a6cf7;
-          margin-bottom: 15px;
-        }
-        .upload-text h4 {
-          font-size: 18px;
-          margin-bottom: 8px;
-        }
-        .upload-text p {
-          color: #7f8c8d;
-        }
-        .file-input {
-          display: none;
-        }
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Expiring within
+              </label>
+              <select
+                value={expiryMonths}
+                onChange={e => setExpiryMonths(parseInt(e.target.value, 10))}
+                className="w-full p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              >
+                {[1, 2, 3, 4, 5, 6].map(m => (
+                  <option key={m} value={m}>
+                    {m} month{m > 1 ? 's' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        .doc-status {
-          display: flex;
-          align-items: center;
-          font-size: 12px;
-          margin-top: 5px;
-        }
-        .status-indicator {
-          display: inline-flex;
-          align-items: center;
-          padding: 3px 8px;
-          border-radius: 12px;
-          font-weight: 500;
-          margin-right: 8px;
-        }
-        .status-uploaded {
-          background: #e1f7e3;
-          color: #27ae60;
-        }
-        .status-pending {
-          background: #fef5e7;
-          color: #e67e22;
-        }
-        .doc-action {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          opacity: 0.85;
-          transition: opacity 0.3s;
-          border: none;
-        }
-        .doc-action:hover {
-          opacity: 1;
-        }
-        .download-action {
-          background: #e3f2fd;
-          color: #4a6cf7;
-        }
-        .delete-action {
-          background: #fee2e2;
-          color: #ef4444;
-          right: 42px;
-        }
-        .doc-type-btn {
-          position: relative;
-        }
+            <div className="flex-1 overflow-y-auto space-y-3">
+              {expiryLoading ? (
+                <div className="text-center text-gray-500 text-sm py-4">
+                  Loading...
+                </div>
+              ) : expiryError ? (
+                <div className="text-center text-red-500 text-sm py-4">
+                  {expiryError}
+                </div>
+              ) : expiryRows.length === 0 ? (
+                <div className="text-center text-gray-500 text-sm py-8 bg-gray-50 dark:bg-white/5 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+                  No expiring passports found.
+                </div>
+              ) : (
+                expiryRows.map(r => {
+                  const dateOnly = String(r.expiryDate).slice(0, 10);
+                  const isExpired = r.daysLeft <= 0;
+                  return (
+                    <div
+                      key={r.employeeId}
+                      className="p-4 bg-gray-50 dark:bg-[#1A1A1A] rounded-xl border border-gray-100 dark:border-gray-800"
+                    >
+                      <div className="mb-2">
+                        <div className="font-semibold text-gray-900 dark:text-white">
+                          {r.displayName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {r.companyEmail}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs mb-3">
+                        <AlertCircle
+                          size={14}
+                          className={
+                            isExpired ? 'text-red-500' : 'text-amber-500'
+                          }
+                        />
+                        <span
+                          className={`font-medium ${
+                            isExpired ? 'text-red-600' : 'text-amber-600'
+                          }`}
+                        >
+                          {isExpired ? 'Expired' : `${r.daysLeft} days left`}
+                        </span>
+                        <span className="text-gray-400">({dateOnly})</span>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            const match = users.find(
+                              u => u.employeeId === r.employeeId,
+                            );
+                            if (match) {
+                              setSel(match);
+                              loadDocs(match);
+                              setShowExpiryPanel(false);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-white dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                        >
+                          Select
+                        </button>
+                        {r.filePath && (
+                          <a
+                            href={withToken(r.filePath) || r.filePath}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                          >
+                            Open
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
-        .filter-bar {
-          background: #fff;
-          border-radius: 12px;
-          padding: 16px 20px;
-          margin: 0 0 20px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        .filter-row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-bottom: 12px;
-          flex-wrap: wrap;
-        }
-        .seg {
-          display: inline-flex;
-          border: 1px solid #e1e4e8;
-          border-radius: 10px;
-          overflow: hidden;
-        }
-        .seg-btn {
-          padding: 8px 12px;
-          border: none;
-          background: #fff;
-          cursor: pointer;
-        }
-        .seg-btn.active {
-          background: #4a6cf7;
-          color: #fff;
-        }
-        .search-wide {
-          position: relative;
-          flex: 1;
-          min-width: 220px;
-        }
-        .search-wide i {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #7f8c8d;
-        }
-        .search-wide input {
-          width: 100%;
-          padding: 10px 12px 10px 36px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          font-size: 15px;
-        }
-        .tabs {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .tab {
-          padding: 8px 12px;
-          border: 1px solid #e1e4e8;
-          border-radius: 8px;
-          background: #fff;
-          cursor: pointer;
-        }
-        .tab.active {
-          background: #f0f4ff;
-          border-color: #4a6cf7;
-          color: #4a6cf7;
-        }
-
-        .browse-btn {
-          background: #4a6cf7;
-          color: #fff;
-          border: none;
-          padding: 12px 25px;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-        .browse-btn:hover {
-          background: #3b5be3;
-        }
-        .document-type {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        .doc-type-btn {
-          display: flex;
-          align-items: center;
-          padding: 15px;
-          border: 1px solid #e1e4e8;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.3s;
-          background: #fff;
-        }
-        .doc-type-btn:hover {
-          border-color: #4a6cf7;
-        }
-        .doc-type-btn.active {
-          border-color: #4a6cf7;
-          background: #f0f4ff;
-        }
-        .doc-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 8px;
-          background: #e3f2fd;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 15px;
-          color: #4a6cf7;
-          font-size: 18px;
-        }
-        .upload-btn {
-          background: #10b981;
-          color: #fff;
-          border: none;
-          padding: 12px 25px;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.3s;
-          width: 100%;
-          font-size: 16px;
-        }
-        .upload-btn:hover {
-          background: #0da271;
-        }
-        .upload-btn:disabled {
-          background: #c1c8d0;
-          cursor: not-allowed;
-        }
-
-        .mini-danger {
-          background: #fee2e2;
-          color: #b91c1c;
-          border: none;
-          padding: 8px 12px;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-        }
-        .mini-danger:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .tabs-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .tabs-right {
-          margin-left: auto;
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
-        /* Right-side layer panel */
-        .expiry-panel {
-          position: fixed;
-          right: 24px;
-          top: 120px;
-          width: 420px;
-          max-width: 92vw;
-          max-height: 70vh;
-          overflow: auto;
-          background: #fff;
-          border: 1px solid #e1e4e8;
-          border-radius: 12px;
-          padding: 14px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-          z-index: 1200;
-        }
-        .expiry-panel-head {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 12px;
-        }
-        .expiry-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: #2c3e50;
-        }
-        .expiry-subtitle {
-          font-size: 12px;
-          color: #7f8c8d;
-          margin-top: 4px;
-        }
-        .expiry-controls {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 12px;
-        }
-        .expiry-label {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 13px;
-          color: #2c3e50;
-        }
-        .expiry-select {
-          padding: 8px 10px;
-          border-radius: 10px;
-          border: 1px solid #ddd;
-          background: #fff;
-        }
-        .expiry-body {
-          font-size: 13px;
-        }
-        .expiry-muted {
-          color: #7f8c8d;
-        }
-        .expiry-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .expiry-row {
-          border: 1px solid #eee;
-          border-radius: 12px;
-          padding: 10px;
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-        }
-        .expiry-name {
-          font-weight: 700;
-        }
-        .expiry-email {
-          font-size: 12px;
-          color: #7f8c8d;
-          margin-top: 2px;
-        }
-        .expiry-meta {
-          font-size: 12px;
-          color: #2c3e50;
-          margin-top: 6px;
-        }
-        .expiry-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          align-items: flex-end;
-        }
-
-        .toast {
-          position: fixed;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #10b981;
-          color: #fff;
-          padding: 12px 20px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          z-index: 1000;
-        }
-        @media (max-width: 900px) {
-          .main-content {
-            grid-template-columns: 1fr;
-          }
-          .document-type {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-    </main>
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl shadow-xl z-50 text-sm font-medium animate-[fadeInUp_0.3s_ease-out] flex items-center gap-2">
+          <CheckCircle
+            size={16}
+            className="text-green-400 dark:text-green-600"
+          />
+          {toast}
+        </div>
+      )}
+    </div>
   );
 }

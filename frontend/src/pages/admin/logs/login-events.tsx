@@ -2,6 +2,15 @@ import {useState, useEffect} from 'react';
 import {useRouter} from 'next/router';
 import {fetchWithAuth} from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  Globe,
+  Monitor,
+} from 'lucide-react';
 
 interface LoginLog {
   id: number;
@@ -77,220 +86,199 @@ export default function LoginEventsPage() {
     });
   };
 
+  const totalPages = Math.ceil(total / limit);
+
   return (
     <ProtectedRoute roles={['super_admin']}>
-      <div className="p-8 max-w-[1400px] mx-auto">
-        <div className="mb-8">
-          <button
-            className="bg-transparent border-none text-blue-600 cursor-pointer text-sm py-2 mb-4 inline-block transition-colors hover:text-blue-700 hover:underline"
-            onClick={() => router.push('/admin/logs')}
-          >
-            ← Back to Logs
-          </button>
-          <h1 className="m-0 mb-2 text-2xl text-gray-900 font-bold">
-            Login Events
-          </h1>
-          <p className="text-gray-500 m-0">
-            Authentication history and security events
-          </p>
+      <div className="flex flex-col h-[calc(100vh-4rem)]">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-6 shrink-0 pl-16">
+          <div>
+            <button
+              onClick={() => router.push('/admin/logs')}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline mb-1"
+            >
+              ← Back to Logs
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Login Events
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Authentication history and security events
+            </p>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="text-center p-12 text-gray-500 bg-white rounded-lg shadow-sm">
-            Loading login events...
-          </div>
-        ) : !logs.length ? (
-          <div className="text-center p-12 text-gray-500 bg-white rounded-lg shadow-sm">
-            No login events found.
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead>
+        {/* Table */}
+        <div className="flex-1 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#111] shadow-sm flex flex-col">
+          <div className="overflow-y-auto flex-1">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-gray-50/90 dark:bg-[#111]/90 backdrop-blur sticky top-0 z-10">
+                <tr>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 w-[160px]">
+                    Time
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 w-[120px]">
+                    Status
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                    User
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                    Location
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                    Device
+                  </th>
+                  <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 text-right w-[140px]">
+                    IP Address
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {loading ? (
                   <tr>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      Date/Time
-                    </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      Status
-                    </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      User
-                    </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      Location
-                    </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      Device & Browser
-                    </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      IP Address
-                    </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
-                      Flags
-                    </th>
+                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                      Loading events...
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {logs.map(log => {
+                ) : logs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                      No login events found.
+                    </td>
+                  </tr>
+                ) : (
+                  logs.map(log => {
                     const location =
                       [log.city, log.region, log.country]
                         .filter(Boolean)
-                        .join(', ') || '-';
+                        .join(', ') || '—';
                     const deviceInfo =
                       [log.browser, log.os, log.deviceType]
                         .filter(Boolean)
-                        .join(' • ') || '-';
+                        .join(' • ') || '—';
 
                     return (
                       <tr
                         key={log.id}
-                        className={`hover:bg-gray-50 border-b border-gray-100 ${log.success ? 'bg-green-50/30' : 'bg-red-50/30'}`}
+                        className={`group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${
+                          !log.success ? 'bg-red-50/30 dark:bg-red-900/10' : ''
+                        }`}
                       >
-                        <td className="p-3 align-top border-b border-gray-100">
-                          <div className="text-sm text-gray-600 whitespace-nowrap">
-                            {formatDate(log.createdAt)}
+                        <td className="p-4 text-xs text-gray-500 font-mono whitespace-nowrap align-top">
+                          {formatDate(log.createdAt)}
+                        </td>
+                        <td className="p-4 align-top">
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border w-fit ${
+                                log.success
+                                  ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
+                                  : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30'
+                              }`}
+                            >
+                              {log.success ? (
+                                <ShieldCheck size={12} />
+                              ) : (
+                                <ShieldAlert size={12} />
+                              )}
+                              {log.success ? 'Success' : 'Failed'}
+                            </span>
+                            {!log.success && log.failReason && (
+                              <span className="text-[10px] text-red-600 dark:text-red-400 font-mono uppercase tracking-wide">
+                                {log.failReason.replace(/_/g, ' ')}
+                              </span>
+                            )}
                           </div>
                         </td>
-                        <td className="p-3 align-top border-b border-gray-100">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap ${
-                              log.success
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {log.success ? '✓ Success' : '✗ Failed'}
-                          </span>
-                          {!log.success && log.failReason && (
-                            <div className="mt-1 text-xs text-red-600 capitalize">
-                              {log.failReason.replace(/_/g, ' ')}
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-3 align-top border-b border-gray-100 min-w-[180px]">
-                          <div className="font-semibold text-gray-900">
+                        <td className="p-4 align-top">
+                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
                             {log.email || 'Unknown'}
                           </div>
                           {log.userId && (
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 font-mono mt-0.5">
                               ID: {log.userId}
                             </div>
                           )}
                         </td>
-                        <td className="p-3 align-top border-b border-gray-100 min-w-[150px]">
-                          <div className="text-sm text-gray-700">
-                            {location}
+                        <td className="p-4 align-top">
+                          <div className="flex items-start gap-2">
+                            <Globe
+                              size={14}
+                              className="text-gray-400 mt-0.5 shrink-0"
+                            />
+                            <div>
+                              <div className="text-sm text-gray-700 dark:text-gray-300">
+                                {location}
+                              </div>
+                              {(log.lat || log.lon) && (
+                                <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                                  {log.lat?.toFixed(4)}, {log.lon?.toFixed(4)}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {(log.lat || log.lon) && (
-                            <div className="text-[11px] text-gray-400 mt-1 font-mono">
-                              {log.lat?.toFixed(4)}, {log.lon?.toFixed(4)}
-                            </div>
-                          )}
                         </td>
-                        <td className="p-3 align-top border-b border-gray-100 min-w-[200px]">
-                          <div className="text-sm text-gray-700 mb-1">
-                            {deviceInfo}
+                        <td className="p-4 align-top">
+                          <div className="flex items-start gap-2">
+                            {log.deviceType === 'mobile' ? (
+                              <Smartphone
+                                size={14}
+                                className="text-gray-400 mt-0.5 shrink-0"
+                              />
+                            ) : (
+                              <Monitor
+                                size={14}
+                                className="text-gray-400 mt-0.5 shrink-0"
+                              />
+                            )}
+                            <div>
+                              <div className="text-sm text-gray-700 dark:text-gray-300">
+                                {deviceInfo}
+                              </div>
+                              {log.deviceId && (
+                                <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                                  {log.deviceId.substring(0, 8)}...
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {log.platform && (
-                            <div className="text-[11px] text-gray-500">
-                              Platform: {log.platform}
-                            </div>
-                          )}
-                          {log.language && (
-                            <div className="text-[11px] text-gray-500">
-                              Lang: {log.language}
-                            </div>
-                          )}
                         </td>
-                        <td className="p-3 align-top border-b border-gray-100 font-mono text-[13px]">
-                          <div className="text-blue-800 font-medium">
+                        <td className="p-4 text-right align-top">
+                          <div className="text-xs font-mono text-gray-600 dark:text-gray-400">
                             {log.ip}
                           </div>
-                          {log.deviceId && (
-                            <div className="text-[11px] text-gray-500 mt-1">
-                              Device: {log.deviceId.substring(0, 8)}...
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-3 align-top border-b border-gray-100 text-center min-w-[100px]">
-                          {log.alerts && log.alerts.length > 0 ? (
-                            log.alerts.map((alert, idx) => {
-                              const isWarning = alert.severity === 'medium';
-                              const isHigh = alert.severity === 'high';
-                              const badgeClass = isHigh
-                                ? 'bg-red-100 text-red-800 border-red-400'
-                                : isWarning
-                                  ? 'bg-yellow-100 text-yellow-800 border-yellow-400'
-                                  : 'bg-blue-100 text-blue-800 border-blue-400';
-                              const icon =
-                                alert.kind === 'NEW_DEVICE'
-                                  ? '🆕'
-                                  : alert.kind === 'NEW_COUNTRY'
-                                    ? '🌍'
-                                    : alert.kind === 'IMPOSSIBLE_TRAVEL'
-                                      ? '✈️'
-                                      : alert.kind === 'FAILED_STREAK'
-                                        ? '❌'
-                                        : '⚠️';
-                              const label = alert.kind
-                                .replace(/_/g, ' ')
-                                .toLowerCase();
-
-                              return (
-                                <span
-                                  key={idx}
-                                  className={`inline-block px-2 py-1 rounded-lg text-xs font-semibold m-0.5 whitespace-nowrap border ${badgeClass}`}
-                                  title={`${alert.severity}: ${label}`}
-                                >
-                                  {icon} {label}
-                                </span>
-                              );
-                            })
-                          ) : log.success ? (
-                            <span className="inline-block px-2 py-1 rounded-lg text-xs font-semibold m-0.5 whitespace-nowrap bg-green-100 text-green-800 border border-green-400">
-                              ✓ Known
-                            </span>
-                          ) : (
-                            <span className="inline-block px-2 py-1 rounded-lg text-xs font-semibold m-0.5 whitespace-nowrap bg-gray-100 text-gray-500 border border-gray-300">
-                              -
-                            </span>
-                          )}
                         </td>
                       </tr>
                     );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-center items-center gap-4 mt-6 pt-6 border-t border-gray-200">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-                className={
-                  'px-4 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer text-sm transition-colors hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
-                }
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-500">
-                Page {page} of {Math.ceil(total / limit) || 1}
-              </span>
-              <button
-                disabled={page >= Math.ceil(total / limit)}
-                onClick={() => setPage(page + 1)}
-                className={
-                  'px-4 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer text-sm transition-colors hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
-                }
-              >
-                Next
-              </button>
-            </div>
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Footer */}
+          <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 p-4 bg-gray-50/50 dark:bg-[#111] flex items-center justify-between">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={16} /> Previous
+            </button>
+            <span className="text-sm text-gray-500">
+              Page {page} of {totalPages || 1}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
       </div>
     </ProtectedRoute>
   );
