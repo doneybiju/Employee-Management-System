@@ -51,7 +51,7 @@ export default function RequestsReview() {
   const load = async () => {
     setIsLoading(true);
     try {
-      const data = await getJson<Row[]>(`/api/requests`);
+      const data = await getJson<Row[]>('/api/requests');
       setRows(data);
     } catch (error) {
       console.error('Failed to load requests:', error);
@@ -62,7 +62,7 @@ export default function RequestsReview() {
 
   const loadApprovedSheetUrl = async () => {
     try {
-      const data = await getJson<{url: string}>(`/api/requests/approved-sheet`);
+      const data = await getJson<{url: string}>('/api/requests/approved-sheet');
       setApprovedSheetUrl(data?.url || null);
     } catch {
       setApprovedSheetUrl(null);
@@ -96,7 +96,7 @@ export default function RequestsReview() {
 
   const act = async (id: number, action: 'approve' | 'reject') => {
     try {
-      let n = (
+      const n = (
         note[id] ??
         rows.find(r => r.id === id)?.reviewNote ??
         ''
@@ -159,50 +159,20 @@ export default function RequestsReview() {
 
   if (loading)
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px',
-          fontSize: '18px',
-          color: '#666',
-        }}
-      >
+      <div className="flex justify-center items-center min-h-[400px] text-lg text-gray-500">
         Loading...
       </div>
     );
 
   if (!user)
     return (
-      <div
-        style={{
-          maxWidth: '400px',
-          margin: '4rem auto',
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{marginBottom: '1.5rem', color: '#666', fontSize: '16px'}}>
+      <div className="max-w-[400px] mx-auto my-16 p-8 bg-white rounded-xl shadow-sm text-center">
+        <p className="mb-6 text-gray-500 text-base">
           Authentication required to access this page
         </p>
         <Link
           href="/login"
-          style={{
-            display: 'inline-block',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: '500',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1d4ed8')}
-          onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2563eb')}
+          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700 no-underline"
         >
           Login to Continue
         </Link>
@@ -211,73 +181,26 @@ export default function RequestsReview() {
 
   if (!(user.role === 'hr' || user.role === 'super_admin'))
     return (
-      <div
-        style={{
-          maxWidth: '400px',
-          margin: '4rem auto',
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center',
-          color: '#dc2626',
-        }}
-      >
+      <div className="max-w-[400px] mx-auto my-16 p-8 bg-white rounded-xl shadow-sm text-center text-red-600 font-medium">
         Access Denied. You don't have permission to view this page.
       </div>
     );
 
   return (
     <>
-      <main
-        style={{
-          maxWidth: '1200px',
-          margin: '2rem auto',
-          padding: '0 1rem',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        }}
-      >
+      <main className="max-w-[1200px] mx-auto p-4 font-sans my-8">
         {/* Header */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            marginBottom: '1.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '1rem',
-            }}
-          >
+        <div className="bg-white rounded-xl p-8 mb-6 shadow-sm">
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <h1
-                style={{
-                  margin: '0 0 0.5rem 0',
-                  fontSize: '28px',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                }}
-              >
+              <h1 className="m-0 mb-2 text-[28px] font-bold text-gray-800">
                 Request Review
               </h1>
-              <p
-                style={{
-                  margin: 0,
-                  color: '#6b7280',
-                  fontSize: '16px',
-                }}
-              >
+              <p className="m-0 text-gray-500 text-base">
                 Review and manage employee time off and extra hours requests
               </p>
             </div>
-            <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+            <div className="flex gap-3 items-center">
               <button
                 onClick={() => {
                   if (approvedSheetUrl)
@@ -288,17 +211,11 @@ export default function RequestsReview() {
                     );
                 }}
                 disabled={!approvedSheetUrl}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: approvedSheetUrl ? '#0f766e' : '#94a3b8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  cursor: approvedSheetUrl ? 'pointer' : 'not-allowed',
-                  opacity: approvedSheetUrl ? 1 : 0.8,
-                  transition: 'all 0.2s',
-                }}
+                className={`py-2.5 px-5 text-white rounded-lg font-medium border-none transition-all ${
+                  approvedSheetUrl
+                    ? 'bg-teal-700 hover:bg-teal-800 cursor-pointer'
+                    : 'bg-slate-400 cursor-not-allowed opacity-80'
+                }`}
                 title={
                   approvedSheetUrl
                     ? 'Open the Google Sheet where approved requests are stored'
@@ -314,17 +231,11 @@ export default function RequestsReview() {
                   void loadApprovedSheetUrl();
                 }}
                 disabled={isLoading}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.6 : 1,
-                  transition: 'all 0.2s',
-                }}
+                className={`py-2.5 px-5 bg-blue-600 text-white rounded-lg font-medium border-none transition-all ${
+                  isLoading
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'cursor-pointer hover:bg-blue-700'
+                }`}
               >
                 {isLoading ? 'Refreshing...' : 'Refresh'}
               </button>
@@ -332,71 +243,28 @@ export default function RequestsReview() {
           </div>
 
           {/* Stats Cards */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1rem',
-              marginTop: '1.5rem',
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                textAlign: 'center',
-              }}
-            >
-              <div
-                style={{fontSize: '32px', fontWeight: '700', color: '#2563eb'}}
-              >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 text-center">
+              <div className="text-[32px] font-bold text-blue-600">
                 {totalCount}
               </div>
-              <div
-                style={{color: '#64748b', fontSize: '14px', fontWeight: '500'}}
-              >
+              <div className="text-slate-500 text-sm font-medium mt-1">
                 Total Pending
               </div>
             </div>
-            <div
-              style={{
-                backgroundColor: '#f0f9ff',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                border: '1px solid #bae6fd',
-                textAlign: 'center',
-              }}
-            >
-              <div
-                style={{fontSize: '32px', fontWeight: '700', color: '#0369a1'}}
-              >
+            <div className="bg-sky-50 p-6 rounded-lg border border-sky-200 text-center">
+              <div className="text-[32px] font-bold text-sky-700">
                 {absenceCount}
               </div>
-              <div
-                style={{color: '#0c4a6e', fontSize: '14px', fontWeight: '500'}}
-              >
+              <div className="text-sky-900 text-sm font-medium mt-1">
                 Absence Requests
               </div>
             </div>
-            <div
-              style={{
-                backgroundColor: '#f0fdf4',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                border: '1px solid #bbf7d0',
-                textAlign: 'center',
-              }}
-            >
-              <div
-                style={{fontSize: '32px', fontWeight: '700', color: '#16a34a'}}
-              >
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200 text-center">
+              <div className="text-[32px] font-bold text-green-600">
                 {extraCount}
               </div>
-              <div
-                style={{color: '#166534', fontSize: '14px', fontWeight: '500'}}
-              >
+              <div className="text-green-800 text-sm font-medium mt-1">
                 Extra Hours
               </div>
             </div>
@@ -404,258 +272,109 @@ export default function RequestsReview() {
         </div>
 
         {/* Main Content */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '0',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden',
-          }}
-        >
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           {/* Tab Navigation */}
-          <div
-            style={{
-              display: 'flex',
-              backgroundColor: '#f8fafc',
-              borderBottom: '1px solid #e2e8f0',
-              padding: '0 2rem',
-            }}
-          >
+          <div className="flex bg-slate-50 border-b border-slate-200 px-8">
             <button
               onClick={() => setActiveTab('all')}
-              style={{
-                padding: '16px 24px',
-                border: 'none',
-                backgroundColor: activeTab === 'all' ? 'white' : 'transparent',
-                color: activeTab === 'all' ? '#2563eb' : '#64748b',
-                fontWeight: '500',
-                cursor: 'pointer',
-                borderBottom:
-                  activeTab === 'all'
-                    ? '2px solid #2563eb'
-                    : '2px solid transparent',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
+              className={`py-4 px-6 border-none font-medium cursor-pointer transition-all flex items-center gap-2 border-b-2 ${
+                activeTab === 'all'
+                  ? 'bg-white text-blue-600 border-blue-600'
+                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700'
+              }`}
             >
               All Requests
               <span
-                style={{
-                  backgroundColor: activeTab === 'all' ? '#2563eb' : '#64748b',
-                  color: 'white',
-                  borderRadius: '12px',
-                  padding: '2px 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                }}
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  activeTab === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-600'
+                }`}
               >
                 {totalCount}
               </span>
             </button>
             <button
               onClick={() => setActiveTab('absence')}
-              style={{
-                padding: '16px 24px',
-                border: 'none',
-                backgroundColor:
-                  activeTab === 'absence' ? 'white' : 'transparent',
-                color: activeTab === 'absence' ? '#2563eb' : '#64748b',
-                fontWeight: '500',
-                cursor: 'pointer',
-                borderBottom:
-                  activeTab === 'absence'
-                    ? '2px solid #2563eb'
-                    : '2px solid transparent',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
+              className={`py-4 px-6 border-none font-medium cursor-pointer transition-all flex items-center gap-2 border-b-2 ${
+                activeTab === 'absence'
+                  ? 'bg-white text-blue-600 border-blue-600'
+                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700'
+              }`}
             >
               Absence
               <span
-                style={{
-                  backgroundColor:
-                    activeTab === 'absence' ? '#2563eb' : '#64748b',
-                  color: 'white',
-                  borderRadius: '12px',
-                  padding: '2px 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                }}
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  activeTab === 'absence'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-600'
+                }`}
               >
                 {absenceCount}
               </span>
             </button>
             <button
               onClick={() => setActiveTab('extra')}
-              style={{
-                padding: '16px 24px',
-                border: 'none',
-                backgroundColor:
-                  activeTab === 'extra' ? 'white' : 'transparent',
-                color: activeTab === 'extra' ? '#2563eb' : '#64748b',
-                fontWeight: '500',
-                cursor: 'pointer',
-                borderBottom:
-                  activeTab === 'extra'
-                    ? '2px solid #2563eb'
-                    : '2px solid transparent',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
+              className={`py-4 px-6 border-none font-medium cursor-pointer transition-all flex items-center gap-2 border-b-2 ${
+                activeTab === 'extra'
+                  ? 'bg-white text-blue-600 border-blue-600'
+                  : 'bg-transparent text-slate-500 border-transparent hover:text-slate-700'
+              }`}
             >
               Extra Hours
               <span
-                style={{
-                  backgroundColor:
-                    activeTab === 'extra' ? '#2563eb' : '#64748b',
-                  color: 'white',
-                  borderRadius: '12px',
-                  padding: '2px 8px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                }}
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  activeTab === 'extra'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-600'
+                }`}
               >
                 {extraCount}
               </span>
             </button>
           </div>
 
-          <div style={{padding: '2rem'}}>
+          <div className="p-8">
             {isLoading ? (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '3rem',
-                  color: '#666',
-                }}
-              >
+              <div className="flex justify-center items-center py-12 text-gray-500">
                 Loading requests...
               </div>
             ) : filteredRows.length === 0 ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '3rem',
-                  color: '#6b7280',
-                }}
-              >
-                <div style={{fontSize: '48px', marginBottom: '1rem'}}>📋</div>
-                <h3 style={{margin: '0 0 0.5rem 0', color: '#374151'}}>
-                  No pending requests
-                </h3>
+              <div className="text-center py-12 text-gray-500">
+                <div className="text-5xl mb-4">📋</div>
+                <h3 className="m-0 mb-2 text-gray-700">No pending requests</h3>
                 <p>
                   There are no {activeTab !== 'all' ? activeTab : ''} requests
                   waiting for review.
                 </p>
               </div>
             ) : (
-              <div style={{overflowX: 'auto'}}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '14px',
-                  }}
-                >
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
                   <thead>
-                    <tr
-                      style={{
-                        backgroundColor: '#f8fafc',
-                        borderBottom: '2px solid #e2e8f0',
-                      }}
-                    >
-                      <th
-                        style={{
-                          padding: '12px 16px',
-                          textAlign: 'left',
-                          fontWeight: '600',
-                          color: '#374151',
-                          fontSize: '12px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
+                    <tr className="bg-slate-50 border-b-2 border-slate-200">
+                      <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
                         Employee
                       </th>
                       {activeTab === 'all' && (
-                        <th
-                          style={{
-                            padding: '12px 16px',
-                            textAlign: 'left',
-                            fontWeight: '600',
-                            color: '#374151',
-                            fontSize: '12px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
+                        <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
                           Type
                         </th>
                       )}
-                      <th
-                        style={{
-                          padding: '12px 16px',
-                          textAlign: 'left',
-                          fontWeight: '600',
-                          color: '#374151',
-                          fontSize: '12px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
+                      <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
                         Date(s)
                       </th>
                       {(activeTab === 'all' || activeTab === 'extra') && (
-                        <th
-                          style={{
-                            padding: '12px 16px',
-                            textAlign: 'left',
-                            fontWeight: '600',
-                            color: '#374151',
-                            fontSize: '12px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
+                        <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
                           Time Window
                         </th>
                       )}
                       {(activeTab === 'all' || activeTab === 'absence') && (
-                        <th
-                          style={{
-                            padding: '12px 16px',
-                            textAlign: 'left',
-                            fontWeight: '600',
-                            color: '#374151',
-                            fontSize: '12px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
+                        <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider">
                           Reason & Details
                         </th>
                       )}
-                      <th
-                        style={{
-                          padding: '12px 16px',
-                          textAlign: 'left',
-                          fontWeight: '600',
-                          color: '#374151',
-                          fontSize: '12px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          width: '300px',
-                        }}
-                      >
+                      <th className="px-4 py-3 text-left font-semibold text-slate-700 text-xs uppercase tracking-wider w-[300px]">
                         Actions
                       </th>
                     </tr>
@@ -675,51 +394,24 @@ export default function RequestsReview() {
                       return (
                         <tr
                           key={r.id}
-                          style={{
-                            borderBottom: '1px solid #f1f5f9',
-                            transition: 'background-color 0.2s',
-                          }}
-                          onMouseEnter={e =>
-                            (e.currentTarget.style.backgroundColor = '#f8fafc')
-                          }
-                          onMouseLeave={e =>
-                            (e.currentTarget.style.backgroundColor =
-                              'transparent')
-                          }
+                          className="border-b border-slate-100 transition-colors hover:bg-slate-50"
                         >
-                          <td style={{padding: '16px'}}>
-                            <div style={{fontWeight: '500', color: '#1f2937'}}>
+                          <td className="px-4 py-4">
+                            <div className="font-medium text-gray-800">
                               {r.name}
                             </div>
-                            <div
-                              style={{
-                                color: '#6b7280',
-                                fontSize: '12px',
-                                marginTop: '2px',
-                              }}
-                            >
+                            <div className="text-gray-500 text-xs mt-0.5">
                               {r.email || '—'}
                             </div>
                           </td>
                           {activeTab === 'all' && (
-                            <td style={{padding: '16px'}}>
+                            <td className="px-4 py-4">
                               <span
-                                style={{
-                                  display: 'inline-block',
-                                  padding: '4px 8px',
-                                  borderRadius: '6px',
-                                  fontSize: '12px',
-                                  fontWeight: '500',
-                                  backgroundColor:
-                                    r.kind === 'EXTRA_HOURS'
-                                      ? '#f0fdf4'
-                                      : '#f0f9ff',
-                                  color:
-                                    r.kind === 'EXTRA_HOURS'
-                                      ? '#166534'
-                                      : '#0369a1',
-                                  border: `1px solid ${r.kind === 'EXTRA_HOURS' ? '#bbf7d0' : '#bae6fd'}`,
-                                }}
+                                className={`inline-block px-2 py-1 rounded-md text-xs font-medium border ${
+                                  r.kind === 'EXTRA_HOURS'
+                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                    : 'bg-sky-50 text-sky-700 border-sky-200'
+                                }`}
                               >
                                 {r.kind === 'EXTRA_HOURS'
                                   ? 'Extra Hours'
@@ -727,95 +419,45 @@ export default function RequestsReview() {
                               </span>
                             </td>
                           )}
-                          <td
-                            style={{
-                              padding: '16px',
-                              color: '#374151',
-                              fontWeight: '500',
-                            }}
-                          >
+                          <td className="px-4 py-4 text-gray-700 font-medium">
                             {dates}
                           </td>
                           {(activeTab === 'all' || activeTab === 'extra') && (
-                            <td style={{padding: '16px', color: '#6b7280'}}>
+                            <td className="px-4 py-4 text-gray-500">
                               {windowLabel}
                             </td>
                           )}
                           {(activeTab === 'all' || activeTab === 'absence') && (
-                            <td style={{padding: '16px'}}>
-                              <div
-                                style={{fontWeight: '500', color: '#1f2937'}}
-                              >
+                            <td className="px-4 py-4">
+                              <div className="font-medium text-gray-800">
                                 {r.reason || '—'}
                               </div>
                               {r.comment && (
-                                <div
-                                  style={{
-                                    color: '#6b7280',
-                                    fontSize: '12px',
-                                    marginTop: '4px',
-                                    fontStyle: 'italic',
-                                  }}
-                                >
+                                <div className="text-gray-500 text-xs mt-1 italic">
                                   {r.comment}
                                 </div>
                               )}
                             </td>
                           )}
-                          <td style={{padding: '16px'}}>
-                            <div
-                              style={{
-                                display: 'flex',
-                                gap: '12px',
-                                alignItems: 'flex-start',
-                              }}
-                            >
+                          <td className="px-4 py-4">
+                            <div className="flex gap-3 items-start">
                               <input
                                 placeholder="Review notes..."
                                 value={note[r.id] ?? r.reviewNote ?? ''}
                                 onChange={e =>
                                   setNote(s => ({...s, [r.id]: e.target.value}))
                                 }
-                                style={{
-                                  flex: 1,
-                                  padding: '8px 12px',
-                                  border: '1px solid #d1d5db',
-                                  borderRadius: '6px',
-                                  fontSize: '14px',
-                                  transition: 'border-color 0.2s',
-                                }}
-                                onFocus={e =>
-                                  (e.target.style.borderColor = '#2563eb')
-                                }
-                                onBlur={e =>
-                                  (e.target.style.borderColor = '#d1d5db')
-                                }
+                                className="flex-1 py-2 px-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                               />
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: '4px',
-                                }}
-                              >
+                              <div className="flex flex-col gap-1">
                                 <button
                                   onClick={() => act(r.id, 'approve')}
                                   disabled={isActing}
-                                  style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#16a34a',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    cursor: isActing
-                                      ? 'not-allowed'
-                                      : 'pointer',
-                                    opacity: isActing ? 0.6 : 1,
-                                    transition: 'background-color 0.2s',
-                                    whiteSpace: 'nowrap',
-                                  }}
+                                  className={`py-2 px-4 bg-green-600 text-white border-none rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                                    isActing
+                                      ? 'opacity-60 cursor-not-allowed'
+                                      : 'hover:bg-green-700 cursor-pointer'
+                                  }`}
                                 >
                                   Approve
                                 </button>
@@ -823,51 +465,17 @@ export default function RequestsReview() {
                                 <button
                                   onClick={() => act(r.id, 'reject')}
                                   disabled={isActing}
-                                  style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: 'transparent',
-                                    color: '#dc2626',
-                                    border: '1px solid #dc2626',
-                                    borderRadius: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    cursor: isActing
-                                      ? 'not-allowed'
-                                      : 'pointer',
-                                    opacity: isActing ? 0.6 : 1,
-                                    transition: 'all 0.2s',
-                                    whiteSpace: 'nowrap',
-                                  }}
+                                  className={`py-2 px-4 bg-transparent text-red-600 border border-red-600 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                                    isActing
+                                      ? 'opacity-60 cursor-not-allowed'
+                                      : 'hover:bg-red-50 cursor-pointer'
+                                  }`}
                                 >
                                   Reject
                                 </button>
                                 {isActing && (
-                                  <div
-                                    aria-busy="true"
-                                    style={{
-                                      position: 'fixed',
-                                      inset: 0,
-                                      background: 'rgba(0,0,0,0.35)',
-                                      zIndex: 2000,
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      pointerEvents: 'all',
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        background: 'white',
-                                        padding: '14px 18px',
-                                        borderRadius: 8,
-                                        boxShadow:
-                                          '0 10px 30px rgba(0,0,0,0.15)',
-                                        fontWeight: 600,
-                                        color: '#374151',
-                                        minWidth: 160,
-                                        textAlign: 'center',
-                                      }}
-                                    >
+                                  <div className="fixed inset-0 bg-black/35 z-[2000] flex items-center justify-center pointer-events-auto">
+                                    <div className="bg-white px-5 py-3.5 rounded-lg shadow-xl font-semibold text-gray-700 min-w-[160px] text-center">
                                       Processing…
                                     </div>
                                   </div>
@@ -888,65 +496,20 @@ export default function RequestsReview() {
 
       {/* Rejection Reason Modal */}
       {rejectModalOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-            padding: '1rem',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '2rem',
-              width: '100%',
-              maxWidth: '500px',
-              boxShadow:
-                '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            }}
-          >
-            <div style={{marginBottom: '1.5rem'}}>
-              <h2
-                style={{
-                  margin: '0 0 0.5rem 0',
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                }}
-              >
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[1000] p-4">
+          <div className="bg-white rounded-xl p-8 w-full max-w-[500px] shadow-2xl">
+            <div className="mb-6">
+              <h2 className="m-0 mb-2 text-xl font-bold text-gray-800">
                 Rejection Reason Required
               </h2>
-              <p
-                style={{
-                  margin: 0,
-                  color: '#6b7280',
-                  fontSize: '14px',
-                }}
-              >
+              <p className="m-0 text-gray-500 text-sm">
                 Please provide a reason for rejecting {pendingRejection?.name}'s
                 request.
               </p>
             </div>
 
-            <div style={{marginBottom: '1.5rem'}}>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                }}
-              >
+            <div className="mb-6">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
                 Rejection Reason *
               </label>
               <textarea
@@ -954,87 +517,28 @@ export default function RequestsReview() {
                 onChange={e => setRejectionReason(e.target.value)}
                 placeholder="Explain why this request is being rejected..."
                 rows={4}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  resize: 'vertical',
-                  transition: 'border-color 0.2s',
-                  fontFamily: 'inherit',
-                }}
-                onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-y transition-colors font-inherit focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
-              <p
-                style={{
-                  margin: '0.5rem 0 0 0',
-                  fontSize: '12px',
-                  color: '#6b7280',
-                }}
-              >
+              <p className="mt-2 text-xs text-gray-500">
                 This reason will be visible to the employee.
               </p>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '12px',
-              }}
-            >
+            <div className="flex justify-end gap-3">
               <button
                 onClick={handleRejectCancel}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'transparent',
-                  color: '#6b7280',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseOver={e => {
-                  e.currentTarget.style.backgroundColor = '#f9fafb';
-                  e.currentTarget.style.borderColor = '#9ca3af';
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                }}
+                className="py-2.5 px-5 bg-transparent text-gray-500 border border-gray-300 rounded-lg text-sm font-medium cursor-pointer transition-colors hover:bg-gray-50 hover:text-gray-700"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRejectConfirm}
                 disabled={!rejectionReason.trim()}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: !rejectionReason.trim()
-                    ? '#9ca3af'
-                    : '#dc2626',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: !rejectionReason.trim() ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseOver={e => {
-                  if (rejectionReason.trim()) {
-                    e.currentTarget.style.backgroundColor = '#b91c1c';
-                  }
-                }}
-                onMouseOut={e => {
-                  if (rejectionReason.trim()) {
-                    e.currentTarget.style.backgroundColor = '#dc2626';
-                  }
-                }}
+                className={`py-2.5 px-5 text-white border-none rounded-lg text-sm font-medium transition-colors ${
+                  !rejectionReason.trim()
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700 cursor-pointer'
+                }`}
               >
                 Confirm Rejection
               </button>

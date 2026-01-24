@@ -53,8 +53,7 @@ export default function UserDevicesPage() {
   }
 
   useEffect(() => {
-    if (ready && isAuthenticated && user?.role === 'super_admin')
-      load(); /* eslint-disable-next-line */
+    if (ready && isAuthenticated && user?.role === 'super_admin') load();
   }, [userId, ready, isAuthenticated, user?.role]);
 
   async function setTrusted(deviceId: string, trusted: boolean) {

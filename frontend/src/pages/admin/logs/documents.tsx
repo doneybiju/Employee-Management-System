@@ -60,98 +60,39 @@ export default function DocumentLogsPage() {
   };
 
   return (
-    <main style={{padding: 24, maxWidth: 1400, margin: '0 auto'}}>
-      <div style={{marginBottom: 24}}>
-        <h1 style={{fontSize: 28, fontWeight: 700, marginBottom: 8}}>
-          Document Activity Logs
-        </h1>
-        <p style={{color: '#6b7280', fontSize: 14}}>
+    <main className="p-6 max-w-[1400px] mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Document Activity Logs</h1>
+        <p className="text-sm text-gray-500">
           Track all document uploads and deletions by HR and admins
         </p>
       </div>
 
       {loading && logs.length === 0 ? (
-        <div style={{textAlign: 'center', padding: 60}}>Loading...</div>
+        <div className="text-center p-16">Loading...</div>
       ) : (
         <>
-          <div
-            style={{
-              background: 'white',
-              borderRadius: 12,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{overflowX: 'auto'}}>
-              <table
-                className="logs-table"
-                style={{width: '100%', borderCollapse: 'collapse'}}
-              >
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr
-                    style={{
-                      background: '#f9fafb',
-                      borderBottom: '2px solid #e5e7eb',
-                    }}
-                  >
-                    <th
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        fontSize: 14,
-                      }}
-                    >
+                  <tr className="bg-gray-50 border-b-2 border-gray-200">
+                    <th className="p-3 text-left font-semibold text-sm">
                       Date & Time
                     </th>
-                    <th
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        fontSize: 14,
-                      }}
-                    >
+                    <th className="p-3 text-left font-semibold text-sm">
                       Action
                     </th>
-                    <th
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        fontSize: 14,
-                      }}
-                    >
+                    <th className="p-3 text-left font-semibold text-sm">
                       Document
                     </th>
-                    <th
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        fontSize: 14,
-                      }}
-                    >
+                    <th className="p-3 text-left font-semibold text-sm">
                       For User
                     </th>
-                    <th
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        fontSize: 14,
-                      }}
-                    >
+                    <th className="p-3 text-left font-semibold text-sm">
                       Performed By
                     </th>
-                    <th
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        fontWeight: 600,
-                        fontSize: 14,
-                      }}
-                    >
+                    <th className="p-3 text-left font-semibold text-sm">
                       IP Address
                     </th>
                   </tr>
@@ -160,39 +101,20 @@ export default function DocumentLogsPage() {
                   {logs.map(log => (
                     <tr
                       key={log.id}
-                      style={{borderBottom: '1px solid #f3f4f6'}}
+                      className="border-b border-gray-100 hover:bg-gray-50"
                     >
-                      <td
-                        style={{
-                          padding: 12,
-                          fontSize: 13,
-                          color: '#4b5563',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                      <td className="p-3 text-[13px] text-gray-600 whitespace-nowrap">
                         {formatDate(log.performedAt)}
                       </td>
-                      <td style={{padding: 12}}>
+                      <td className="p-3">
                         <span
-                          style={{
-                            display: 'inline-block',
-                            padding: '4px 10px',
-                            borderRadius: 12,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background:
-                              log.action === 'upload'
-                                ? '#d1fae5'
-                                : log.action === 'replace'
-                                  ? '#fef3c7'
-                                  : '#fee2e2',
-                            color:
-                              log.action === 'upload'
-                                ? '#065f46'
-                                : log.action === 'replace'
-                                  ? '#92400e'
-                                  : '#991b1b',
-                          }}
+                          className={`inline-block px-2.5 py-1 rounded-xl text-xs font-semibold ${
+                            log.action === 'upload'
+                              ? 'bg-green-100 text-green-800'
+                              : log.action === 'replace'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
                         >
                           {log.action === 'upload'
                             ? '📤 Upload'
@@ -201,98 +123,42 @@ export default function DocumentLogsPage() {
                               : '🗑️ Delete'}
                         </span>
                       </td>
-                      <td style={{padding: 12}}>
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            color: '#1f2937',
-                            marginBottom: 4,
-                          }}
-                        >
+                      <td className="p-3">
+                        <div className="font-semibold text-gray-800 mb-1">
                           {formatDocumentType(log.documentType)}
                         </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: '#6b7280',
-                            maxWidth: 250,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        <div className="text-xs text-gray-500 max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap">
                           {log.fileName}
                         </div>
                         {log.expiryDate && (
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: '#9ca3af',
-                              marginTop: 2,
-                            }}
-                          >
+                          <div className="text-[11px] text-gray-400 mt-0.5">
                             Expires:{' '}
                             {new Date(log.expiryDate).toLocaleDateString()}
                           </div>
                         )}
                       </td>
-                      <td style={{padding: 12}}>
-                        <div style={{fontWeight: 500, color: '#1f2937'}}>
+                      <td className="p-3">
+                        <div className="font-medium text-gray-800">
                           {log.employeeName || 'Unknown'}
                         </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: '#6b7280',
-                            fontFamily: 'monospace',
-                          }}
-                        >
+                        <div className="text-[11px] text-gray-500 font-mono">
                           {log.employeeId.substring(0, 8)}...
                         </div>
                       </td>
-                      <td style={{padding: 12}}>
-                        <div
-                          style={{
-                            fontWeight: 500,
-                            color: '#1f2937',
-                            marginBottom: 4,
-                          }}
-                        >
+                      <td className="p-3">
+                        <div className="font-medium text-gray-800 mb-1">
                           {log.performedByName}
                         </div>
-                        <div style={{display: 'flex', gap: 4}}>
-                          <span
-                            style={{
-                              padding: '2px 6px',
-                              background: '#e5e7eb',
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 500,
-                            }}
-                          >
+                        <div className="flex gap-1">
+                          <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[11px] font-medium">
                             {log.performedByRole}
                           </span>
-                          <span
-                            style={{
-                              padding: '2px 6px',
-                              background: '#dbeafe',
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 500,
-                            }}
-                          >
+                          <span className="px-1.5 py-0.5 bg-blue-100 rounded text-[11px] font-medium">
                             {log.performedByEmpType.replace('_', ' ')}
                           </span>
                         </div>
                       </td>
-                      <td
-                        style={{
-                          padding: 12,
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          color: '#6b7280',
-                        }}
-                      >
+                      <td className="p-3 font-mono text-xs text-gray-500">
                         {log.ip || '—'}
                       </td>
                     </tr>
@@ -303,45 +169,29 @@ export default function DocumentLogsPage() {
           </div>
 
           {totalPages > 1 && (
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 16,
-                marginTop: 24,
-              }}
-            >
+            <div className="flex justify-center items-center gap-4 mt-6">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                style={{
-                  padding: '8px 16px',
-                  background: page === 1 ? '#f3f4f6' : '#2d8cf0',
-                  color: page === 1 ? '#9ca3af' : 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: page === 1 ? 'not-allowed' : 'pointer',
-                  fontWeight: 500,
-                }}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border border-transparent ${
+                  page === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
               >
                 Previous
               </button>
-              <span style={{fontSize: 14, color: '#6b7280'}}>
+              <span className="text-sm text-gray-500">
                 Page {page} of {totalPages} ({total} total)
               </span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                style={{
-                  padding: '8px 16px',
-                  background: page === totalPages ? '#f3f4f6' : '#2d8cf0',
-                  color: page === totalPages ? '#9ca3af' : 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                  fontWeight: 500,
-                }}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border border-transparent ${
+                  page === totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
               >
                 Next
               </button>
@@ -349,12 +199,6 @@ export default function DocumentLogsPage() {
           )}
         </>
       )}
-
-      <style jsx>{`
-        .logs-table tr:hover {
-          background: #f9fafb;
-        }
-      `}</style>
     </main>
   );
 }

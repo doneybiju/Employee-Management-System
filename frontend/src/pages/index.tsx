@@ -64,27 +64,35 @@ function ModernNotification({
   if (missing.length === 0) return null;
 
   return (
-    <div className="modern-notification">
-      <div className="notification-badge">
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-white dark:bg-gray-800 mx-auto mb-6 p-5 rounded-xl border border-yellow-500 shadow-sm max-w-[1400px]">
+      <div className="text-yellow-500 text-xl">
         <i className="fas fa-exclamation-circle" />
       </div>
-      <div className="notification-body">
-        <div className="notification-title">Required Documents</div>
-        <div className="notification-desc">
+      <div className="flex-1">
+        <div className="font-semibold text-gray-900 dark:text-white text-sm mb-0.5">
+          Required Documents
+        </div>
+        <div className="text-gray-500 text-[13px]">
           Upload {missing.join(', ')} to complete your profile
         </div>
       </div>
-      <div className="notification-actions">
+      <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
         <button
-          className="action-btn primary"
+          className="px-4 py-2 bg-blue-600 text-white rounded text-[13px] font-medium hover:bg-blue-700 transition-colors shadow-sm"
           onClick={() => (window.location.href = '/profile')}
         >
           Upload Now
         </button>
-        <button className="action-btn secondary" onClick={onLater}>
+        <button
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded text-[13px] font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shadow-sm"
+          onClick={onLater}
+        >
           Later
         </button>
-        <button className="close-btn" onClick={onDismiss}>
+        <button
+          className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+          onClick={onDismiss}
+        >
           <i className="fas fa-times" />
         </button>
       </div>
@@ -125,28 +133,15 @@ function IndexInner() {
     })();
   }, []);
 
-  const displayedDeadlines = showAllDeadlines
-    ? deadlines
-    : deadlines.slice(0, 3);
-
   const getStatusVariant = (status: string) => {
-    return status === 'Active' ? 'success' : 'warning';
-  };
-
-  const getUrgency = (days: number) => {
-    if (days <= 2) return 'critical';
-    if (days <= 7) return 'high';
-    if (days <= 14) return 'medium';
-    return 'low';
+    return status === 'Active' ? 'text-green-600' : 'text-yellow-600';
   };
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-        </div>
-        <p>Preparing your dashboard...</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+        <p className="text-gray-500">Preparing your dashboard...</p>
       </div>
     );
   }
@@ -154,21 +149,19 @@ function IndexInner() {
   const hasEndDate = !!me?.endDate;
 
   return (
-    <div className="modern-dashboard">
+    <div className="">
       <Head>
         <title>Dashboard • Intern Portal</title>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
       </Head>
 
       {/* Header */}
-      <header className="dashboard-header">
-        <div className="header-main">
-          <div className="header-left">
-            <h1 className="dashboard-title">Dashboard</h1>
-            <div className="welcome-text">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 mb-8 -mx-8 -mt-8">
+        <div className="flex justify-between items-center max-w-[1400px] mx-auto">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white m-0">
+              Dashboard
+            </h1>
+            <div className="text-gray-500 text-sm font-medium">
               Welcome back, {user?.firstName || 'Intern'}! 👋
             </div>
           </div>
@@ -185,21 +178,23 @@ function IndexInner() {
       )}
 
       {/* Main Content */}
-      <main className="dashboard-main">
+      <main className="max-w-[1400px] mx-auto">
         {/* Key Metrics Grid */}
-        <section className="metrics-grid">
-          <div className="metric-card status">
-            <div className="metric-icon">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 hover:-translate-y-0.5 transition-transform shadow-sm hover:shadow-md">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-blue-100 text-blue-600">
               <i className="fas fa-rocket"></i>
             </div>
-            <div className="metric-content">
-              <div className="metric-label">Status</div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                Status
+              </div>
               <div
-                className={`metric-value ${getStatusVariant(me?.status || '')}`}
+                className={`text-2xl font-bold mb-1 ${getStatusVariant(me?.status || '')}`}
               >
                 {me?.status || '—'}
               </div>
-              <div className="metric-description">
+              <div className="text-xs text-gray-400">
                 Since{' '}
                 {me?.startDate
                   ? new Date(me.startDate).toLocaleDateString()
@@ -209,30 +204,38 @@ function IndexInner() {
           </div>
 
           {hasEndDate && (
-            <div className="metric-card timeline">
-              <div className="metric-icon">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 hover:-translate-y-0.5 transition-transform shadow-sm hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-green-100 text-green-600">
                 <i className="fas fa-calendar"></i>
               </div>
-              <div className="metric-content">
-                <div className="metric-label">Timeline</div>
-                <div className="metric-value">
+              <div className="flex-1">
+                <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                  Timeline
+                </div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {me?.daysRemaining ?? '—'} days
                 </div>
-                <div className="metric-description">
+                <div className="text-xs text-gray-400">
                   Ends {new Date(me!.endDate as string).toLocaleDateString()}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="metric-card position">
-            <div className="metric-icon">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 hover:-translate-y-0.5 transition-transform shadow-sm hover:shadow-md">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-yellow-100 text-yellow-600">
               <i className="fas fa-briefcase"></i>
             </div>
-            <div className="metric-content">
-              <div className="metric-label">Position</div>
-              <div className="metric-value">{me?.position || '—'}</div>
-              <div className="metric-description">{me?.department || '—'}</div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                Position
+              </div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                {me?.position || '—'}
+              </div>
+              <div className="text-xs text-gray-400">
+                {me?.department || '—'}
+              </div>
             </div>
           </div>
         </section>
@@ -241,38 +244,49 @@ function IndexInner() {
         <UpcomingDeadlines deadlines={deadlines} />
 
         {/* Quick Actions */}
-        <section className="quick-actions">
-          <div className="section-header">
-            <div className="section-title">
-              <i className="fas fa-bolt"></i>
+        <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+          <div className="flex justify-between items-center mb-5">
+            <div className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+              <i className="fas fa-bolt text-blue-600"></i>
               Quick Actions
             </div>
           </div>
-          <div className="actions-grid">
-            <button className="action-card">
-              <div className="action-icon">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                 <i className="fas fa-upload"></i>
               </div>
-              <span>Upload Docs</span>
+              <span className="text-sm font-semibold text-gray-500">
+                Upload Docs
+              </span>
             </button>
-            <Link href="/my-work" className="action-card">
-              <div className="action-icon">
+            <Link
+              href="/my-work"
+              className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                 <i className="fas fa-tasks"></i>
               </div>
-              <span>My Tasks</span>
+              <span className="text-sm font-semibold text-gray-500">
+                My Tasks
+              </span>
             </Link>
 
-            <button className="action-card">
-              <div className="action-icon">
+            <button className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                 <i className="fas fa-file-alt"></i>
               </div>
-              <span>Reports</span>
+              <span className="text-sm font-semibold text-gray-500">
+                Reports
+              </span>
             </button>
-            <button className="action-card">
-              <div className="action-icon">
+            <button className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                 <i className="fas fa-calendar-check"></i>
               </div>
-              <span>Schedule</span>
+              <span className="text-sm font-semibold text-gray-500">
+                Schedule
+              </span>
             </button>
           </div>
         </section>

@@ -79,35 +79,57 @@ export default function LoginEventsPage() {
 
   return (
     <ProtectedRoute roles={['super_admin']}>
-      <div className="login-events-page">
-        <div className="header-section">
+      <div className="p-8 max-w-[1400px] mx-auto">
+        <div className="mb-8">
           <button
-            className="back-button"
+            className="bg-transparent border-none text-blue-600 cursor-pointer text-sm py-2 mb-4 inline-block transition-colors hover:text-blue-700 hover:underline"
             onClick={() => router.push('/admin/logs')}
           >
             ← Back to Logs
           </button>
-          <h1>Login Events</h1>
-          <p className="subtitle">Authentication history and security events</p>
+          <h1 className="m-0 mb-2 text-2xl text-gray-900 font-bold">
+            Login Events
+          </h1>
+          <p className="text-gray-500 m-0">
+            Authentication history and security events
+          </p>
         </div>
 
         {loading ? (
-          <div className="loading">Loading login events...</div>
+          <div className="text-center p-12 text-gray-500 bg-white rounded-lg shadow-sm">
+            Loading login events...
+          </div>
         ) : !logs.length ? (
-          <div className="no-data">No login events found.</div>
+          <div className="text-center p-12 text-gray-500 bg-white rounded-lg shadow-sm">
+            No login events found.
+          </div>
         ) : (
-          <div className="logs-container">
-            <div className="table-responsive">
-              <table className="logs-table">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th>Date/Time</th>
-                    <th>Status</th>
-                    <th>User</th>
-                    <th>Location</th>
-                    <th>Device & Browser</th>
-                    <th>IP Address</th>
-                    <th>Flags</th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      Date/Time
+                    </th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      Status
+                    </th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      User
+                    </th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      Location
+                    </th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      Device & Browser
+                    </th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      IP Address
+                    </th>
+                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-600 border-b-2 border-gray-200 whitespace-nowrap">
+                      Flags
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -124,70 +146,84 @@ export default function LoginEventsPage() {
                     return (
                       <tr
                         key={log.id}
-                        className={log.success ? 'row-success' : 'row-failure'}
+                        className={`hover:bg-gray-50 border-b border-gray-100 ${log.success ? 'bg-green-50/30' : 'bg-red-50/30'}`}
                       >
-                        <td>
-                          <div className="datetime-cell">
+                        <td className="p-3 align-top border-b border-gray-100">
+                          <div className="text-sm text-gray-600 whitespace-nowrap">
                             {formatDate(log.createdAt)}
                           </div>
                         </td>
-                        <td>
+                        <td className="p-3 align-top border-b border-gray-100">
                           <span
-                            className={`status-badge ${log.success ? 'status-success' : 'status-failure'}`}
+                            className={`inline-block px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap ${
+                              log.success
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
                           >
                             {log.success ? '✓ Success' : '✗ Failed'}
                           </span>
                           {!log.success && log.failReason && (
-                            <div className="fail-reason">
+                            <div className="mt-1 text-xs text-red-600 capitalize">
                               {log.failReason.replace(/_/g, ' ')}
                             </div>
                           )}
                         </td>
-                        <td className="user-cell">
-                          <div className="user-email">
+                        <td className="p-3 align-top border-b border-gray-100 min-w-[180px]">
+                          <div className="font-semibold text-gray-900">
                             {log.email || 'Unknown'}
                           </div>
                           {log.userId && (
-                            <div className="user-id">ID: {log.userId}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              ID: {log.userId}
+                            </div>
                           )}
                         </td>
-                        <td className="location-cell">
-                          <div className="location-text">{location}</div>
+                        <td className="p-3 align-top border-b border-gray-100 min-w-[150px]">
+                          <div className="text-sm text-gray-700">
+                            {location}
+                          </div>
                           {(log.lat || log.lon) && (
-                            <div className="coordinates">
+                            <div className="text-[11px] text-gray-400 mt-1 font-mono">
                               {log.lat?.toFixed(4)}, {log.lon?.toFixed(4)}
                             </div>
                           )}
                         </td>
-                        <td className="device-cell">
-                          <div className="device-info">{deviceInfo}</div>
+                        <td className="p-3 align-top border-b border-gray-100 min-w-[200px]">
+                          <div className="text-sm text-gray-700 mb-1">
+                            {deviceInfo}
+                          </div>
                           {log.platform && (
-                            <div className="platform">
+                            <div className="text-[11px] text-gray-500">
                               Platform: {log.platform}
                             </div>
                           )}
                           {log.language && (
-                            <div className="language">Lang: {log.language}</div>
+                            <div className="text-[11px] text-gray-500">
+                              Lang: {log.language}
+                            </div>
                           )}
                         </td>
-                        <td className="ip-cell">
-                          <div className="ip-address">{log.ip}</div>
+                        <td className="p-3 align-top border-b border-gray-100 font-mono text-[13px]">
+                          <div className="text-blue-800 font-medium">
+                            {log.ip}
+                          </div>
                           {log.deviceId && (
-                            <div className="device-id">
+                            <div className="text-[11px] text-gray-500 mt-1">
                               Device: {log.deviceId.substring(0, 8)}...
                             </div>
                           )}
                         </td>
-                        <td className="flags-cell">
+                        <td className="p-3 align-top border-b border-gray-100 text-center min-w-[100px]">
                           {log.alerts && log.alerts.length > 0 ? (
                             log.alerts.map((alert, idx) => {
                               const isWarning = alert.severity === 'medium';
                               const isHigh = alert.severity === 'high';
                               const badgeClass = isHigh
-                                ? 'flag-alert'
+                                ? 'bg-red-100 text-red-800 border-red-400'
                                 : isWarning
-                                  ? 'flag-warning'
-                                  : 'flag-info';
+                                  ? 'bg-yellow-100 text-yellow-800 border-yellow-400'
+                                  : 'bg-blue-100 text-blue-800 border-blue-400';
                               const icon =
                                 alert.kind === 'NEW_DEVICE'
                                   ? '🆕'
@@ -205,7 +241,7 @@ export default function LoginEventsPage() {
                               return (
                                 <span
                                   key={idx}
-                                  className={`flag-badge ${badgeClass}`}
+                                  className={`inline-block px-2 py-1 rounded-lg text-xs font-semibold m-0.5 whitespace-nowrap border ${badgeClass}`}
                                   title={`${alert.severity}: ${label}`}
                                 >
                                   {icon} {label}
@@ -213,9 +249,13 @@ export default function LoginEventsPage() {
                               );
                             })
                           ) : log.success ? (
-                            <span className="flag-badge flag-ok">✓ Known</span>
+                            <span className="inline-block px-2 py-1 rounded-lg text-xs font-semibold m-0.5 whitespace-nowrap bg-green-100 text-green-800 border border-green-400">
+                              ✓ Known
+                            </span>
                           ) : (
-                            <span className="flag-badge flag-neutral">-</span>
+                            <span className="inline-block px-2 py-1 rounded-lg text-xs font-semibold m-0.5 whitespace-nowrap bg-gray-100 text-gray-500 border border-gray-300">
+                              -
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -226,311 +266,31 @@ export default function LoginEventsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="pagination">
-              <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <div className="flex justify-center items-center gap-4 mt-6 pt-6 border-t border-gray-200">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+                className={
+                  'px-4 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer text-sm transition-colors hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
+                }
+              >
                 Previous
               </button>
-              <span>
+              <span className="text-sm text-gray-500">
                 Page {page} of {Math.ceil(total / limit) || 1}
               </span>
               <button
                 disabled={page >= Math.ceil(total / limit)}
                 onClick={() => setPage(page + 1)}
+                className={
+                  'px-4 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer text-sm transition-colors hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
+                }
               >
                 Next
               </button>
             </div>
           </div>
         )}
-
-        <style jsx>{`
-          .login-events-page {
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-          }
-
-          .header-section {
-            margin-bottom: 2rem;
-          }
-
-          .back-button {
-            background: none;
-            border: none;
-            color: #2563eb;
-            cursor: pointer;
-            font-size: 0.95rem;
-            padding: 0.5rem 0;
-            margin-bottom: 1rem;
-            display: inline-block;
-            transition: color 0.2s;
-          }
-
-          .back-button:hover {
-            color: #1d4ed8;
-            text-decoration: underline;
-          }
-
-          .header-section h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 2rem;
-            color: #1a1a1a;
-          }
-
-          .subtitle {
-            color: #666;
-            margin: 0;
-          }
-
-          .logs-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
-          }
-
-          .table-responsive {
-            overflow-x: auto;
-          }
-
-          .logs-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-          }
-
-          .logs-table th {
-            text-align: left;
-            padding: 0.75rem;
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            white-space: nowrap;
-          }
-
-          .logs-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #e9ecef;
-            vertical-align: top;
-          }
-
-          .logs-table tr:hover {
-            background: #f8f9fa;
-          }
-
-          .logs-table tr.row-success {
-            background: #f0fdf4;
-          }
-
-          .logs-table tr.row-failure {
-            background: #fef2f2;
-          }
-
-          .datetime-cell {
-            font-size: 0.875rem;
-            color: #4b5563;
-            white-space: nowrap;
-          }
-
-          .status-badge {
-            display: inline-block;
-            padding: 0.3rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            white-space: nowrap;
-          }
-
-          .status-success {
-            background: #d1fae5;
-            color: #065f46;
-          }
-
-          .status-failure {
-            background: #fee2e2;
-            color: #991b1b;
-          }
-
-          .fail-reason {
-            margin-top: 0.25rem;
-            font-size: 0.75rem;
-            color: #dc2626;
-            text-transform: capitalize;
-          }
-
-          .user-cell {
-            min-width: 180px;
-          }
-
-          .user-email {
-            font-weight: 600;
-            color: #1f2937;
-          }
-
-          .user-id {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
-          }
-
-          .location-cell {
-            min-width: 150px;
-          }
-
-          .location-text {
-            color: #374151;
-            font-size: 0.875rem;
-          }
-
-          .coordinates {
-            font-size: 0.7rem;
-            color: #9ca3af;
-            margin-top: 0.25rem;
-            font-family: 'Courier New', monospace;
-          }
-
-          .device-cell {
-            min-width: 200px;
-          }
-
-          .device-info {
-            font-size: 0.875rem;
-            color: #374151;
-            margin-bottom: 0.25rem;
-          }
-
-          .platform,
-          .language {
-            font-size: 0.7rem;
-            color: #6b7280;
-          }
-
-          .ip-cell {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-          }
-
-          .ip-address {
-            color: #1e40af;
-            font-weight: 500;
-          }
-
-          .device-id {
-            font-size: 0.7rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
-          }
-
-          .flags-cell {
-            text-align: center;
-            min-width: 100px;
-          }
-
-          .flag-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin: 0.125rem;
-            white-space: nowrap;
-          }
-
-          .flag-warning {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fbbf24;
-          }
-
-          .flag-alert {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #f87171;
-          }
-
-          .flag-ok {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #34d399;
-          }
-
-          .flag-info {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #60a5fa;
-          }
-
-          .flag-neutral {
-            background: #f3f4f6;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
-          }
-
-          .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e9ecef;
-          }
-
-          .pagination button {
-            padding: 0.5rem 1rem;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: background 0.2s;
-          }
-
-          .pagination button:hover:not(:disabled) {
-            background: #1d4ed8;
-          }
-
-          .pagination button:disabled {
-            background: #cbd5e1;
-            cursor: not-allowed;
-          }
-
-          .pagination span {
-            font-size: 0.875rem;
-            color: #64748b;
-          }
-
-          .loading,
-          .no-data {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          }
-
-          @media (max-width: 768px) {
-            .login-events-page {
-              padding: 1rem;
-            }
-
-            .logs-table {
-              font-size: 0.75rem;
-            }
-
-            .logs-table th,
-            .logs-table td {
-              padding: 0.5rem;
-            }
-
-            .user-agent {
-              max-width: 150px;
-            }
-          }
-        `}</style>
       </div>
     </ProtectedRoute>
   );

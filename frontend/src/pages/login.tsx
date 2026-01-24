@@ -3,7 +3,6 @@
 import {useEffect, useState, FormEvent} from 'react';
 import {useRouter} from 'next/router';
 import {useAuth} from '@/context/AuthContext';
-import styles from './login.module.css';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -75,7 +74,7 @@ export default function LoginPage() {
   // simple inline SVG icons
   const MailIcon = () => (
     <svg
-      className={styles.icon}
+      className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
@@ -85,7 +84,7 @@ export default function LoginPage() {
   );
   const LockIcon = () => (
     <svg
-      className={styles.icon}
+      className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
@@ -95,20 +94,24 @@ export default function LoginPage() {
   );
 
   return (
-    <main className={styles.page}>
-      <section className={styles.card}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>Welcome back</h1>
-          <p className={styles.sub}>Sign in to continue</p>
+    <main className="min-h-[100dvh] grid place-items-center p-6 bg-gradient-to-br from-[#eef2f7] to-[#f7f9fc] overflow-hidden">
+      <section className="w-full max-w-[420px] p-8 md:p-7 bg-white/96 rounded-[18px] shadow-[0_14px_32px_rgba(0,0,0,0.14)] backdrop-blur-[6px] box-border">
+        <header className="text-center mb-[22px]">
+          <h1 className="text-[26px] font-bold text-gray-900">Welcome back</h1>
+          <p className="mt-1.5 text-gray-500 text-sm">Sign in to continue</p>
         </header>
 
-        {err && <div className={styles.error}>{err}</div>}
+        {err && (
+          <div className="bg-red-50 text-red-700 border border-red-200 p-2.5 rounded-[10px] text-sm mb-[14px]">
+            {err}
+          </div>
+        )}
 
-        <form className={styles.form} onSubmit={onSubmit} noValidate>
-          <div className={styles.group}>
+        <form className="flex flex-col" onSubmit={onSubmit} noValidate>
+          <div className="relative mb-4">
             <MailIcon />
             <input
-              className={styles.input}
+              className="w-full border-none outline-none bg-gray-100 text-gray-900 py-[14px] px-[14px] pl-[44px] rounded-xl text-[15px] transition-all focus:bg-[#eef1f5] focus:ring-2 focus:ring-blue-500/25"
               type="email"
               placeholder="Company email"
               value={email}
@@ -118,10 +121,10 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className={styles.group} style={{position: 'relative'}}>
+          <div className="relative mb-4">
             <LockIcon />
             <input
-              className={styles.input}
+              className="w-full border-none outline-none bg-gray-100 text-gray-900 py-[14px] px-[14px] pl-[44px] rounded-xl text-[15px] transition-all focus:bg-[#eef1f5] focus:ring-2 focus:ring-blue-500/25"
               type={showPw ? 'text' : 'password'}
               placeholder="Password"
               value={password}
@@ -133,37 +136,34 @@ export default function LoginPage() {
               type="button"
               aria-label={showPw ? 'Hide password' : 'Show password'}
               onClick={() => setShowPw(s => !s)}
-              style={{
-                position: 'absolute',
-                right: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                border: 'none',
-                background: 'transparent',
-                padding: 6,
-                cursor: 'pointer',
-                color: '#6b7280',
-              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 border-none bg-transparent p-1.5 cursor-pointer text-gray-500"
             >
               {showPw ? '🙈' : '👁️'}
             </button>
           </div>
 
-          <Link href="/forgot-password" className={styles.link}>
+          <Link
+            href="/forgot-password"
+            className="inline-block ml-auto mb-[18px] text-blue-600 text-sm hover:underline"
+          >
             Forgot password?
           </Link>
 
-          <button className={styles.button} type="submit" disabled={loading}>
+          <button
+            className="w-full p-[14px] border-none rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-semibold cursor-pointer shadow-[0_6px_14px_rgba(79,70,229,0.35)] transition-all hover:-translate-y-px hover:shadow-[0_8px_18px_rgba(79,70,229,0.45)] disabled:opacity-60 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
 
-          <div className={styles.divider}>
+          <div className="flex items-center gap-3 my-5 text-gray-400 text-[13px] before:flex-1 before:h-px before:bg-gray-200 after:flex-1 after:h-px after:bg-gray-200">
             <span>or</span>
           </div>
 
           <button
             type="button"
-            className={styles.sso}
+            className="w-full p-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium cursor-pointer flex items-center justify-center gap-3 hover:bg-gray-50"
             onClick={() => {
               window.location.href = '/api/auth/google';
             }}
@@ -177,7 +177,9 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          <div className={styles.footer}>Need access? Contact IT.</div>
+          <div className="text-center mt-4 text-gray-500 text-sm">
+            Need access? Contact IT.
+          </div>
         </form>
       </section>
     </main>

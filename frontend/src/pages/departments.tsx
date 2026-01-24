@@ -121,137 +121,128 @@ export default function DepartmentsPage() {
     }
   };
 
-  if (loading) return <div>Loading…</div>;
+  if (loading) return <div className="p-8 text-gray-500">Loading…</div>;
   if (!user)
     return (
-      <div>
-        <Link href="/login">Login</Link> required.
+      <div className="p-8 text-gray-500">
+        <Link href="/login" className="text-blue-600 hover:underline">
+          Login
+        </Link>{' '}
+        required.
       </div>
     );
-  if (!['hr', 'super_admin'].includes(user.role)) return <div>Forbidden.</div>;
+  if (!['hr', 'super_admin'].includes(user.role))
+    return <div className="p-8 text-red-600">Forbidden.</div>;
 
   const filtered = rows.filter(d =>
     d.departmentName.toLowerCase().includes(q.trim().toLowerCase()),
   );
 
   return (
-    <main style={{maxWidth: 1000, margin: '2rem auto', padding: 16}}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <h1 style={{marginRight: 'auto'}}>Departments & Positions</h1>
+    <main className="max-w-[1000px] mx-auto my-8 p-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="mr-auto text-2xl font-bold text-gray-900">
+          Departments & Positions
+        </h1>
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
           placeholder="Search department…"
-          style={{padding: 8}}
+          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
         />
       </div>
 
       {/* Create department */}
-      <section
-        style={{
-          border: '2px solid #d1d5db',
-          padding: 20,
-          borderRadius: 12,
-          marginTop: 12,
-          background: '#fff',
-        }}
-      >
-        <h3>Create Department</h3>
-        <form
-          onSubmit={submitDept}
-          style={{display: 'grid', gap: 8, maxWidth: 600}}
-        >
+      <section className="border border-gray-300 p-5 rounded-xl mt-3 bg-white shadow-sm">
+        <h3 className="text-lg font-bold text-gray-800 mb-3">
+          Create Department
+        </h3>
+        <form onSubmit={submitDept} className="grid gap-2 max-w-[600px]">
           <label>
-            <div style={{fontSize: 12, color: '#666'}}>Department name</div>
+            <div className="text-xs text-gray-500 mb-1">Department name</div>
             <input
               value={deptName}
               onChange={e => setDeptName(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
             />
           </label>
           <div>
-            <div style={{fontSize: 12, color: '#666', marginBottom: 4}}>
-              Positions
-            </div>
+            <div className="text-xs text-gray-500 mb-1">Positions</div>
             {pos.map((p, i) => (
-              <div key={i} style={{display: 'flex', gap: 8, marginBottom: 6}}>
+              <div key={i} className="flex gap-2 mb-1.5">
                 <input
                   value={p}
                   onChange={e => setPosVal(i, e.target.value)}
-                  style={{flex: 1}}
+                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
                 />
                 {pos.length > 1 && (
-                  <button type="button" onClick={() => rmPosInput(i)}>
+                  <button
+                    type="button"
+                    onClick={() => rmPosInput(i)}
+                    className="px-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100"
+                  >
                     −
                   </button>
                 )}
               </div>
             ))}
-            <button type="button" onClick={addPosInput}>
+            <button
+              type="button"
+              onClick={addPosInput}
+              className="text-sm text-blue-600 font-medium hover:underline mt-1"
+            >
               + Add position
             </button>
           </div>
-          <div>
-            <button type="submit">Create</button>
+          <div className="mt-2">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Create
+            </button>
           </div>
         </form>
       </section>
 
       {/* List */}
-      <section style={{marginTop: 16}}>
-        <table
-          width="100%"
-          cellPadding={10}
-          style={{borderCollapse: 'separate', borderSpacing: 0}}
-        >
+      <section className="mt-4">
+        <table className="w-full border-separate border-spacing-0">
           <thead>
-            <tr style={{textAlign: 'left', borderBottom: '2px solid #d1d5db'}}>
-              <th style={{width: 260}}>Department</th>
-              <th>Positions</th>
-              <th style={{width: 160}}>Actions</th>
+            <tr className="text-left">
+              <th className="w-[260px] pb-2 border-b-2 border-gray-300 font-semibold text-gray-700">
+                Department
+              </th>
+              <th className="pb-2 border-b-2 border-gray-300 font-semibold text-gray-700">
+                Positions
+              </th>
+              <th className="w-[160px] pb-2 border-b-2 border-gray-300 font-semibold text-gray-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(d => (
               <React.Fragment key={d.id}>
                 <tr>
-                  <td>{d.departmentName}</td>
-                  <td>
-                    <div style={{display: 'flex', gap: 12, flexWrap: 'wrap'}}>
+                  <td className="py-3 pr-4 align-top font-medium text-gray-800">
+                    {d.departmentName}
+                  </td>
+                  <td className="py-3 pr-4 align-top">
+                    <div className="flex gap-3 flex-wrap">
                       {d.positions.map(p => (
                         <span
                           key={p.id}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            border: '2px solid #d1d5db',
-                            padding: '6px 10px',
-                            borderRadius: 999,
-                            background: '#f9fafb',
-                          }}
+                          className="inline-flex items-center gap-1.5 border border-gray-300 px-2.5 py-1.5 rounded-full bg-gray-50 text-sm"
                         >
-                          <span style={{fontWeight: 500}}>{p.name}</span>
+                          <span className="font-medium text-gray-700">
+                            {p.name}
+                          </span>
                           <button
                             type="button"
                             title="Rename"
                             onClick={() => renamePos(p)}
-                            style={{
-                              width: 22,
-                              height: 22,
-                              lineHeight: '20px',
-                              textAlign: 'center',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: 6,
-                              background: '#fff',
-                              cursor: 'pointer',
-                            }}
+                            className="w-5 h-5 flex items-center justify-center border border-gray-300 rounded bg-white cursor-pointer hover:bg-gray-100 text-xs text-gray-500"
                           >
                             ✎
                           </button>
@@ -259,32 +250,31 @@ export default function DepartmentsPage() {
                             type="button"
                             title="Delete"
                             onClick={() => delPos(p.id)}
-                            style={{
-                              width: 22,
-                              height: 22,
-                              lineHeight: '20px',
-                              textAlign: 'center',
-                              border: '1px solid #fecaca',
-                              borderRadius: 6,
-                              background: '#fff',
-                              color: '#b91c1c',
-                              cursor: 'pointer',
-                            }}
+                            className="w-5 h-5 flex items-center justify-center border border-red-200 rounded bg-white text-red-600 cursor-pointer hover:bg-red-50 text-xs"
                           >
                             ×
                           </button>
                         </span>
                       ))}
-                      <button type="button" onClick={() => addPosition(d.id)}>
+                      <button
+                        type="button"
+                        onClick={() => addPosition(d.id)}
+                        className="text-sm text-blue-600 font-medium hover:underline self-center"
+                      >
                         + add
                       </button>
                     </div>
                   </td>
-                  <td style={{whiteSpace: 'nowrap'}}>
-                    <button onClick={() => renameDept(d)}>Rename</button>{' '}
+                  <td className="py-3 align-top whitespace-nowrap">
+                    <button
+                      onClick={() => renameDept(d)}
+                      className="text-blue-600 hover:underline mr-3 font-medium text-sm bg-transparent border-none cursor-pointer"
+                    >
+                      Rename
+                    </button>
                     <button
                       onClick={() => delDept(d.id)}
-                      style={{color: '#b00'}}
+                      className="text-red-600 hover:underline font-medium text-sm bg-transparent border-none cursor-pointer"
                     >
                       Delete
                     </button>
@@ -292,13 +282,7 @@ export default function DepartmentsPage() {
                 </tr>
                 <tr aria-hidden>
                   <td colSpan={3}>
-                    <div
-                      style={{
-                        height: 2,
-                        background: '#d1d5db',
-                        margin: '18px 0',
-                      }}
-                    />
+                    <div className="h-px bg-gray-200 my-2" />
                   </td>
                 </tr>
               </React.Fragment>

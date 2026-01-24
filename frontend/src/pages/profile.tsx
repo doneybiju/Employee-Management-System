@@ -50,13 +50,6 @@ const normDocs = (d?: Partial<Docs> | null): Docs => ({
   linkedin: d?.linkedin ?? null,
 });
 
-const kindKey = {
-  acceptance_letter: 'acceptanceLetter',
-  learning_agreement: 'learningAgreement',
-  passport_id: 'passportId',
-  cv: 'cv',
-} as const;
-
 const DEFAULT_AVATAR = '/account.png';
 
 function agreementLabel(empType?: EmpType | null) {
@@ -102,12 +95,6 @@ export default function ProfilePage() {
   const [sosRelation, setSosRelation] = useState('');
   const [linkedin, setLinkedin] = useState('');
 
-  // upload states
-  // const [upAvatar, setUpAvatar] = useState(false);
-  // const [savingSOS, setSavingSOS] = useState(false);
-  // const [savingSocial, setSavingSocial] = useState(false);
-
-  // allow ALL logged-in roles to edit their own profile
   const canEdit = !!user;
 
   useEffect(() => {
@@ -277,11 +264,13 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <main className="profile-container">Loading…</main>;
-  if (!user) return <main className="profile-container">Please log in.</main>;
+  if (loading)
+    return <main className="max-w-[1200px] mx-auto p-6">Loading…</main>;
+  if (!user)
+    return <main className="max-w-[1200px] mx-auto p-6">Please log in.</main>;
   const nameBase = `${data?.firstName || 'user'}_${data?.surname || ''}`.trim();
   return (
-    <main className="profile-container">
+    <main className="max-w-[1200px] mx-auto p-6">
       <Head>
         <link
           rel="stylesheet"
@@ -289,28 +278,31 @@ export default function ProfilePage() {
         />
       </Head>
 
-      <div className="profile-header">
-        <h1 className="profile-title">My Profile</h1>
-        <Link href="/change-password" className="change-password-btn">
-          <i className="fas fa-lock icon-blue" />{' '}
-          <span className="ml-8">Change password</span>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+        <Link
+          href="/change-password"
+          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium shadow-sm transition-all hover:bg-blue-700 hover:-translate-y-px hover:shadow-md no-underline"
+        >
+          <i className="fas fa-lock text-white" />{' '}
+          <span>Change password</span>
         </Link>
       </div>
 
       {err && (
-        <div className="error-message">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6 flex items-center gap-2">
           <i className="fas fa-exclamation-circle" />
-          <span className="ml-8">{err}</span>
+          <span>{err}</span>
         </div>
       )}
 
-      <div className="profile-grid">
-        <aside className="profile-sidebar">
-          <div className="avatar-container">
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
+        <aside className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-center self-start">
+          <div className="relative mb-5">
             <img
               src={avatarSrc}
               alt="Profile Avatar"
-              className="avatar"
+              className="w-[180px] h-[180px] rounded-full object-cover border-4 border-gray-50 shadow-sm mx-auto"
               onError={e => {
                 const el = e.currentTarget;
                 if (el.src !== DEFAULT_AVATAR) el.src = DEFAULT_AVATAR;
@@ -319,16 +311,16 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <h2 className="user-name">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
               {data ? `${data.firstName} ${data.surname}` : '—'}
             </h2>
-            <div className="user-role">{data?.role ?? '—'}</div>
+            <div className="text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full inline-block">
+              {data?.role ?? '—'}
+            </div>
           </div>
 
           {canEdit && (
-            <div className="mt-16">
-              {/* <label className="info-label" htmlFor="avatarFile">Update avatar</label> */}
-
+            <div className="mt-4">
               {/* Hidden native input */}
               <input
                 id="avatarFile"
@@ -347,24 +339,21 @@ export default function ProfilePage() {
               {/* Nice button – no filename shown */}
               <label
                 htmlFor="avatarFile"
-                className="upload-btn"
-                style={{
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-3.5 py-2.5 rounded text-sm font-medium cursor-pointer shadow-sm transition-all hover:bg-blue-700"
               >
                 {upAvatar ? (
                   <i className="fas fa-spinner fa-spin" />
                 ) : (
                   <i className="fas fa-upload" />
                 )}
-                <span className="ml-8">
+                <span>
                   {data?.avatarUrl ? 'Replace photo' : 'Upload photo'}
                 </span>
               </label>
 
-              {upAvatar && <div className="hint">Uploading…</div>}
+              {upAvatar && (
+                <div className="text-xs text-gray-500 mt-2">Uploading…</div>
+              )}
             </div>
           )}
         </aside>
@@ -382,7 +371,7 @@ export default function ProfilePage() {
           />
         )}
 
-        <section className="profile-content">
+        <section className="flex flex-col gap-6">
           <Card icon="fa-building" title="Company Information">
             <Info k="Company Email" v={data?.companyEmail} />
             <Info k="Department" v={data?.department} />
@@ -409,12 +398,14 @@ export default function ProfilePage() {
                     value={sosPhone}
                     onChange={e => setSosPhone(e.target.value)}
                     placeholder="+123 456 789"
+                    className="w-full p-3 border border-gray-300 rounded text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
                   />
                 </Field>
                 <Field label="Relation with Intern">
                   <select
                     value={sosRelation}
                     onChange={e => setSosRelation(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
                   >
                     <option value="">—</option>
                     {[
@@ -436,16 +427,14 @@ export default function ProfilePage() {
                   </select>
                 </Field>
                 <button
-                  className="save-btn"
+                  className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded font-medium shadow-sm cursor-pointer transition-all hover:bg-green-700 hover:shadow-md disabled:opacity-75 disabled:cursor-default mt-4"
                   onClick={saveSOS}
                   disabled={savingSOS}
                 >
                   <i
                     className={`fas ${savingSOS ? 'fa-spinner fa-spin' : 'fa-save'}`}
                   />
-                  <span className="ml-8">
-                    {savingSOS ? 'Saving…' : 'Save SOS Information'}
-                  </span>
+                  <span>{savingSOS ? 'Saving…' : 'Save SOS Information'}</span>
                 </button>
               </>
             ) : (
@@ -470,17 +459,18 @@ export default function ProfilePage() {
                     value={linkedin}
                     onChange={e => setLinkedin(e.target.value)}
                     placeholder="https://linkedin.com/in/username"
+                    className="w-full p-3 border border-gray-300 rounded text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
                   />
                 </Field>
                 <button
-                  className="save-btn"
+                  className="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded font-medium shadow-sm cursor-pointer transition-all hover:bg-green-700 hover:shadow-md disabled:opacity-75 disabled:cursor-default mt-4"
                   onClick={saveSocial}
                   disabled={savingSocial}
                 >
                   <i
                     className={`fas ${savingSocial ? 'fa-spinner fa-spin' : 'fa-save'}`}
                   />
-                  <span className="ml-8">
+                  <span>
                     {savingSocial ? 'Saving…' : 'Save Social Information'}
                   </span>
                 </button>
@@ -491,7 +481,7 @@ export default function ProfilePage() {
           </Card>
 
           <Card icon="fa-file-alt" title="Documents">
-            <div className="doc-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               <DocTile
                 label="Acceptance Letter"
                 value={data?.documents?.acceptanceLetter}
@@ -550,14 +540,18 @@ export default function ProfilePage() {
       </div>
       {toast && (
         <div
-          className={`toast ${toast.kind === 'success' ? 'toast-success' : 'toast-error'}`}
+          className={`fixed bottom-5 right-5 inline-flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg z-50 font-medium animate-[toastIn_0.2s_ease-out] ${
+            toast.kind === 'success'
+              ? 'bg-green-50 text-green-700'
+              : 'bg-red-50 text-red-700'
+          }`}
           role="status"
           aria-live="polite"
         >
           <i
             className={`fas ${toast.kind === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}`}
           />
-          <span className="ml-8">{toast.message}</span>
+          <span>{toast.message}</span>
         </div>
       )}
     </main>
@@ -574,21 +568,27 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="card">
-      <h3 className="card-title">
-        <i className={`fas ${icon} icon-blue`} /> {title}
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-5 pb-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2.5">
+        <i className={`fas ${icon} text-blue-600`} /> {title}
       </h3>
-      <div className="info-grid">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {children}
+      </div>
     </div>
   );
 }
 
 function Info({k, v}: {k: string; v?: string | null}) {
   return (
-    <div className="info-item">
-      <span className="info-label">{k}</span>
-      <div className="info-value">
-        {v && String(v).trim() ? v : <span className="empty">Not set</span>}
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm text-gray-500 font-medium">{k}</span>
+      <div className="text-base text-gray-900 dark:text-white font-medium break-words">
+        {v && String(v).trim() ? (
+          v
+        ) : (
+          <span className="text-gray-400 italic">Not set</span>
+        )}
       </div>
     </div>
   );
@@ -596,8 +596,8 @@ function Info({k, v}: {k: string; v?: string | null}) {
 
 function Field({label, children}: {label: string; children: React.ReactNode}) {
   return (
-    <div className="info-item">
-      <span className="info-label">{label}</span>
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm text-gray-500 font-medium">{label}</span>
       {children}
     </div>
   );
@@ -671,52 +671,50 @@ function DocTile({
   const proxied = toProxy(value);
 
   return (
-    <div className="doc-tile">
-      <div className="doc-left">
-        <i className="fas fa-file icon-blue doc-icon" />
+    <div className="grid grid-cols-[48px_1fr_auto] gap-3 items-center border border-gray-200 rounded-lg p-3.5 bg-white dark:bg-gray-800 transition-all hover:shadow-md hover:-translate-y-px">
+      <div className="text-xl text-blue-600 flex items-center justify-center">
+        <i className="fas fa-file" />
       </div>
 
-      <div className="doc-mid">
-        <div className="doc-label">{label}</div>
-        <div className="doc-file">
+      <div className="min-w-0">
+        <div className="text-sm text-gray-500">{label}</div>
+        <div className="text-[15px] font-medium text-gray-900 dark:text-white mt-0.5 break-all">
           {proxied ? (
-            <span className="ok" style={{color: '#16a34a', fontWeight: 600}}>
-              Uploaded
-            </span>
+            <span className="text-green-600 font-semibold">Uploaded</span>
           ) : (
-            <span className="empty">Not uploaded</span>
+            <span className="text-gray-400 italic">Not uploaded</span>
           )}
         </div>
 
         {extra && (
-          <div style={{marginTop: 6, fontSize: 12, color: '#6b7280'}}>
-            {extra}
-          </div>
+          <div className="mt-1.5 text-xs text-gray-500">{extra}</div>
         )}
 
         {proxied && (
-          <div className="doc-actions" style={{marginTop: 6}}>
+          <div className="mt-1.5">
             <button
-              className="download-btn"
+              className="inline-flex items-center gap-2 text-blue-600 text-xs font-semibold px-2 py-1 rounded hover:bg-blue-50 bg-transparent border-none cursor-pointer"
               onClick={() => downloadWithAuth(proxied, nameBase, kind)}
             >
-              <i className="fas fa-download" />{' '}
-              <span className="ml-6">Download</span>
+              <i className="fas fa-download" /> <span>Download</span>
             </button>
           </div>
         )}
       </div>
 
-      <div className="doc-right">
+      <div className="flex items-center">
         {canEdit && (
           <>
-            <label htmlFor={id} className="upload-btn">
+            <label
+              htmlFor={id}
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-3.5 py-2.5 rounded text-sm font-medium cursor-pointer shadow-sm transition-all hover:bg-blue-700"
+            >
               {busy ? (
                 <i className="fas fa-spinner fa-spin" />
               ) : (
                 <i className="fas fa-upload" />
               )}
-              <span className="ml-8">{value ? 'Replace' : 'Upload'}</span>
+              <span>{value ? 'Replace' : 'Upload'}</span>
             </label>
             <input
               id={id}
@@ -746,11 +744,4 @@ function fmtDate(s?: string | null) {
 }
 function cap(s: string) {
   return s.slice(0, 1).toUpperCase() + s.slice(1);
-}
-function basename(p: string) {
-  try {
-    return decodeURIComponent(p.split('/').pop() || p);
-  } catch {
-    return p;
-  }
 }

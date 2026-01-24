@@ -56,50 +56,20 @@ export default function RequestsPage() {
 
   if (loading)
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px',
-          fontSize: '18px',
-          color: '#666',
-        }}
-      >
+      <div className="flex justify-center items-center min-h-[400px] text-lg text-gray-500">
         Loading...
       </div>
     );
 
   if (!user)
     return (
-      <div
-        style={{
-          maxWidth: '400px',
-          margin: '4rem auto',
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{marginBottom: '1.5rem', color: '#666', fontSize: '16px'}}>
+      <div className="max-w-[400px] mx-auto my-16 p-8 bg-white rounded-xl shadow-sm text-center">
+        <p className="mb-6 text-gray-500 text-base">
           Authentication required to access this page
         </p>
         <Link
           href="/login"
-          style={{
-            display: 'inline-block',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: '500',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseOver={e => (e.currentTarget.style.backgroundColor = '#1d4ed8')}
-          onMouseOut={e => (e.currentTarget.style.backgroundColor = '#2563eb')}
+          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700 no-underline"
         >
           Login to Continue
         </Link>
@@ -170,153 +140,70 @@ export default function RequestsPage() {
   };
 
   return (
-    <main
-      style={{
-        maxWidth: '600px',
-        margin: '2rem auto',
-        padding: '0 1rem',
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
-    >
+    <main className="max-w-[600px] mx-auto p-4 font-sans my-8">
       {/* Header */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '2rem',
-          marginBottom: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <h1
-          style={{
-            margin: '0 0 0.5rem 0',
-            fontSize: '28px',
-            fontWeight: '700',
-            color: '#1f2937',
-          }}
-        >
+      <div className="bg-white rounded-xl p-8 mb-6 shadow-sm">
+        <h1 className="m-0 mb-2 text-2xl font-bold text-gray-800">
           Time Off & Extra Hours
         </h1>
-        <p
-          style={{
-            margin: 0,
-            color: '#6b7280',
-            fontSize: '16px',
-          }}
-        >
+        <p className="m-0 text-gray-500 text-base">
           Submit absence requests or log extra working hours
         </p>
       </div>
 
       {/* Main Card */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '2rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        }}
-      >
+      <div className="bg-white rounded-xl p-8 shadow-sm">
         {/* Tab Navigation */}
-        <div
-          style={{
-            display: 'flex',
-            backgroundColor: '#f8fafc',
-            borderRadius: '8px',
-            padding: '4px',
-            marginBottom: '2rem',
-          }}
-        >
+        <div className="flex bg-slate-50 rounded-lg p-1 mb-8">
           <button
             onClick={() => setTab('extra')}
-            style={{
-              flex: 1,
-              padding: '12px 16px',
-              border: 'none',
-              borderRadius: '6px',
-              backgroundColor: tab === 'extra' ? 'white' : 'transparent',
-              color: tab === 'extra' ? '#2563eb' : '#64748b',
-              fontWeight: '500',
-              cursor: 'pointer',
-              boxShadow:
-                tab === 'extra' ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none',
-              transition: 'all 0.2s',
-            }}
+            className={`flex-1 py-3 px-4 rounded-md font-medium border-none cursor-pointer transition-all ${
+              tab === 'extra'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'bg-transparent text-slate-500 hover:text-slate-700'
+            }`}
           >
             Extra Hours
           </button>
           <button
             onClick={() => setTab('absence')}
-            style={{
-              flex: 1,
-              padding: '12px 16px',
-              border: 'none',
-              borderRadius: '6px',
-              backgroundColor: tab === 'absence' ? 'white' : 'transparent',
-              color: tab === 'absence' ? '#2563eb' : '#64748b',
-              fontWeight: '500',
-              cursor: 'pointer',
-              boxShadow:
-                tab === 'absence' ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none',
-              transition: 'all 0.2s',
-            }}
+            className={`flex-1 py-3 px-4 rounded-md font-medium border-none cursor-pointer transition-all ${
+              tab === 'absence'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'bg-transparent text-slate-500 hover:text-slate-700'
+            }`}
           >
             Absence Request
           </button>
         </div>
 
-        <form
-          onSubmit={submit}
-          style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}
-        >
+        <form onSubmit={submit} className="flex flex-col gap-6">
           {/* Mode Selection - Only for Extra Hours */}
           {tab === 'extra' && (
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '0.75rem',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                }}
-              >
+              <label className="block mb-3 text-sm font-medium text-gray-700">
                 Request Type
               </label>
-              <div style={{display: 'flex', gap: '12px'}}>
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setMode('single')}
-                  style={{
-                    flex: 1,
-                    padding: '12px 16px',
-                    border: `2px solid ${mode === 'single' ? '#2563eb' : '#e5e7eb'}`,
-                    borderRadius: '8px',
-                    backgroundColor: mode === 'single' ? '#eff6ff' : 'white',
-                    color: mode === 'single' ? '#2563eb' : '#6b7280',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
+                  className={`flex-1 py-3 px-4 border-2 rounded-lg font-medium cursor-pointer transition-all ${
+                    mode === 'single'
+                      ? 'border-blue-600 bg-blue-50 text-blue-600'
+                      : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
                 >
                   Single Day
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('range')}
-                  style={{
-                    flex: 1,
-                    padding: '12px 16px',
-                    border: `2px solid ${mode === 'range' ? '#2563eb' : '#e5e7eb'}`,
-                    borderRadius: '8px',
-                    backgroundColor: mode === 'range' ? '#eff6ff' : 'white',
-                    color: mode === 'range' ? '#2563eb' : '#6b7280',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
+                  className={`flex-1 py-3 px-4 border-2 rounded-lg font-medium cursor-pointer transition-all ${
+                    mode === 'range'
+                      ? 'border-blue-600 bg-blue-50 text-blue-600'
+                      : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
                 >
                   Date Range
                 </button>
@@ -326,25 +213,12 @@ export default function RequestsPage() {
 
           {/* Date Selection */}
           <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                tab === 'absence' || mode === 'range' ? '1fr 1fr' : '1fr',
-              gap: '1rem',
-            }}
+            className={`grid gap-4 ${tab === 'absence' || mode === 'range' ? 'grid-cols-2' : 'grid-cols-1'}`}
           >
             {tab === 'absence' ? (
               <>
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                    }}
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Start Date
                   </label>
                   <input
@@ -352,28 +226,11 @@ export default function RequestsPage() {
                     value={from}
                     onChange={e => setFrom(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                    onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                    }}
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     End Date
                   </label>
                   <input
@@ -381,30 +238,13 @@ export default function RequestsPage() {
                     value={to}
                     onChange={e => setTo(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                    onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </>
             ) : mode === 'single' ? (
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                  }}
-                >
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   Date
                 </label>
                 <input
@@ -412,30 +252,13 @@ export default function RequestsPage() {
                   value={date}
                   onChange={e => setDate(e.target.value)}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                  onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 />
               </div>
             ) : (
               <>
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                    }}
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     From Date
                   </label>
                   <input
@@ -443,28 +266,11 @@ export default function RequestsPage() {
                     value={from}
                     onChange={e => setFrom(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                    onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                    }}
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     To Date
                   </label>
                   <input
@@ -472,16 +278,7 @@ export default function RequestsPage() {
                     value={to}
                     onChange={e => setTo(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                    onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-base transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </>
@@ -490,59 +287,19 @@ export default function RequestsPage() {
 
           {/* Extra-hours time window */}
           {tab === 'extra' && (
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-              }}
-            >
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '1rem',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                }}
-              >
+            <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+              <label className="block mb-4 text-sm font-medium text-gray-700">
                 Time Period
               </label>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '1rem',
-                  marginBottom: '1rem',
-                }}
-              >
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                    }}
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Start Time
                   </label>
                   <select
                     value={start}
                     onChange={e => setStart(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      backgroundColor: 'white',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                    onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-base bg-white transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   >
                     {TIME.slice(0, TIME.length - 1).map(t => (
                       <option key={t} value={t}>
@@ -552,31 +309,13 @@ export default function RequestsPage() {
                   </select>
                 </div>
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                    }}
-                  >
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     End Time
                   </label>
                   <select
                     value={end}
                     onChange={e => setEnd(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      backgroundColor: 'white',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                    onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                    className="w-full p-3 border border-gray-300 rounded-lg text-base bg-white transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   >
                     {endOpts.map(t => (
                       <option key={t} value={t}>
@@ -586,18 +325,9 @@ export default function RequestsPage() {
                   </select>
                 </div>
               </div>
-              <div
-                style={{
-                  fontSize: '14px',
-                  color: '#6b7280',
-                  padding: '8px 12px',
-                  backgroundColor: 'white',
-                  borderRadius: '6px',
-                  border: '1px solid #e5e7eb',
-                }}
-              >
+              <div className="text-sm text-gray-500 px-3 py-2 bg-white rounded-md border border-gray-200">
                 Planned duration:{' '}
-                <span style={{fontWeight: '600', color: '#1f2937'}}>
+                <span className="font-semibold text-gray-800">
                   {Math.floor(minutes / 60)}h
                   {minutes % 60 ? ` ${minutes % 60}m` : ''}
                 </span>{' '}
@@ -610,32 +340,14 @@ export default function RequestsPage() {
           {tab === 'absence' && (
             <>
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                  }}
-                >
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   Reason for Absence
                 </label>
                 <select
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    backgroundColor: 'white',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                  onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-base bg-white transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 >
                   <option value="">Please select a reason</option>
                   <option value="Sick Leave">Sick Leave</option>
@@ -647,15 +359,7 @@ export default function RequestsPage() {
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                  }}
-                >
+                <label className="block mb-2 text-sm font-medium text-gray-700">
                   Additional Details (Optional)
                 </label>
                 <textarea
@@ -663,19 +367,7 @@ export default function RequestsPage() {
                   onChange={e => setComment(e.target.value)}
                   placeholder="Provide any additional context or details for your request..."
                   rows={4}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    resize: 'vertical',
-                    minHeight: '100px',
-                    transition: 'border-color 0.2s',
-                    fontFamily: 'inherit',
-                  }}
-                  onFocus={e => (e.target.style.borderColor = '#2563eb')}
-                  onBlur={e => (e.target.style.borderColor = '#d1d5db')}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-base font-inherit resize-y min-h-[100px] transition-colors focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 />
               </div>
             </>
@@ -683,31 +375,13 @@ export default function RequestsPage() {
 
           {/* Status Messages */}
           {msg && (
-            <div
-              style={{
-                padding: '12px 16px',
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: '8px',
-                color: '#166534',
-                fontSize: '14px',
-              }}
-            >
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
               {msg}
             </div>
           )}
 
           {err && (
-            <div
-              style={{
-                padding: '12px 16px',
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: '8px',
-                color: '#dc2626',
-                fontSize: '14px',
-              }}
-            >
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {err}
             </div>
           )}
@@ -716,27 +390,7 @@ export default function RequestsPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            style={{
-              width: '100%',
-              padding: '14px 24px',
-              backgroundColor: isSubmitting ? '#9ca3af' : '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.2s',
-              marginTop: '0.5rem',
-            }}
-            onMouseOver={e => {
-              if (!isSubmitting)
-                e.currentTarget.style.backgroundColor = '#1d4ed8';
-            }}
-            onMouseOut={e => {
-              if (!isSubmitting)
-                e.currentTarget.style.backgroundColor = '#2563eb';
-            }}
+            className="w-full py-3.5 px-6 bg-blue-600 text-white border-none rounded-lg text-base font-semibold cursor-pointer transition-colors mt-2 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isSubmitting
               ? 'Processing...'

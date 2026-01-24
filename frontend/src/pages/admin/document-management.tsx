@@ -256,8 +256,8 @@ export default function AdminDocumentManagement() {
     return m ? `/api/uploads/drive/file/${m[1]}?name=avatar` : u;
   };
   useEffect(() => {
-    let dead = false;
-    let toRevoke: string[] = [];
+    const dead = false;
+    const toRevoke: string[] = [];
     (async () => {
       const next: Record<number, string> = {};
       for (const u of users) {
@@ -950,7 +950,7 @@ export default function AdminDocumentManagement() {
         </section>
       </div>
 
-      {toast && <div className={`toast show`}>{toast}</div>}
+      {toast && <div className={'toast show'}>{toast}</div>}
 
       <style jsx>{`
         * {

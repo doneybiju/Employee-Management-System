@@ -121,23 +121,24 @@ function AdminHome() {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-        </div>
-        <p>Preparing your dashboard...</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <p className="text-gray-500">Preparing your dashboard...</p>
       </div>
     );
   }
 
   if (!user)
     return (
-      <main style={{padding: 24}}>
-        <Link href="/login">Login</Link> required.
+      <main className="p-6">
+        <Link href="/login" className="text-blue-600 hover:underline">
+          Login
+        </Link>{' '}
+        required.
       </main>
     );
   if (role !== 'hr' && role !== 'super_admin') {
-    return <main style={{padding: 24}}>Forbidden.</main>;
+    return <main className="p-6">Forbidden.</main>;
   }
 
   const displayName = user.firstName
@@ -148,14 +149,7 @@ function AdminHome() {
     : deadlines.slice(0, 3);
 
   const getStatusVariant = (status: string) => {
-    return status === 'active' ? 'success' : 'warning';
-  };
-
-  const getUrgency = (days: number) => {
-    if (days <= 2) return 'critical';
-    if (days <= 7) return 'high';
-    if (days <= 14) return 'medium';
-    return 'low';
+    return status === 'active' ? 'text-green-600' : 'text-yellow-600';
   };
 
   const hasEndDate = !!summary?.endDate;
@@ -169,32 +163,36 @@ function AdminHome() {
     peopleTotal ? Math.round((n * 100) / peopleTotal) : 0;
 
   return (
-    <div className="modern-dashboard admin-dashboard">
+    <div className="">
       <Head>
         <title>Admin Dashboard • Intern Portal</title>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
       </Head>
 
       {/* Header */}
-      <header className="dashboard-header">
-        <div className="header-main">
-          <div className="header-left">
-            <h1 className="dashboard-title">Admin Dashboard</h1>
-            <div className="welcome-text">Welcome back, {displayName}! 👋</div>
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 mb-8 -mx-8 -mt-8">
+        <div className="flex justify-between items-center max-w-[1400px] mx-auto">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white m-0">
+              Admin Dashboard
+            </h1>
+            <div className="text-gray-500 text-sm font-medium">
+              Welcome back, {displayName}! 👋
+            </div>
           </div>
         </div>
       </header>
 
       {/* Role Tabs */}
-      <div className="role-tabs-container">
-        <div className="role-tabs">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 mb-8 -mx-8">
+        <div className="flex max-w-[1400px] mx-auto px-8 gap-1">
           {/* Intern Tab - Show for both HR and Super Admin */}
           {tabs.includes('intern') && (
             <button
-              className={`role-tab ${activeTab === 'intern' ? 'active' : ''}`}
+              className={`flex items-center gap-2 px-6 py-4 bg-transparent border-b-2 font-medium cursor-pointer transition-all ${
+                activeTab === 'intern'
+                  ? 'text-blue-600 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
               onClick={() => setActiveTab('intern')}
             >
               <i className="fas fa-user-graduate"></i>
@@ -205,7 +203,11 @@ function AdminHome() {
           {/* HR Tab - Only show for HR role */}
           {tabs.includes('hr') && (
             <button
-              className={`role-tab ${activeTab === 'hr' ? 'active' : ''}`}
+              className={`flex items-center gap-2 px-6 py-4 bg-transparent border-b-2 font-medium cursor-pointer transition-all ${
+                activeTab === 'hr'
+                  ? 'text-blue-600 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
               onClick={() => setActiveTab('hr')}
             >
               <i className="fas fa-users"></i>
@@ -216,7 +218,11 @@ function AdminHome() {
           {/* Super Admin Tab - Only show for Super Admin role */}
           {tabs.includes('super_admin') && (
             <button
-              className={`role-tab ${activeTab === 'super_admin' ? 'active' : ''}`}
+              className={`flex items-center gap-2 px-6 py-4 bg-transparent border-b-2 font-medium cursor-pointer transition-all ${
+                activeTab === 'super_admin'
+                  ? 'text-blue-600 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
               onClick={() => setActiveTab('super_admin')}
             >
               <i className="fas fa-shield-alt"></i>
@@ -227,24 +233,26 @@ function AdminHome() {
       </div>
 
       {/* Main Content */}
-      <main className="dashboard-main">
+      <main className="max-w-[1400px] mx-auto">
         {/* Intern Dashboard Tab - Show for both HR and Super Admin */}
         {activeTab === 'intern' && (
-          <div className="tab-content active">
+          <div className="block">
             {/* Key Metrics Grid */}
-            <section className="metrics-grid">
-              <div className="metric-card status">
-                <div className="metric-icon">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-blue-100 text-blue-600">
                   <i className="fas fa-rocket"></i>
                 </div>
-                <div className="metric-content">
-                  <div className="metric-label">Status</div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                    Status
+                  </div>
                   <div
-                    className={`metric-value ${getStatusVariant(summary?.status || '')}`}
+                    className={`text-2xl font-bold mb-1 ${getStatusVariant(summary?.status || '')}`}
                   >
                     {(summary?.status || '—').toString().replace('_', ' ')}
                   </div>
-                  <div className="metric-description">
+                  <div className="text-xs text-gray-400">
                     Since{' '}
                     {summary?.startDate
                       ? new Date(summary.startDate).toLocaleDateString()
@@ -254,16 +262,18 @@ function AdminHome() {
               </div>
 
               {hasEndDate && (
-                <div className="metric-card timeline">
-                  <div className="metric-icon">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-green-100 text-green-600">
                     <i className="fas fa-calendar"></i>
                   </div>
-                  <div className="metric-content">
-                    <div className="metric-label">Timeline</div>
-                    <div className="metric-value">
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                      Timeline
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                       {summary?.daysLeft ?? '—'} days
                     </div>
-                    <div className="metric-description">
+                    <div className="text-xs text-gray-400">
                       Ends{' '}
                       {new Date(
                         summary!.endDate as string,
@@ -273,14 +283,18 @@ function AdminHome() {
                 </div>
               )}
 
-              <div className="metric-card position">
-                <div className="metric-icon">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl bg-yellow-100 text-yellow-600">
                   <i className="fas fa-briefcase"></i>
                 </div>
-                <div className="metric-content">
-                  <div className="metric-label">Position</div>
-                  <div className="metric-value">{summary?.position || '—'}</div>
-                  <div className="metric-description">
+                <div className="flex-1">
+                  <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                    Position
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                    {summary?.position || '—'}
+                  </div>
+                  <div className="text-xs text-gray-400">
                     {summary?.department || '—'}
                   </div>
                 </div>
@@ -291,38 +305,49 @@ function AdminHome() {
             <UpcomingDeadlines deadlines={deadlines} />
 
             {/* Quick Actions */}
-            <section className="quick-actions">
-              <div className="section-header">
-                <div className="section-title">
-                  <i className="fas fa-bolt"></i>
+            <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+                  <i className="fas fa-bolt text-blue-600"></i>
                   Quick Actions
                 </div>
               </div>
-              <div className="actions-grid">
-                <button className="action-card">
-                  <div className="action-icon">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                     <i className="fas fa-upload"></i>
                   </div>
-                  <span>Upload Docs</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Upload Docs
+                  </span>
                 </button>
-                <Link href="/my-work" className="action-card">
-                  <div className="action-icon">
+                <Link
+                  href="/my-work"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                     <i className="fas fa-tasks"></i>
                   </div>
-                  <span>My Tasks</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    My Tasks
+                  </span>
                 </Link>
 
-                <button className="action-card">
-                  <div className="action-icon">
+                <button className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                     <i className="fas fa-file-alt"></i>
                   </div>
-                  <span>Reports</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Reports
+                  </span>
                 </button>
-                <button className="action-card">
-                  <div className="action-icon">
+                <button className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                     <i className="fas fa-calendar-check"></i>
                   </div>
-                  <span>Schedule</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Schedule
+                  </span>
                 </button>
               </div>
             </section>
@@ -331,102 +356,114 @@ function AdminHome() {
 
         {/* HR Dashboard Tab - Only for HR role */}
         {activeTab === 'hr' && (
-          <div className="tab-content active">
-            <div className="section-header">
-              <h2 className="section-title">
-                <i className="fas fa-users"></i>
+          <div className="block">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+                <i className="fas fa-users text-blue-600"></i>
                 HR Overview
               </h2>
             </div>
 
-            <section className="metrics-grid">
-              <div className="metric-card">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+              {[
+                {
+                  label: 'Active Interns',
+                  value: people?.interns ?? 0,
+                  desc: 'Currently active',
+                  color: 'text-blue-600',
+                  bg: 'bg-blue-100',
+                  icon: 'fa-user-graduate',
+                },
+                {
+                  label: 'Active Employees',
+                  value: people?.employees ?? 0,
+                  desc: 'Full-time staff',
+                  color: 'text-green-600',
+                  bg: 'bg-green-100',
+                  icon: 'fa-briefcase',
+                },
+                {
+                  label: 'Team Leads',
+                  value: people?.teamLeads ?? 0,
+                  desc: 'Managing teams',
+                  color: 'text-yellow-600',
+                  bg: 'bg-yellow-100',
+                  icon: 'fa-user-tie',
+                },
+                {
+                  label: 'Document Alerts',
+                  value: missingDocs?.count ?? 0,
+                  desc: missingDocs
+                    ? `${missingDocs.count} of ${missingDocs.total} missing docs (${missingDocs.percent}%)`
+                    : 'Missing documents',
+                  color: 'text-red-600',
+                  bg: 'bg-red-100',
+                  icon: 'fa-exclamation-circle',
+                },
+              ].map((item, i) => (
                 <div
-                  className="metric-icon"
-                  style={{background: '#dbeafe', color: '#3b82f6'}}
+                  key={i}
+                  className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm hover:-translate-y-0.5 transition-transform"
                 >
-                  <i className="fas fa-user-graduate"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">Active Interns</div>
-                  <div className="metric-value">{people?.interns ?? 0}</div>
-                  <div className="metric-description">Currently active</div>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div
-                  className="metric-icon"
-                  style={{background: '#dcfce7', color: '#16a34a'}}
-                >
-                  <i className="fas fa-briefcase"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">Active Employees</div>
-                  <div className="metric-value">{people?.employees ?? 0}</div>
-                  <div className="metric-description">Full-time staff</div>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div
-                  className="metric-icon"
-                  style={{background: '#fef3c7', color: '#d97706'}}
-                >
-                  <i className="fas fa-user-tie"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">Team Leads</div>
-                  <div className="metric-value">{people?.teamLeads ?? 0}</div>
-                  <div className="metric-description">Managing teams</div>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div
-                  className="metric-icon"
-                  style={{background: '#fee2e2', color: '#ef4444'}}
-                >
-                  <i className="fas fa-exclamation-circle"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">Document Alerts</div>
-                  <div className="metric-value">{missingDocs?.count ?? 0}</div>
-                  <div className="metric-description">
-                    {missingDocs
-                      ? `${missingDocs.count} of ${missingDocs.total} intern users missing required docs (${missingDocs.percent}%)`
-                      : 'Missing documents'}
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${item.bg} ${item.color}`}
+                  >
+                    <i className={`fas ${item.icon}`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                      {item.label}
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                      {item.value}
+                    </div>
+                    <div className="text-xs text-gray-400">{item.desc}</div>
                   </div>
                 </div>
-              </div>
+              ))}
             </section>
 
             {/* Quick Actions for HR */}
-            <section className="quick-actions">
-              <div className="section-header">
-                <div className="section-title">
-                  <i className="fas fa-bolt"></i>
+            <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+                  <i className="fas fa-bolt text-blue-600"></i>
                   Quick Actions
                 </div>
               </div>
-              <div className="actions-grid">
-                <Link href="/admin/interns" className="action-card">
-                  <div className="action-icon" style={{background: '#3b82f6'}}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link
+                  href="/admin/interns"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                     <i className="fas fa-user-graduate"></i>
                   </div>
-                  <span>Manage Interns</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Manage Interns
+                  </span>
                 </Link>
-                <Link href="/admin/documents" className="action-card">
-                  <div className="action-icon" style={{background: '#ef4444'}}>
+                <Link
+                  href="/admin/documents"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-red-500 text-white">
                     <i className="fas fa-file-contract"></i>
                   </div>
-                  <span>Document Review</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Document Review
+                  </span>
                 </Link>
-                <Link href="/admin/analytics" className="action-card">
-                  <div className="action-icon" style={{background: '#10b981'}}>
+                <Link
+                  href="/admin/analytics"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-emerald-500 text-white">
                     <i className="fas fa-chart-bar"></i>
                   </div>
-                  <span>Analytics</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Analytics
+                  </span>
                 </Link>
               </div>
             </section>
@@ -435,144 +472,178 @@ function AdminHome() {
 
         {/* Super Admin Dashboard Tab - Only for Super Admin role */}
         {activeTab === 'super_admin' && (
-          <div className="tab-content active">
-            <div className="section-header">
-              <h2 className="section-title">
-                <i className="fas fa-shield-alt"></i>
+          <div className="block">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+                <i className="fas fa-shield-alt text-blue-600"></i>
                 System Overview
               </h2>
             </div>
 
             {/* System Health Metrics */}
-            <section className="metrics-grid">
-              <div className="metric-card">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+              {[
+                {
+                  label: 'Live Users',
+                  value: '—',
+                  desc: 'Active sessions',
+                  color: 'text-blue-600',
+                  bg: 'bg-blue-100',
+                  icon: 'fa-user-check',
+                },
+                {
+                  label: 'System Health',
+                  value: 'OK',
+                  desc: 'All systems operational',
+                  color: 'text-green-600',
+                  bg: 'bg-green-100',
+                  icon: 'fa-heartbeat',
+                },
+                {
+                  label: 'Storage Usage',
+                  value: '—',
+                  desc: 'Database capacity',
+                  color: 'text-yellow-600',
+                  bg: 'bg-yellow-100',
+                  icon: 'fa-database',
+                },
+                {
+                  label: 'API Requests',
+                  value: '—',
+                  desc: 'Last 24 hours',
+                  color: 'text-purple-600',
+                  bg: 'bg-purple-100',
+                  icon: 'fa-code',
+                },
+              ].map((item, i) => (
                 <div
-                  className="metric-icon"
-                  style={{background: '#dbeafe', color: '#3b82f6'}}
+                  key={i}
+                  className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm hover:-translate-y-0.5 transition-transform"
                 >
-                  <i className="fas fa-user-check"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">Live Users</div>
-                  <div className="metric-value">—</div>
-                  <div className="metric-description">Active sessions</div>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div
-                  className="metric-icon"
-                  style={{background: '#dcfce7', color: '#16a34a'}}
-                >
-                  <i className="fas fa-heartbeat"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">System Health</div>
-                  <div className="metric-value">OK</div>
-                  <div className="metric-description">
-                    All systems operational
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${item.bg} ${item.color}`}
+                  >
+                    <i className={`fas ${item.icon}`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
+                      {item.label}
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                      {item.value}
+                    </div>
+                    <div className="text-xs text-gray-400">{item.desc}</div>
                   </div>
                 </div>
-              </div>
-
-              <div className="metric-card">
-                <div
-                  className="metric-icon"
-                  style={{background: '#fef3c7', color: '#d97706'}}
-                >
-                  <i className="fas fa-database"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">Storage Usage</div>
-                  <div className="metric-value">—</div>
-                  <div className="metric-description">Database capacity</div>
-                </div>
-              </div>
-
-              <div className="metric-card">
-                <div
-                  className="metric-icon"
-                  style={{background: '#f3e8ff', color: '#9333ea'}}
-                >
-                  <i className="fas fa-code"></i>
-                </div>
-                <div className="metric-content">
-                  <div className="metric-label">API Requests</div>
-                  <div className="metric-value">—</div>
-                  <div className="metric-description">Last 24 hours</div>
-                </div>
-              </div>
+              ))}
             </section>
 
             {/* People Statistics */}
-            <section className="people-stats">
-              <div className="section-header">
-                <h3 className="section-subtitle">People Statistics</h3>
+            <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  People Statistics
+                </h3>
               </div>
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <div className="stat-value">{people?.interns ?? 0}</div>
-                  <div className="stat-label">Active Interns</div>
-                  <div className="stat-trend positive">
-                    {sharePct(people?.interns ?? 0)}%
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    label: 'Active Interns',
+                    value: people?.interns ?? 0,
+                    pct: sharePct(people?.interns ?? 0),
+                    trend: 'bg-green-100 text-green-600',
+                  },
+                  {
+                    label: 'Active Employees',
+                    value: people?.employees ?? 0,
+                    pct: sharePct(people?.employees ?? 0),
+                    trend: 'bg-gray-100 text-gray-500',
+                  },
+                  {
+                    label: 'Active Team Leads',
+                    value: people?.teamLeads ?? 0,
+                    pct: sharePct(people?.teamLeads ?? 0),
+                    trend: 'bg-green-100 text-green-600',
+                  },
+                  {
+                    label: 'Document Alerts',
+                    value: missingDocs?.count ?? 0,
+                    pct: missingDocs?.percent ?? 0,
+                    trend: 'bg-red-100 text-red-600',
+                  },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="text-center p-5 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                      {item.value}
+                    </div>
+                    <div className="text-sm text-gray-500 font-medium mb-2">
+                      {item.label}
+                    </div>
+                    <div
+                      className={`text-xs font-bold px-2 py-1 rounded-md inline-block ${item.trend}`}
+                    >
+                      {item.pct}%
+                    </div>
                   </div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{people?.employees ?? 0}</div>
-                  <div className="stat-label">Active Employees</div>
-                  <div className="stat-trend neutral">
-                    {sharePct(people?.employees ?? 0)}%
-                  </div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{people?.teamLeads ?? 0}</div>
-                  <div className="stat-label">Active Team Leads</div>
-                  <div className="stat-trend positive">
-                    {sharePct(people?.teamLeads ?? 0)}%
-                  </div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{missingDocs?.count ?? 0}</div>
-                  <div className="stat-label">Document Alerts</div>
-                  <div className="stat-trend negative">
-                    {missingDocs?.percent ?? 0}%
-                  </div>
-                </div>
+                ))}
               </div>
             </section>
 
             {/* Admin Actions */}
-            <section className="quick-actions">
-              <div className="section-header">
-                <div className="section-title">
-                  <i className="fas fa-cog"></i>
+            <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+                  <i className="fas fa-cog text-blue-600"></i>
                   System Management
                 </div>
               </div>
-              <div className="actions-grid">
-                <Link href="/admin/users" className="action-card">
-                  <div className="action-icon" style={{background: '#3b82f6'}}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link
+                  href="/admin/users"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-blue-600 text-white">
                     <i className="fas fa-users-cog"></i>
                   </div>
-                  <span>User Management</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    User Management
+                  </span>
                 </Link>
-                <Link href="/admin/system" className="action-card">
-                  <div className="action-icon" style={{background: '#8b5cf6'}}>
+                <Link
+                  href="/admin/system"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-violet-500 text-white">
                     <i className="fas fa-sliders-h"></i>
                   </div>
-                  <span>System Settings</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    System Settings
+                  </span>
                 </Link>
-                <Link href="/admin/security" className="action-card">
-                  <div className="action-icon" style={{background: '#ef4444'}}>
+                <Link
+                  href="/admin/security"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-red-500 text-white">
                     <i className="fas fa-clipboard-list"></i>
                   </div>
-                  <span>Audit Logs</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Audit Logs
+                  </span>
                 </Link>
-                <Link href="/admin/backup" className="action-card">
-                  <div className="action-icon" style={{background: '#10b981'}}>
+                <Link
+                  href="/admin/backup"
+                  className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg bg-emerald-500 text-white">
                     <i className="fas fa-database"></i>
                   </div>
-                  <span>Backup & Restore</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    Backup & Restore
+                  </span>
                 </Link>
               </div>
             </section>

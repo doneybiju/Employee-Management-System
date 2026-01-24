@@ -59,85 +59,34 @@ export default function DocsReminderToast() {
     <>
       {/* Backdrop blocks all interaction */}
       <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15,23,42,.45)',
-          zIndex: 999,
-        }}
+        className="fixed inset-0 bg-slate-900/45 z-[999]"
         aria-hidden="true"
       />
       {/* Dialog */}
       <div
         role="dialog"
         aria-modal="true"
-        style={{
-          position: 'fixed',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%,-50%)',
-          width: 'min(720px, 95vw)',
-          background: '#fff',
-          borderRadius: 14,
-          padding: '26px 22px',
-          boxShadow: '0 24px 60px rgba(0,0,0,.25)',
-          zIndex: 1000,
-          textAlign: 'center',
-        }}
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(720px,95vw)] bg-white rounded-2xl p-6 shadow-[0_24px_60px_rgba(0,0,0,0.25)] z-[1000] text-center"
       >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            margin: '-56px auto 10px',
-            borderRadius: 999,
-            background: '#FEF3C7',
-            display: 'grid',
-            placeItems: 'center',
-            color: '#D97706',
-            fontSize: 20,
-            boxShadow: '0 8px 24px rgba(0,0,0,.08)',
-          }}
-        >
+        <div className="w-14 h-14 -mt-14 mx-auto mb-2.5 rounded-full bg-amber-100 grid place-items-center text-amber-600 text-xl shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
           !
         </div>
-        <div
-          style={{
-            fontWeight: 700,
-            color: '#0F172A',
-            fontSize: 22,
-            marginBottom: 8,
-          }}
-        >
+        <div className="font-bold text-slate-900 text-xl mb-2">
           Documents Required
         </div>
-        <div style={{color: '#6B7280', margin: '0 auto 16px', maxWidth: 560}}>
+        <div className="text-gray-500 mx-auto mb-4 max-w-[560px]">
           {item.message}
         </div>
-        <div style={{display: 'flex', gap: 12, justifyContent: 'center'}}>
+        <div className="flex gap-3 justify-center">
           <button
             onClick={markReadAndHide}
-            style={{
-              padding: '10px 16px',
-              borderRadius: 10,
-              background: '#E5E7EB',
-              color: '#374151',
-              border: 'none',
-              fontWeight: 600,
-            }}
+            className="py-2.5 px-4 rounded-xl bg-gray-200 text-gray-700 border-none font-semibold cursor-pointer hover:bg-gray-300"
           >
             Remind Later
           </button>
           <button
             onClick={markReadAndHide}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 10,
-              background: '#4F46E5',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 700,
-            }}
+            className="py-2.5 px-4.5 rounded-xl bg-indigo-600 text-white border-none font-bold cursor-pointer hover:bg-indigo-700"
           >
             Send Now
           </button>

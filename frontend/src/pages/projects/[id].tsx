@@ -4,7 +4,6 @@ import {useRouter} from 'next/router';
 import Link from 'next/link';
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
-import styles from './[id].module.css';
 
 type Member = {id: number; name: string; email?: string};
 type ChecklistItem = {id: number; title: string; done: boolean; sort: number};
@@ -267,7 +266,7 @@ export default function ProjectDetailPage() {
       const names = assigned.map(t => `• ${t.title}`).join('\n');
       alert(
         `Cannot remove ${memberName}.\n\nThis user is assigned to the following task(s):\n${names}\n\n` +
-          `Please unassign/reassign them first.`,
+          'Please unassign/reassign them first.',
       );
       return;
     }
@@ -289,7 +288,7 @@ export default function ProjectDetailPage() {
           const names = j.tasks.map((t: any) => `• ${t.title}`).join('\n');
           throw new Error(
             `Cannot remove ${memberName}.\n\nThis user is assigned to:\n${names}\n\n` +
-              `Please unassign/reassign them first.`,
+              'Please unassign/reassign them first.',
           );
         }
         throw new Error(j?.error || `${res.status} ${res.statusText}`);
@@ -507,18 +506,28 @@ export default function ProjectDetailPage() {
         : 0;
 
     return (
-      <div className={`${styles.taskCard} ${expanded ? styles.expanded : ''}`}>
+      <div
+        className={`bg-white rounded-2xl border-2 transition-all overflow-hidden relative ${
+          expanded
+            ? 'border-blue-500 shadow-[0_12px_40px_rgba(0,112,243,0.15)]'
+            : 'border-gray-100 hover:border-gray-200 hover:shadow-lg hover:-translate-y-0.5'
+        }`}
+      >
         <div
-          className={styles.taskHeader}
+          className={
+            'p-6 cursor-pointer flex justify-between items-start gap-4 transition-colors bg-gradient-to-br from-gray-50 to-white hover:from-gray-100 hover:to-gray-50'
+          }
           onClick={() => !isEditing && onToggle()}
         >
-          <div className={styles.taskMainInfo}>
-            <div className={styles.taskTitleSection}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start gap-4 mb-3 flex-wrap">
               {!isEditing ? (
-                <h4 className={styles.taskTitle}>{t.title}</h4>
+                <h4 className="text-xl font-bold m-0 text-gray-800 leading-snug flex-1 min-w-[200px]">
+                  {t.title}
+                </h4>
               ) : (
                 <input
-                  className={styles.taskTitleInput}
+                  className="text-xl font-bold border-2 border-blue-500 rounded-lg p-3 flex-1 bg-white font-inherit"
                   value={eTitle}
                   onChange={e => setETitle(e.target.value)}
                   onClick={e => e.stopPropagation()}
@@ -526,25 +535,31 @@ export default function ProjectDetailPage() {
               )}
 
               <div
-                className={styles.taskStatusBadge}
+                className={
+                  'px-4 py-2 rounded-[20px] text-xs font-bold inline-flex items-center gap-1.5 border-2 uppercase tracking-wide'
+                }
                 style={{
                   backgroundColor: statusColor.bg,
                   color: statusColor.text,
                   borderColor: statusColor.border,
                 }}
               >
-                <span className={styles.statusIcon}>{statusIcon}</span>
+                <span className="text-base">{statusIcon}</span>
                 {t.status.replace('_', ' ')}
               </div>
             </div>
 
-            <div className={styles.taskPreviewMeta}>
-              <span className={styles.assigneePreview}>
+            <div className="flex gap-6 flex-wrap">
+              <span className="text-sm text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-gray-200">
                 👤 {t.assignedTo?.name || 'Unassigned'}
               </span>
               {t.dueDate && (
                 <span
-                  className={`${styles.dueDatePreview} ${new Date(t.dueDate) < new Date() ? styles.overdue : ''}`}
+                  className={`text-sm flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-gray-200 ${
+                    new Date(t.dueDate) < new Date()
+                      ? 'text-red-600 bg-red-50 border-red-200 font-semibold'
+                      : 'text-gray-500'
+                  }`}
                 >
                   📅 {new Date(t.dueDate).toLocaleDateString()}
                 </span>
@@ -553,13 +568,13 @@ export default function ProjectDetailPage() {
           </div>
 
           <div
-            className={styles.taskActions}
+            className="flex gap-2 flex-shrink-0"
             onClick={e => e.stopPropagation()}
           >
             {canEdit && (
               <>
                 <button
-                  className={styles.iconBtn}
+                  className="bg-white border-2 border-gray-200 rounded-lg cursor-pointer text-sm p-2.5 transition-all flex items-center justify-center w-10 h-10 hover:bg-gray-50 hover:border-gray-300 hover:scale-105"
                   onClick={e => {
                     e.stopPropagation();
                     onStartEdit();
@@ -570,7 +585,7 @@ export default function ProjectDetailPage() {
                 </button>
 
                 <button
-                  className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                  className="bg-white border-2 border-gray-200 rounded-lg cursor-pointer text-sm p-2.5 transition-all flex items-center justify-center w-10 h-10 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
                   onClick={() => deleteTask(t.id)}
                   title="Delete task"
                 >
@@ -579,7 +594,7 @@ export default function ProjectDetailPage() {
               </>
             )}
             <button
-              className={`${styles.iconBtn} ${styles.expandBtn}`}
+              className="bg-white border-2 border-gray-200 rounded-lg cursor-pointer text-sm p-2.5 transition-all flex items-center justify-center w-10 h-10 hover:bg-blue-500 hover:border-blue-500 hover:text-white"
               onClick={onToggle}
               title={expanded ? 'Collapse' : 'Expand'}
             >
@@ -589,58 +604,74 @@ export default function ProjectDetailPage() {
         </div>
 
         {expanded && (
-          <div className={styles.taskExpandedContent}>
+          <div className="px-6 pb-6 border-t border-gray-100 animate-[slideDown_0.3s_ease]">
             {!isEditing ? (
               <>
                 {t.description && (
-                  <div className={styles.taskDescriptionSection}>
-                    <h5>Description</h5>
-                    <p className={styles.taskDescription}>{t.description}</p>
+                  <div className="mb-6 p-5 bg-gray-50 rounded-xl border-l-4 border-blue-500">
+                    <h5 className="text-sm font-bold text-gray-600 m-0 mb-3 uppercase tracking-wide">
+                      Description
+                    </h5>
+                    <p className="text-gray-600 leading-relaxed m-0 text-[15px]">
+                      {t.description}
+                    </p>
                   </div>
                 )}
 
-                <div className={styles.taskDetailsGrid}>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Assigned to:</span>
-                    <span className={styles.detailValue}>
-                      <span className={styles.avatarSm}>👤</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7 p-5 bg-gray-50 rounded-xl">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+                      Assigned to:
+                    </span>
+                    <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <span className="text-base">👤</span>
                       {t.assignedTo?.name || 'Unassigned'}
                     </span>
                   </div>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Due date:</span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+                      Due date:
+                    </span>
                     <span
-                      className={`${styles.detailValue} ${t.dueDate && new Date(t.dueDate) < new Date() ? styles.overdue : ''}`}
+                      className={`text-sm font-bold text-gray-800 flex items-center gap-2 ${
+                        t.dueDate && new Date(t.dueDate) < new Date()
+                          ? 'text-red-600 font-bold'
+                          : ''
+                      }`}
                     >
-                      <span className={styles.icon}>📅</span>
+                      <span className="text-base">📅</span>
                       {t.dueDate
                         ? new Date(t.dueDate).toLocaleDateString()
                         : 'No due date'}
                     </span>
                   </div>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Created:</span>
-                    <span className={styles.detailValue}>
-                      <span className={styles.icon}>🕒</span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+                      Created:
+                    </span>
+                    <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <span className="text-base">🕒</span>
                       Recently
                     </span>
                   </div>
                 </div>
 
                 {/* Enhanced Checklist Section */}
-                <div className={styles.checklistSection}>
-                  <div className={styles.checklistHeader}>
-                    <div className={styles.checklistTitle}>
-                      <h5>Checklist</h5>
+                <div className="mb-7 p-5 bg-gray-50 rounded-xl">
+                  <div className="flex justify-between items-center mb-5">
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <h5 className="m-0 text-base font-bold text-gray-800">
+                        Checklist
+                      </h5>
                       {t.checklistEnabled && t.checklistItems.length > 0 && (
-                        <div className={styles.checklistProgress}>
-                          <div className={styles.progressBar}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-[100px] h-2 bg-gray-200 rounded overflow-hidden">
                             <div
-                              className={styles.progressFill}
+                              className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-[width] duration-300 rounded"
                               style={{width: `${checklistProgress}%`}}
                             ></div>
                           </div>
-                          <span className={styles.progressText}>
+                          <span className="text-sm font-bold text-gray-600 min-w-[40px]">
                             {checklistProgress}%
                           </span>
                         </div>
@@ -648,7 +679,7 @@ export default function ProjectDetailPage() {
                     </div>
                     {canEdit && (
                       <button
-                        className={`${styles.toggleChecklistBtn} ${t.checklistEnabled ? styles.active : ''}`}
+                        className={`bg-white border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer transition-all hover:-translate-y-px ${t.checklistEnabled ? 'bg-green-100 border-green-200 text-green-800' : ''}`}
                         onClick={() =>
                           setChecklistEnabled(t.id, !t.checklistEnabled)
                         }
@@ -660,12 +691,15 @@ export default function ProjectDetailPage() {
 
                   {t.checklistEnabled ? (
                     <>
-                      <div className={styles.checklistItems}>
+                      <div className="space-y-3 mb-5">
                         {t.checklistItems
                           .sort((a, b) => a.sort - b.sort || a.id - b.id)
                           .map(ci => (
-                            <div key={ci.id} className={styles.checklistItem}>
-                              <label className={styles.checklistLabel}>
+                            <div
+                              key={ci.id}
+                              className="flex items-center gap-3 p-4 bg-white border-2 border-gray-100 rounded-lg mb-2 transition-all hover:border-gray-200 hover:translate-x-1 group"
+                            >
+                              <label className="flex items-center gap-3 flex-1 cursor-pointer m-0">
                                 <input
                                   type="checkbox"
                                   checked={ci.done}
@@ -678,18 +712,18 @@ export default function ProjectDetailPage() {
                                     )
                                   }
                                   disabled={!canAct}
-                                  className={styles.checklistCheckbox}
+                                  className="w-5 h-5 rounded-md border-2 border-gray-300 cursor-pointer relative checked:bg-blue-600 checked:border-blue-600 after:content-['✓'] after:text-white after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-sm after:font-bold"
                                 />
 
                                 <span
-                                  className={`${styles.checklistText} ${ci.done ? styles.completed : ''}`}
+                                  className={`text-sm flex-1 font-medium ${ci.done ? 'line-through text-gray-400' : ''}`}
                                 >
                                   {ci.title}
                                 </span>
                               </label>
                               {canEdit && (
                                 <button
-                                  className={styles.checklistItemDelete}
+                                  className="bg-transparent border-none cursor-pointer text-xl text-gray-400 p-1 rounded transition-all opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
                                   onClick={() =>
                                     removeChecklistItem(t.id, ci.id)
                                   }
@@ -703,12 +737,12 @@ export default function ProjectDetailPage() {
                       </div>
 
                       {canEdit && (
-                        <div className={styles.addChecklistItem}>
+                        <div className="flex gap-3">
                           <input
                             placeholder="Add a new checklist item..."
                             value={newItem}
                             onChange={e => setNewItem(e.target.value)}
-                            className={styles.checklistInput}
+                            className="flex-1 p-3 border-2 border-gray-200 rounded-lg text-sm transition-colors font-inherit focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                             onKeyPress={e => {
                               if (e.key === 'Enter' && newItem.trim()) {
                                 addChecklistItem(t.id, newItem.trim());
@@ -717,7 +751,7 @@ export default function ProjectDetailPage() {
                             }}
                           />
                           <button
-                            className={styles.addItemBtn}
+                            className="bg-blue-600 text-white border-none rounded-lg px-5 text-base font-semibold cursor-pointer transition-transform min-w-[60px] disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 hover:-translate-y-px"
                             onClick={async () => {
                               const v = newItem.trim();
                               if (!v) return;
@@ -732,12 +766,14 @@ export default function ProjectDetailPage() {
                       )}
                     </>
                   ) : (
-                    <div className={styles.checklistDisabledState}>
-                      <div className={styles.emptyIcon}>📋</div>
-                      <p>Checklist is disabled for this task</p>
+                    <div className="text-center py-10 px-5 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                      <div className="text-5xl mb-4 opacity-50">📋</div>
+                      <p className="m-0 mb-4 text-gray-500 text-base">
+                        Checklist is disabled for this task
+                      </p>
                       {canEdit && (
                         <button
-                          className={styles.enableChecklistBtn}
+                          className="bg-blue-600 text-white border-none px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-blue-700 hover:-translate-y-0.5"
                           onClick={() => setChecklistEnabled(t.id, true)}
                         >
                           Enable Checklist
@@ -748,9 +784,11 @@ export default function ProjectDetailPage() {
                 </div>
 
                 {canAct && (
-                  <div className={styles.statusActionsSection}>
-                    <h5>Update Status</h5>
-                    <div className={styles.statusActionsGrid}>
+                  <div className="mt-6 p-5 bg-gray-50 rounded-xl">
+                    <h5 className="text-sm font-bold text-gray-600 m-0 mb-4 uppercase tracking-wide">
+                      Update Status
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                       {(
                         [
                           'NOT_STARTED',
@@ -763,7 +801,11 @@ export default function ProjectDetailPage() {
                           key={s}
                           disabled={t.status === s}
                           onClick={() => updateStatus(t.id, s)}
-                          className={`${styles.statusActionBtn} ${t.status === s ? styles.active : ''}`}
+                          className={`flex items-center gap-2.5 px-4 py-3 border-2 rounded-lg bg-white cursor-pointer transition-all text-[13px] font-semibold text-left disabled:cursor-not-allowed disabled:opacity-60 ${
+                            t.status === s
+                              ? 'active cursor-default font-bold scale-[1.02]'
+                              : 'hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-sm'
+                          }`}
                           style={
                             t.status === s
                               ? {
@@ -774,14 +816,10 @@ export default function ProjectDetailPage() {
                               : {}
                           }
                         >
-                          <span className={styles.statusIcon}>
-                            {statusIcons[s]}
-                          </span>
-                          <span className={styles.statusText}>
-                            {s.replace('_', ' ')}
-                          </span>
+                          <span className="text-base">{statusIcons[s]}</span>
+                          <span className="flex-1">{s.replace('_', ' ')}</span>
                           {t.status === s && (
-                            <span className={styles.currentIndicator}>✓</span>
+                            <span className="font-bold text-base">✓</span>
                           )}
                         </button>
                       ))}
@@ -791,37 +829,43 @@ export default function ProjectDetailPage() {
               </>
             ) : (
               // Enhanced Edit Form
-              <div className={styles.taskEditForm}>
-                <div className={styles.formGroup}>
-                  <label>Title *</label>
+              <div className="space-y-5 p-5 bg-gray-50 rounded-xl">
+                <div className="mb-5">
+                  <label className="block mb-2 font-bold text-gray-700 text-sm">
+                    Title *
+                  </label>
                   <input
                     value={eTitle}
                     onChange={e => setETitle(e.target.value)}
-                    className={styles.formInput}
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                     placeholder="Task title"
                   />
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Description</label>
+                <div className="mb-5">
+                  <label className="block mb-2 font-bold text-gray-700 text-sm">
+                    Description
+                  </label>
                   <textarea
                     value={eDesc}
                     onChange={e => setEDesc(e.target.value)}
-                    className={styles.formTextarea}
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                     placeholder="Task description"
                     rows={4}
                   />
                 </div>
 
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Assign To</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="mb-5">
+                    <label className="block mb-2 font-bold text-gray-700 text-sm">
+                      Assign To
+                    </label>
                     <select
                       value={eAssign}
                       onChange={e =>
                         setEAssign(e.target.value ? Number(e.target.value) : '')
                       }
-                      className={styles.formSelect}
+                      className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                     >
                       <option value="">Unassigned</option>
                       {members.map(m => (
@@ -832,20 +876,22 @@ export default function ProjectDetailPage() {
                     </select>
                   </div>
 
-                  <div className={styles.formGroup}>
-                    <label>Due Date</label>
+                  <div className="mb-5">
+                    <label className="block mb-2 font-bold text-gray-700 text-sm">
+                      Due Date
+                    </label>
                     <input
                       type="date"
                       value={eDue}
                       onChange={e => setEDue(e.target.value)}
-                      className={styles.formInput}
+                      className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                     />
                   </div>
                 </div>
 
-                <div className={styles.editActions}>
+                <div className="flex gap-3 justify-end mt-6 pt-5 border-t border-gray-200">
                   <button
-                    className={`${styles.saveBtn} ${styles.primary}`}
+                    className="bg-blue-600 text-white border-none px-6 py-3 rounded-lg font-semibold cursor-pointer transition-all flex items-center gap-2 hover:bg-blue-700 hover:-translate-y-px disabled:bg-gray-300 disabled:cursor-not-allowed"
                     onClick={async () => {
                       await updateTask(t.id, {
                         title: eTitle,
@@ -861,7 +907,7 @@ export default function ProjectDetailPage() {
                   </button>
 
                   <button
-                    className={styles.cancelBtn}
+                    className="bg-white border-2 border-gray-200 px-6 py-3 rounded-lg font-semibold cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-300"
                     onClick={() => {
                       onCancelEdit(); // close edit mode
                       // reset local form fields
@@ -891,20 +937,22 @@ export default function ProjectDetailPage() {
 
   if (loading)
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner}></div>
+      <div className="flex flex-col items-center justify-center py-32 text-center bg-gray-50 min-h-[60vh] rounded-2xl">
+        <div className="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
         <p>Loading project details...</p>
       </div>
     );
 
   if (err)
     return (
-      <div className={styles.errorContainer}>
-        <div className={styles.errorIcon}>⚠️</div>
-        <h2>Error Loading Project</h2>
+      <div className="text-center py-20 px-10 max-w-[500px] mx-auto bg-white rounded-2xl shadow-sm border border-red-100">
+        <div className="text-6xl mb-6 text-red-500">⚠️</div>
+        <h2 className="m-0 mb-4 text-2xl text-red-600">
+          Error Loading Project
+        </h2>
         <p>{err}</p>
         <button
-          className={styles.retryBtn}
+          className="bg-blue-600 text-white border-none px-6 py-3 rounded-lg mt-6 cursor-pointer font-semibold transition-colors hover:bg-blue-700"
           onClick={() => window.location.reload()}
         >
           Try Again
@@ -914,8 +962,8 @@ export default function ProjectDetailPage() {
 
   if (!proj)
     return (
-      <div className={styles.notFound}>
-        <h2>Project Not Found</h2>
+      <div className="text-center py-20 px-10 max-w-[500px] mx-auto bg-white rounded-2xl shadow-sm">
+        <h2 className="m-0 mb-4 text-2xl text-gray-800">Project Not Found</h2>
         <p>
           The project you're looking for doesn't exist or you don't have access
           to it.
@@ -930,82 +978,88 @@ export default function ProjectDetailPage() {
   const projectProgress = computeProgress(proj.tasks);
 
   return (
-    <div className={styles.container}>
-      <header className={styles.projectHeader}>
+    <div className="max-w-[1200px] mx-auto p-6 font-sans text-gray-900 bg-gray-50 min-h-screen">
+      <header className="bg-white rounded-2xl p-8 mb-8 shadow-sm border border-gray-200">
         {user ? (
-          <Link href="/projects" className={styles.backButton}>
+          <Link
+            href="/projects"
+            className="inline-flex items-center text-gray-500 no-underline mb-6 font-medium transition-colors px-4 py-2 rounded-lg bg-white shadow-sm border border-gray-100 hover:text-blue-600 hover:bg-gray-50"
+          >
             ← Back to Projects
           </Link>
         ) : null}
 
-        <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
-          <div
-            style={{
-              width: 140,
-              height: 8,
-              background: '#eee',
-              borderRadius: 4,
-              overflow: 'hidden',
-            }}
-          >
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-[140px] h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              style={{
-                height: '100%',
-                width: `${projectProgress}%`,
-                background: '#4cc9f0',
-              }}
+              className="h-full bg-blue-400"
+              style={{width: `${projectProgress}%`}}
             />
           </div>
-          <span style={{fontSize: 12, color: '#555'}}>{projectProgress}%</span>
+          <span className="text-xs text-gray-500">{projectProgress}%</span>
         </div>
 
-        <div className={styles.projectTitleSection}>
-          <h1 className={styles.projectTitle}>{proj.title}</h1>
+        <div className="flex items-start justify-between mb-5 flex-wrap gap-4">
+          <h1 className="text-[2.5rem] font-extrabold m-0 text-gray-800 leading-tight">
+            {proj.title}
+          </h1>
           <div
-            className={styles.projectStatus}
+            className="px-5 py-2 rounded-[20px] text-sm font-semibold inline-flex items-center gap-2 border-2 whitespace-nowrap"
             style={{
               backgroundColor: projectStatusColor.bg,
               color: projectStatusColor.text,
               borderColor: projectStatusColor.border,
             }}
           >
-            <span className={styles.statusIcon}>{projectStatusIcon}</span>
+            <span className="text-base">{projectStatusIcon}</span>
             {computedStatus.replace('_', ' ')}
           </div>
         </div>
 
-        <p className={styles.projectDescription}>
+        <p className="text-lg leading-relaxed text-gray-500 mb-7 p-5 bg-gray-50 rounded-xl border-l-4 border-blue-500">
           {proj.description || 'No description provided'}
         </p>
 
-        <div className={styles.projectMeta}>
-          <div className={styles.metaInfo}>
-            <span className={styles.metaLabel}>Due Date:</span>
-            <span className={styles.metaValue}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 p-5 bg-gray-50 rounded-xl">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+              Due Date:
+            </span>
+            <span className="text-base font-bold text-gray-800">
               {proj.dueDate
                 ? new Date(proj.dueDate).toLocaleDateString()
                 : 'No due date'}
             </span>
           </div>
-          <div className={styles.metaInfo}>
-            <span className={styles.metaLabel}>Tasks:</span>
-            <span className={styles.metaValue}>{proj.tasks.length}</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+              Tasks:
+            </span>
+            <span className="text-base font-bold text-gray-800">
+              {proj.tasks.length}
+            </span>
           </div>
-          <div className={styles.metaInfo}>
-            <span className={styles.metaLabel}>Members:</span>
-            <span className={styles.metaValue}>{proj.members.length}</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs text-gray-500 font-bold uppercase tracking-wide">
+              Members:
+            </span>
+            <span className="text-base font-bold text-gray-800">
+              {proj.members.length}
+            </span>
           </div>
         </div>
       </header>
 
-      <div className={styles.projectContent}>
+      <div className="grid gap-8">
         {/* Team Section */}
-        <section className={styles.teamSection}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Team Members</h2>
+        <section className="bg-white rounded-2xl p-7 shadow-sm border border-gray-200">
+          <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-200">
+            <h2 className="text-[1.75rem] font-bold m-0 text-gray-800">
+              Team Members
+            </h2>
             {canManage && (
               <button
-                className={styles.addMemberBtn}
+                className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all flex items-center gap-2 shadow-md hover:-translate-y-0.5 hover:shadow-lg"
                 onClick={() => setShowMemberModal(true)}
               >
                 + Add Members
@@ -1013,37 +1067,35 @@ export default function ProjectDetailPage() {
             )}
           </div>
 
-          <div className={styles.membersGrid}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {proj.members.length ? (
               proj.members.map(m => (
-                <div key={m.id} className={styles.memberCard}>
-                  <div className={styles.memberAvatar}>
+                <div
+                  key={m.id}
+                  className="bg-gray-50 rounded-xl p-5 flex items-center gap-4 transition-all border-2 border-transparent hover:-translate-y-0.5 hover:shadow-md hover:border-blue-500"
+                >
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-400 text-white flex items-center justify-center font-bold text-base flex-shrink-0">
                     {m.name
                       .split(' ')
                       .map(n => n[0])
                       .join('')
                       .toUpperCase()}
                   </div>
-                  <div className={styles.memberInfo}>
-                    <div className={styles.memberName}>{m.name}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold mb-1 text-gray-800 text-base">
+                      {m.name}
+                    </div>
                     {m.email && (
-                      <div className={styles.memberEmail}>{m.email}</div>
+                      <div className="text-sm text-gray-500 break-all">
+                        {m.email}
+                      </div>
                     )}
 
                     {canManage && (
                       <button
                         onClick={() => removeMember(m.id, m.name)}
                         title="Remove from project"
-                        style={{
-                          marginTop: 8,
-                          padding: '6px 10px',
-                          fontSize: 12,
-                          borderRadius: 6,
-                          border: '1px solid #ef4444',
-                          background: '#fff',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                        }}
+                        className="mt-2 py-1.5 px-2.5 text-xs rounded-md border border-red-500 bg-white text-red-500 cursor-pointer hover:bg-red-50"
                       >
                         ✖ Remove
                       </button>
@@ -1052,7 +1104,7 @@ export default function ProjectDetailPage() {
                 </div>
               ))
             ) : (
-              <div className={styles.emptyState}>
+              <div className="col-span-full text-center py-12 px-10 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                 <p>No team members yet</p>
                 {canManage && <p>Add members to get started</p>}
               </div>
@@ -1061,12 +1113,14 @@ export default function ProjectDetailPage() {
         </section>
 
         {/* Tasks Section */}
-        <section className={styles.tasksSection}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Tasks</h2>
+        <section className="bg-white rounded-2xl p-7 shadow-sm border border-gray-200">
+          <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-200">
+            <h2 className="text-[1.75rem] font-bold m-0 text-gray-800">
+              Tasks
+            </h2>
             {canManage && (
               <button
-                className={styles.createTaskBtn}
+                className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all flex items-center gap-2 shadow-md hover:-translate-y-0.5 hover:shadow-lg"
                 onClick={() => setShowTaskModal(true)}
               >
                 + Create Task
@@ -1074,7 +1128,7 @@ export default function ProjectDetailPage() {
             )}
           </div>
 
-          <div className={styles.tasksGrid}>
+          <div className="grid gap-5">
             {proj.tasks.length ? (
               proj.tasks.map(t => (
                 <TaskCard
@@ -1094,7 +1148,7 @@ export default function ProjectDetailPage() {
                 />
               ))
             ) : (
-              <div className={styles.emptyState}>
+              <div className="text-center py-12 px-10 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                 <p>No tasks yet</p>
                 {canManage && <p>Create your first task to get started</p>}
               </div>
@@ -1105,37 +1159,46 @@ export default function ProjectDetailPage() {
 
       {/* Add Members Modal */}
       {showMemberModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Add Team Members</h3>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-5 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto shadow-2xl animate-[modalSlideIn_0.3s_ease]">
+            <div className="flex justify-between items-center p-7 border-b border-gray-100">
+              <h3 className="m-0 text-2xl font-bold text-gray-800">
+                Add Team Members
+              </h3>
               <button
-                className={styles.modalClose}
+                className="bg-gray-100 border-none text-2xl cursor-pointer text-gray-500 p-2 rounded-lg w-10 h-10 flex items-center justify-center transition-all hover:bg-gray-200 hover:text-gray-800"
                 onClick={() => setShowMemberModal(false)}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={addMembers} className={styles.modalForm}>
-              <div className={styles.formGroup}>
-                <label>Search Users</label>
+            <form onSubmit={addMembers} className="p-7">
+              <div className="mb-5">
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
+                  Search Users
+                </label>
                 <input
                   placeholder="Search by name, email..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className={styles.formInput}
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                 />
               </div>
 
               {search && (
-                <div className={styles.candidatesList}>
-                  <h4>Select users to add:</h4>
+                <div className="border-2 border-gray-200 rounded-xl p-2 bg-gray-50 max-h-[200px] overflow-y-auto">
+                  <h4 className="m-0 mb-2 p-2 text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                    Select users to add:
+                  </h4>
                   {candidates.length ? (
                     candidates.map(c => {
                       const checked = selectedIds.includes(c.id);
                       return (
-                        <label key={c.id} className={styles.candidateItem}>
+                        <label
+                          key={c.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${checked ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'}`}
+                        >
                           <input
                             type="checkbox"
                             checked={checked}
@@ -1146,12 +1209,12 @@ export default function ProjectDetailPage() {
                                   : [...s, c.id],
                               );
                             }}
-                            className={styles.candidateCheckbox}
+                            className="w-5 h-5 rounded border-2 border-gray-300 cursor-pointer relative"
                           />
-                          <div className={styles.candidateInfo}>
-                            <div className={styles.candidateName}>{c.name}</div>
+                          <div className="flex-1">
+                            <div className="font-semibold">{c.name}</div>
                             {c.email && (
-                              <div className={styles.candidateEmail}>
+                              <div className="text-xs opacity-70">
                                 {c.email}
                               </div>
                             )}
@@ -1160,15 +1223,17 @@ export default function ProjectDetailPage() {
                       );
                     })
                   ) : (
-                    <p className={styles.noResults}>No users found</p>
+                    <p className="p-3 text-gray-500 italic text-center m-0">
+                      No users found
+                    </p>
                   )}
                 </div>
               )}
 
-              <div className={styles.modalActions}>
+              <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
                 <button
                   type="button"
-                  className={styles.cancelBtn}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-semibold border bg-white text-gray-900 border-gray-200 hover:bg-gray-50"
                   onClick={() => setShowMemberModal(false)}
                 >
                   Cancel
@@ -1176,7 +1241,7 @@ export default function ProjectDetailPage() {
                 <button
                   type="submit"
                   disabled={!selectedIds.length || addingMembers}
-                  className={styles.submitBtn}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-semibold border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {addingMembers
                     ? 'Adding...'
@@ -1190,50 +1255,58 @@ export default function ProjectDetailPage() {
 
       {/* Create Task Modal */}
       {showTaskModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Create New Task</h3>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-5 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto shadow-2xl animate-[modalSlideIn_0.3s_ease]">
+            <div className="flex justify-between items-center p-7 border-b border-gray-100">
+              <h3 className="m-0 text-2xl font-bold text-gray-800">
+                Create New Task
+              </h3>
               <button
-                className={styles.modalClose}
+                className="bg-gray-100 border-none text-2xl cursor-pointer text-gray-500 p-2 rounded-lg w-10 h-10 flex items-center justify-center transition-all hover:bg-gray-200 hover:text-gray-800"
                 onClick={() => setShowTaskModal(false)}
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={createTask} className={styles.modalForm}>
-              <div className={styles.formGroup}>
-                <label>Task Title *</label>
+            <form onSubmit={createTask} className="p-7">
+              <div className="mb-5">
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
+                  Task Title *
+                </label>
                 <input
                   required
                   placeholder="Enter task title"
                   value={tTitle}
                   onChange={e => setTTitle(e.target.value)}
-                  className={styles.formInput}
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label>Description</label>
+              <div className="mb-5">
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
+                  Description
+                </label>
                 <textarea
                   placeholder="Task description (optional)"
                   value={tDesc}
                   onChange={e => setTDesc(e.target.value)}
-                  className={styles.formTextarea}
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                   rows={3}
                 />
               </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Assign To</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
+                    Assign To
+                  </label>
                   <select
                     value={tAssign}
                     onChange={e =>
                       setTAssign(e.target.value ? Number(e.target.value) : '')
                     }
-                    className={styles.formSelect}
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                   >
                     <option value="">Unassigned</option>
                     {proj.members.map(m => (
@@ -1244,34 +1317,38 @@ export default function ProjectDetailPage() {
                   </select>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Due Date</label>
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
+                    Due Date
+                  </label>
                   <input
                     type="date"
                     value={tDue}
                     onChange={e => setTDue(e.target.value)}
-                    className={styles.formInput}
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                   />
                 </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.checkboxLabel}>
+              <div className="mb-5">
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none leading-none">
                   <input
                     type="checkbox"
                     checked={tChecklistEnabled}
                     onChange={e => setTChecklistEnabled(e.target.checked)}
-                    className={styles.checkbox}
+                    className="w-[18px] h-[18px] m-0 align-middle"
                   />
                   <span>Enable checklist for this task</span>
                 </label>
               </div>
 
               {tChecklistEnabled && (
-                <div className={styles.checklistCreation}>
-                  <label>Checklist Items</label>
+                <div className="mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
+                    Checklist Items
+                  </label>
                   {tChecklistItems.map((val, idx) => (
-                    <div key={idx} className={styles.checklistItemInput}>
+                    <div key={idx} className="flex items-center gap-2 mt-2">
                       <input
                         placeholder={`Item ${idx + 1}`}
                         value={val}
@@ -1280,7 +1357,7 @@ export default function ProjectDetailPage() {
                           next[idx] = e.target.value;
                           setTChecklistItems(next);
                         }}
-                        className={styles.formInput}
+                        className="h-10 px-2.5 leading-tight flex-1 border-2 border-gray-200 rounded-lg text-sm transition-colors bg-white font-inherit focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(0,112,243,0.1)]"
                       />
                       <button
                         type="button"
@@ -1291,7 +1368,7 @@ export default function ProjectDetailPage() {
                           );
                           setTChecklistItems(next.length ? next : ['']);
                         }}
-                        className={styles.removeItemBtn}
+                        className="inline-flex items-center justify-center w-10 h-10 p-0 leading-none border border-gray-200 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100"
                       >
                         ×
                       </button>
@@ -1300,17 +1377,17 @@ export default function ProjectDetailPage() {
                   <button
                     type="button"
                     onClick={() => setTChecklistItems(a => [...a, ''])}
-                    className={styles.addItemBtn}
+                    className="bg-blue-600 text-white border-none rounded-lg px-5 py-2 mt-3 text-sm font-semibold cursor-pointer transition-transform min-w-[60px] hover:bg-blue-700 hover:-translate-y-px"
                   >
                     + Add Another Item
                   </button>
                 </div>
               )}
 
-              <div className={styles.modalActions}>
+              <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
                 <button
                   type="button"
-                  className={styles.cancelBtn}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-semibold border bg-white text-gray-900 border-gray-200 hover:bg-gray-50"
                   onClick={() => setShowTaskModal(false)}
                 >
                   Cancel
@@ -1318,7 +1395,7 @@ export default function ProjectDetailPage() {
                 <button
                   type="submit"
                   disabled={creatingTask}
-                  className={styles.submitBtn}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-semibold border bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {creatingTask ? 'Creating...' : 'Create Task'}
                 </button>

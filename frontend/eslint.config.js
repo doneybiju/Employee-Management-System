@@ -18,11 +18,11 @@ module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
-        parserOptions: {
-            ecmaFeatures: {
-                jsx: true
-            }
-        }
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
@@ -31,7 +31,7 @@ module.exports = [
       'node/no-unpublished-import': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       'prefer-const': 'warn',
-      'eqeqeq': 'off'
-    }
-  }
+      eqeqeq: 'off',
+    },
+  },
 ];

@@ -22,7 +22,6 @@ const DEFAULT: DocPolicy = {
 
 // simple in-memory store
 declare global {
-  // eslint-disable-next-line no-var
   var __docCleanupPolicy: DocPolicy | undefined;
 }
 function getStore(): DocPolicy {

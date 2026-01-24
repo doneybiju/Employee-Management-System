@@ -30,40 +30,66 @@ export default function UpcomingDeadlines({
   );
 
   return (
-    <section className="deadlines-section">
-      <div className="section-header">
-        <div className="section-title">
-          <i className="fas fa-clock" />
+    <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm">
+      <div className="flex justify-between items-center mb-5">
+        <div className="flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white">
+          <i className="fas fa-clock text-blue-600" />
           {title}
-          <span className="count-badge">{deadlines.length}</span>
+          <span className="bg-blue-600 text-white px-2 py-0.5 rounded-xl text-xs font-semibold">
+            {deadlines.length}
+          </span>
         </div>
 
         {deadlines.length > initialLimit && (
-          <button className="toggle-btn" onClick={() => setShowAll(v => !v)}>
+          <button
+            className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+            onClick={() => setShowAll(v => !v)}
+          >
             {showAll ? 'Show Less' : 'View All'}
             <i className={`fas fa-chevron-${showAll ? 'up' : 'down'}`} />
           </button>
         )}
       </div>
 
-      {/* scroll area shows many cards without stretching the page */}
-      <div className="deadlines-grid scroll-area">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
         {visible.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">
+          <div className="col-span-full text-center py-12 px-5">
+            <div className="text-5xl text-gray-300 mb-4">
               <i className="fas fa-check-circle" />
             </div>
-            <h3>No upcoming deadlines</h3>
-            <p>You're all caught up for now!</p>
+            <h3 className="text-gray-500 text-base font-semibold mb-2">
+              No upcoming deadlines
+            </h3>
+            <p className="text-gray-400 text-sm">
+              You&apos;re all caught up for now!
+            </p>
           </div>
         ) : (
           visible.map((d, i) => {
             const dleft = daysLeft(d.dueDate);
             const tag = urgency(dleft);
+
+            let borderClass = 'border-l-4 border-l-green-600';
+            let badgeClass = 'bg-green-600';
+
+            if (tag === 'critical') {
+              borderClass = 'border-l-4 border-l-red-600';
+              badgeClass = 'bg-red-600';
+            } else if (tag === 'high') {
+              borderClass = 'border-l-4 border-l-orange-600';
+              badgeClass = 'bg-orange-600';
+            } else if (tag === 'medium') {
+              borderClass = 'border-l-4 border-l-yellow-600';
+              badgeClass = 'bg-yellow-600';
+            }
+
             return (
-              <div key={i} className={`deadline-card ${tag}`}>
-                <div className="deadline-header">
-                  <div className="deadline-type">
+              <div
+                key={i}
+                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:-translate-y-px transition-transform shadow-sm hover:shadow-md ${borderClass}`}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 capitalize">
                     <i
                       className={`fas ${
                         d.kind === 'task'
@@ -75,14 +101,22 @@ export default function UpcomingDeadlines({
                     />
                     {d.kind.replace('_', ' ')}
                   </div>
-                  <div className={`urgency-badge ${tag}`}>{dleft}d</div>
+                  <div
+                    className={`px-2 py-1 rounded-md text-[11px] font-semibold text-white ${badgeClass}`}
+                  >
+                    {dleft}d
+                  </div>
                 </div>
-                <h4 className="deadline-title">{d.title}</h4>
+                <h4 className="text-[15px] font-semibold text-gray-900 dark:text-white mb-2">
+                  {d.title}
+                </h4>
                 {d.subtitle && (
-                  <p className="deadline-subtitle">{d.subtitle}</p>
+                  <p className="text-[13px] text-gray-500 mb-4 leading-relaxed">
+                    {d.subtitle}
+                  </p>
                 )}
-                <div className="deadline-footer">
-                  <div className="deadline-date">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
                     <i className="fas fa-calendar" />
                     {new Date(d.dueDate).toLocaleDateString()}
                   </div>

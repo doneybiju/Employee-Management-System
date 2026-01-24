@@ -229,12 +229,6 @@ export default function AdminUsers() {
     loadColumns();
   }, []);
 
-  //   // -- departments + positions for edit modal --
-  // async function loadDepartmentsFull() {
-  //   const rows = await fetchWithAuth('/api/departments/full');
-  //   setDepts(Array.isArray(rows) ? rows : []);
-  // }
-
   // ========== HR auto-sync with SA changes (poll every 10s) ==========
   useEffect(() => {
     if (!isHR) return;
@@ -309,14 +303,29 @@ export default function AdminUsers() {
     setCountry('');
   };
 
-  if (loading) return <main style={{padding: 24}}>Loading…</main>;
-  if (!isStaff)
+  if (loading)
     return (
-      <main style={{padding: 24}}>
-        <Link href="/login">Login</Link> required.
+      <main className="p-6">
+        <div className="text-gray-500">Loading…</div>
       </main>
     );
-  if (error) return <main style={{padding: 24, color: '#b00'}}>{error}</main>;
+  if (!isStaff)
+    return (
+      <main className="p-6">
+        <Link href="/login" className="text-blue-600 hover:underline">
+          Login
+        </Link>{' '}
+        required.
+      </main>
+    );
+  if (error)
+    return (
+      <main className="p-6 text-red-600">
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+          {error}
+        </div>
+      </main>
+    );
 
   // Helper: try multiple backend endpoints to delete a Workspace user
   const tryGsuiteDelete = async (
@@ -617,10 +626,19 @@ export default function AdminUsers() {
   const renderThs = () => (
     <>
       {TABLE_COLS.map(id => (
-        <th key={id}>{thLabel(id)}</th>
+        <th
+          key={id}
+          className="text-left bg-gray-50 p-3 font-semibold text-gray-700 whitespace-nowrap"
+        >
+          {thLabel(id)}
+        </th>
       ))}
-      <th>Details</th>
-      <th>Actions</th>
+      <th className="text-left bg-gray-50 p-3 font-semibold text-gray-700 whitespace-nowrap">
+        Details
+      </th>
+      <th className="text-left bg-gray-50 p-3 font-semibold text-gray-700 whitespace-nowrap">
+        Actions
+      </th>
     </>
   );
 
@@ -628,72 +646,46 @@ export default function AdminUsers() {
   const renderCells = (r: Row) => (
     <>
       {/* name */}
-      <td
-        style={{
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          maxWidth: 240,
-        }}
-      >
+      <td className="p-3 border-b border-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[240px]">
         {r.name}
       </td>
       {/* companyEmail */}
-      <td
-        style={{
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          maxWidth: 260,
-        }}
-      >
+      <td className="p-3 border-b border-gray-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[260px]">
         {r.companyEmail || '—'}
       </td>
       {/* department */}
-      <td>{r.department || '—'}</td>
+      <td className="p-3 border-b border-gray-100">{r.department || '—'}</td>
       {/* position */}
-      <td>{r.position || '—'}</td>
+      <td className="p-3 border-b border-gray-100">{r.position || '—'}</td>
       {/* start */}
-      <td>{dmy(r.joiningDate)}</td>
+      <td className="p-3 border-b border-gray-100">{dmy(r.joiningDate)}</td>
       {/* end */}
-      <td>{dmy(r.leavingDate)}</td>
+      <td className="p-3 border-b border-gray-100">{dmy(r.leavingDate)}</td>
 
       {/* Details */}
-      <td>
+      <td className="p-3 border-b border-gray-100">
         <button
           onClick={() => openDetails(r)}
-          style={{
-            background: '#eef6ff',
-            border: '1px solid #cfe3ff',
-            color: '#1e62d0',
-            padding: '6px 10px',
-            borderRadius: 8,
-            cursor: 'pointer',
-          }}
+          className="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-blue-100 text-sm font-medium transition-colors"
           title="See full details"
         >
           Details
         </button>
       </td>
       {/* Actions */}
-      <td>
-        <div style={{display: 'flex', gap: 10}}>
+      <td className="p-3 border-b border-gray-100">
+        <div className="flex gap-2.5">
           <button
             title="Edit"
             onClick={() => openEdit(r)}
-            style={{background: 'none', border: 'none', cursor: 'pointer'}}
+            className="text-lg bg-transparent border-none cursor-pointer p-1 rounded hover:bg-gray-100"
           >
             ✏️
           </button>
           <button
             title="Update History"
             onClick={() => openUpdateLog(r)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px',
-            }}
+            className="text-lg bg-transparent border-none cursor-pointer p-1 rounded hover:bg-gray-100"
           >
             📋
           </button>
@@ -710,7 +702,7 @@ export default function AdminUsers() {
                     alert('Restore failed');
                   }
                 }}
-                style={{background: 'none', border: 'none', cursor: 'pointer'}}
+                className="text-lg bg-transparent border-none cursor-pointer p-1 rounded hover:bg-gray-100"
               >
                 🔓
               </button>
@@ -727,7 +719,7 @@ export default function AdminUsers() {
                     alert('Revoke failed');
                   }
                 }}
-                style={{background: 'none', border: 'none', cursor: 'pointer'}}
+                className="text-lg bg-transparent border-none cursor-pointer p-1 rounded hover:bg-gray-100"
               >
                 🔒
               </button>
@@ -736,7 +728,7 @@ export default function AdminUsers() {
           <button
             title="Deactivate & Delete login"
             onClick={() => handleDelete(r)}
-            style={{background: 'none', border: 'none', cursor: 'pointer'}}
+            className="text-lg bg-transparent border-none cursor-pointer p-1 rounded hover:bg-red-50 hover:text-red-600"
           >
             🗑️
           </button>
@@ -805,31 +797,16 @@ export default function AdminUsers() {
   };
 
   return (
-    <main style={{maxWidth: 1250, margin: '2rem auto', padding: 16}}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <h1 style={{marginRight: 'auto'}}>User Management</h1>
+    <main className="max-w-[1250px] mx-auto my-8 p-4">
+      <div className="flex items-center gap-3 flex-wrap mb-6">
+        <h1 className="mr-auto text-2xl font-bold text-gray-900">
+          User Management
+        </h1>
 
-        <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+        <div className="flex items-center gap-3">
           <Link
             href="/admin/import-users"
-            style={{
-              padding: '10px 16px',
-              border: '1px solid #ccc',
-              background: 'white',
-              color: '#111',
-              borderRadius: 8,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
+            className="px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 inline-flex items-center gap-2 no-underline hover:bg-gray-50 transition-colors font-medium text-sm"
             title="Import users from CSV"
           >
             ⬆️ Import Users
@@ -840,40 +817,22 @@ export default function AdminUsers() {
       </div>
 
       {/* Search & Filters */}
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #eee',
-          borderRadius: 10,
-          padding: 16,
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-          marginBottom: 16,
-        }}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
-            gap: 8,
-          }}
-        >
+      <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3">
           <input
             placeholder="Search name, email, dept, position, ID…"
             value={q}
             onChange={e => setQ(e.target.value)}
-            style={{padding: 10, border: '1px solid #ddd', borderRadius: 8}}
+            className="p-2.5 border border-gray-300 rounded-lg w-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
           <div>
-            <label style={{fontSize: 13, color: '#6b7280'}}>Department</label>
+            <label className="block text-xs text-gray-500 mb-1">
+              Department
+            </label>
             <select
               value={dep}
               onChange={e => setDep(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #ddd',
-                borderRadius: 8,
-              }}
+              className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
             >
               <option value="all">All departments</option>
               {departments.map(d => (
@@ -884,16 +843,11 @@ export default function AdminUsers() {
             </select>
           </div>
           <div>
-            <label style={{fontSize: 13, color: '#6b7280'}}>Gender</label>
+            <label className="block text-xs text-gray-500 mb-1">Gender</label>
             <select
               value={gen}
               onChange={e => setGen(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 10,
-                border: '1px solid #ddd',
-                borderRadius: 8,
-              }}
+              className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
             >
               {['all', 'male', 'female', 'others'].map(v => (
                 <option key={v} value={v}>
@@ -905,33 +859,21 @@ export default function AdminUsers() {
             </select>
           </div>
           <div>
-            <label style={{fontSize: 13, color: '#6b7280'}}>Country</label>
-            <CountrySelect
-              value={country}
-              onChange={setCountry}
-              label=""
-              allowClear
-            />
+            <label className="block text-xs text-gray-500 mb-1">Country</label>
+            <div className="w-full">
+              <CountrySelect
+                value={country}
+                onChange={setCountry}
+                label=""
+                allowClear
+              />
+            </div>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 12,
-              alignItems: 'end',
-              justifyContent: 'flex-end',
-            }}
-          >
+          <div className="flex gap-3 items-end justify-end">
             {cfg?.selectable && isHR && (
               <button
                 onClick={() => setShowCols(true)}
-                style={{
-                  background: '#3498db',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px 16px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                }}
+                className="bg-sky-500 text-white border-none px-4 py-2.5 rounded-lg cursor-pointer hover:bg-sky-600 transition-colors font-medium text-sm whitespace-nowrap"
                 title="Configure which fields HR can see in Details"
               >
                 ▦ Select Columns
@@ -939,14 +881,7 @@ export default function AdminUsers() {
             )}
             <button
               onClick={resetFilters}
-              style={{
-                background: '#e74c3c',
-                color: '#fff',
-                border: 'none',
-                padding: '10px 16px',
-                borderRadius: 8,
-                cursor: 'pointer',
-              }}
+              className="bg-red-500 text-white border-none px-4 py-2.5 rounded-lg cursor-pointer hover:bg-red-600 transition-colors font-medium text-sm whitespace-nowrap"
             >
               ⟲ Reset Filters
             </button>
@@ -955,24 +890,10 @@ export default function AdminUsers() {
       </div>
 
       {/* Table (fixed 6 columns) */}
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #eee',
-          borderRadius: 10,
-          overflow: 'hidden',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-        }}
-      >
-        <table
-          width="100%"
-          cellPadding={12}
-          style={{borderCollapse: 'collapse'}}
-        >
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+        <table className="w-full border-collapse text-sm text-gray-800">
           <thead>
-            <tr style={{textAlign: 'left', background: '#f8f9fa'}}>
-              {renderThs()}
-            </tr>
+            <tr>{renderThs()}</tr>
           </thead>
           <tbody>
             {filtered.map((r, i) => {
@@ -983,7 +904,10 @@ export default function AdminUsers() {
                     ? `i-${r.internId}`
                     : `idx-${i}-${r.companyEmail || ''}`;
               return (
-                <tr key={key} style={{borderBottom: '1px solid #f0f0f0'}}>
+                <tr
+                  key={key}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                >
                   {renderCells(r)}
                 </tr>
               );
@@ -992,7 +916,7 @@ export default function AdminUsers() {
               <tr>
                 <td
                   colSpan={TABLE_COLS.length + 2}
-                  style={{color: '#666', padding: 16}}
+                  className="p-8 text-center text-gray-500 italic"
                 >
                   No users for this tab / filters.
                 </td>
@@ -1002,46 +926,21 @@ export default function AdminUsers() {
         </table>
       </div>
 
-      {/* Columns Modal (SA) — controls HR Details only */}
       {/* Columns Modal (HR) — controls HR Details only */}
       {isHR && cfg?.selectable && showCols && (
-        <div
-          onClick={() => setShowCols(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.3)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 1000,
-          }}
-        >
+        <div className="fixed inset-0 bg-black/30 grid place-items-center z-50 p-4">
           <div
             onClick={e => e.stopPropagation()}
-            style={{
-              width: 520,
-              maxWidth: '95vw',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              background: '#fff',
-              borderRadius: 12,
-              padding: 16,
-            }}
+            className="w-[520px] max-w-[95vw] max-h-[80vh] overflow-hidden bg-white rounded-xl p-6 shadow-2xl flex flex-col"
           >
-            <h2 style={{margin: '0 0 12px'}}>Select Columns (HR)</h2>
-            <div
-              style={{
-                overflow: 'auto',
-                maxHeight: 380,
-                border: '1px solid #eee',
-                borderRadius: 8,
-                padding: 12,
-              }}
-            >
+            <h2 className="m-0 mb-4 text-xl font-bold text-gray-800">
+              Select Columns (HR)
+            </h2>
+            <div className="overflow-y-auto border border-gray-200 rounded-lg p-3 max-h-[380px]">
               {ALL_COLS.map(c => (
                 <label
                   key={c.id}
-                  style={{display: 'block', padding: '8px 6px'}}
+                  className="block p-2 hover:bg-gray-50 rounded cursor-pointer flex items-center gap-2"
                 >
                   <input
                     type="checkbox"
@@ -1049,49 +948,35 @@ export default function AdminUsers() {
                     onChange={e => {
                       setLocalCols(s => {
                         const n = new Set(s);
-                        e.target.checked ? n.add(c.id) : n.delete(c.id);
+                        if (e.target.checked) {
+                          n.add(c.id);
+                        } else {
+                          n.delete(c.id);
+                        }
                         return n;
                       });
                     }}
-                    style={{marginRight: 8}}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   {c.label}
                 </label>
               ))}
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 10,
-                marginTop: 12,
-              }}
-            >
+            <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setShowCols(false)}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  background: '#fff',
-                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={saveCols}
-                style={{
-                  padding: '8px 12px',
-                  border: 'none',
-                  borderRadius: 8,
-                  background: '#1e90ff',
-                  color: '#fff',
-                }}
+                className="px-4 py-2 border-none rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 Save
               </button>
             </div>
-            <p style={{marginTop: 10, color: '#6b7280', fontSize: 12}}>
+            <p className="mt-3 text-gray-500 text-xs">
               Table always shows 6 basic fields. This controls extra fields in
               the Details modal for HR.
             </p>
@@ -1103,63 +988,38 @@ export default function AdminUsers() {
       {edit && (
         <div
           onClick={() => setEdit(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.3)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 1000,
-          }}
+          className="fixed inset-0 bg-black/30 grid place-items-center z-50 p-4"
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{
-              width: 520,
-              maxWidth: '95vw',
-              background: '#fff',
-              borderRadius: 12,
-              padding: 16,
-            }}
+            className="w-[520px] max-w-[95vw] bg-white rounded-xl p-6 shadow-2xl"
           >
-            <h3 style={{marginTop: 0}}>
-              Edit:{' '}
+            <h3 className="mt-0 mb-4 text-xl font-bold text-gray-800 flex items-center gap-2">
+              Edit:
               {editingName ? (
                 <input
                   autoFocus
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   onBlur={() => setEditingName(false)}
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 600,
-                    border: '1px solid #ddd',
-                    borderRadius: 6,
-                    padding: '4px 8px',
-                  }}
+                  className="text-lg font-semibold border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
                 />
               ) : (
                 <span
                   onClick={() => setEditingName(true)}
                   title="Click to edit name"
-                  style={{cursor: 'text', borderBottom: '1px dashed #bbb'}}
+                  className="cursor-text border-b border-dashed border-gray-400 hover:border-blue-500"
                 >
                   {editName || edit.name}
                 </span>
               )}
             </h3>
 
-            <div style={{display: 'grid', gap: 12}}>
+            <div className="grid gap-4">
               {/* Department & Position */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                }}
-              >
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Department</div>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Department</div>
                   <select
                     value={editDeptId ?? ''}
                     onChange={e => {
@@ -1167,12 +1027,7 @@ export default function AdminUsers() {
                       setEditDeptId(v);
                       setEditPosId(null);
                     }}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   >
                     <option value="">—</option>
                     {depts.map(d => (
@@ -1183,8 +1038,8 @@ export default function AdminUsers() {
                   </select>
                 </label>
 
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Position</div>
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Position</div>
                   <select
                     value={editPosId ?? ''}
                     onChange={e =>
@@ -1192,12 +1047,7 @@ export default function AdminUsers() {
                         e.target.value ? Number(e.target.value) : null,
                       )
                     }
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500 disabled:bg-gray-100"
                     disabled={editDeptId == null}
                   >
                     <option value="">—</option>
@@ -1213,114 +1063,66 @@ export default function AdminUsers() {
               </div>
 
               {/* Dates */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                }}
-              >
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Start date</div>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Start date</div>
                   <input
                     type="date"
                     value={editStart}
                     onChange={e => setEditStart(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   />
                 </label>
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>End date</div>
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">End date</div>
                   <input
                     type="date"
                     value={editEnd}
                     onChange={e => setEditEnd(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   />
                 </label>
               </div>
 
               {/* Contact */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                }}
-              >
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Phone</div>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Phone</div>
                   <input
                     value={editPhone}
                     onChange={e => setEditPhone(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   />
                 </label>
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">
                     Personal email
                   </div>
                   <input
                     type="email"
                     value={editPersonalEmail}
                     onChange={e => setEditPersonalEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   />
                 </label>
               </div>
 
               {/* Demographics */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  gap: 12,
-                }}
-              >
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Country</div>
+              <div className="grid grid-cols-3 gap-4">
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Country</div>
                   <input
                     value={editNationality}
                     onChange={e => setEditNationality(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   />
                 </label>
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Gender</div>
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Gender</div>
                   <select
                     value={editGender}
                     onChange={e => setEditGender(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   >
                     <option value="">—</option>
                     <option value="male">Male</option>
@@ -1328,35 +1130,25 @@ export default function AdminUsers() {
                     <option value="others">Others</option>
                   </select>
                 </label>
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Birthdate</div>
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Birthdate</div>
                   <input
                     type="date"
                     value={editBirthdate}
                     onChange={e => setEditBirthdate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   />
                 </label>
               </div>
 
               {/* Role (SA only) */}
               {isSA && edit?.userId && (
-                <label>
-                  <div style={{fontSize: 13, color: '#6b7280'}}>Role</div>
+                <label className="block">
+                  <div className="text-xs text-gray-500 mb-1">Role</div>
                   <select
                     value={editRole}
                     onChange={e => setEditRole(e.target.value as any)}
-                    style={{
-                      width: '100%',
-                      padding: 10,
-                      border: '1px solid #ddd',
-                      borderRadius: 8,
-                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                   >
                     <option value="intern">EMP</option>
                     <option value="hr">hr</option>
@@ -1365,67 +1157,47 @@ export default function AdminUsers() {
                 </label>
               )}
               {/* Supervisor */}
-              <label style={{display: 'block', marginTop: 12}}>
-                <div className="text-sm text-gray-600 mb-1">Supervisor</div>
+              <label className="block">
+                <div className="text-xs text-gray-500 mb-1">Supervisor</div>
                 <input
                   value={editSupervisor}
                   onChange={e => setEditSupervisor(e.target.value)}
                   placeholder="e.g. Antonio"
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    border: '1px solid #ddd',
-                    borderRadius: 8,
-                  }}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500"
                 />
               </label>
 
               {/* Emp Type */}
-              <label style={{display: 'block', marginTop: 12}}>
-                <div className="text-sm text-gray-600 mb-1">Emp Type</div>
+              <label className="block">
+                <div className="text-xs text-gray-500 mb-1">Emp Type</div>
                 <select
                   value={editEmpType}
                   onChange={e => setEditEmpType(e.target.value as EmpType)}
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    border: '1px solid #ddd',
-                    borderRadius: 8,
-                  }}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-blue-500 disabled:bg-gray-100"
                   disabled={!edit?.userId}
                 >
-                  {// HR and SA can set team_lead
-                  (user?.role === 'super_admin' || user?.role === 'hr'
-                    ? (['intern', 'employee', 'team_lead'] as EmpType[])
-                    : (['intern', 'employee'] as EmpType[])
-                  ).map(opt => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
+                  {
+                    // HR and SA can set team_lead
+                    (user?.role === 'super_admin' || user?.role === 'hr'
+                      ? (['intern', 'employee', 'team_lead'] as EmpType[])
+                      : (['intern', 'employee'] as EmpType[])
+                    ).map(opt => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))
+                  }
                 </select>
               </label>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 10,
-                marginTop: 16,
-              }}
-            >
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => {
                   setEdit(null);
                   setPendingDelete(null);
                 }}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  background: '#fff',
-                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-medium"
               >
                 Cancel
               </button>
@@ -1434,13 +1206,7 @@ export default function AdminUsers() {
                 <button
                   onClick={() => saveEdit({thenDelete: true})}
                   disabled={!edit?.internId || !editEnd}
-                  style={{
-                    padding: '8px 12px',
-                    border: 'none',
-                    borderRadius: 8,
-                    background: '#ef4444',
-                    color: '#fff',
-                  }}
+                  className="px-4 py-2 border-none rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save & Delete
                 </button>
@@ -1449,20 +1215,14 @@ export default function AdminUsers() {
               <button
                 onClick={() => saveEdit()}
                 disabled={!edit?.internId}
-                style={{
-                  padding: '8px 12px',
-                  border: 'none',
-                  borderRadius: 8,
-                  background: '#10b981',
-                  color: '#fff',
-                }}
+                className="px-4 py-2 border-none rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save
               </button>
             </div>
 
             {!edit?.internId && (
-              <p style={{marginTop: 8, color: '#b45309'}}>
+              <p className="mt-3 text-amber-700 text-sm">
                 (This looks like a staff account. Edit for staff isn’t wired
                 yet.)
               </p>
@@ -1475,46 +1235,19 @@ export default function AdminUsers() {
       {view && (
         <div
           onClick={() => setView(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.35)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 1100,
-          }}
+          className="fixed inset-0 bg-black/35 grid place-items-center z-[1100] p-4"
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{
-              width: 640,
-              maxWidth: '95vw',
-              maxHeight: '85vh',
-              overflow: 'auto',
-              background: '#fff',
-              borderRadius: 12,
-              padding: 18,
-              boxShadow: '0 10px 30px rgba(0,0,0,.15)',
-            }}
+            className="w-[640px] max-w-[95vw] max-h-[85vh] overflow-y-auto bg-white rounded-xl p-6 shadow-2xl"
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 8,
-              }}
-            >
-              <h3 style={{margin: 0}}>Details: {view.name}</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="m-0 text-xl font-bold text-gray-800">
+                Details: {view.name}
+              </h3>
               <button
                 onClick={() => setView(null)}
-                style={{
-                  border: '1px solid #ddd',
-                  background: '#fff',
-                  borderRadius: 8,
-                  padding: '6px 10px',
-                  cursor: 'pointer',
-                }}
+                className="border border-gray-300 bg-white rounded-lg px-3 py-1.5 cursor-pointer hover:bg-gray-50 text-gray-700 font-medium"
               >
                 Close
               </button>
@@ -1531,13 +1264,7 @@ export default function AdminUsers() {
 
               return (
                 <>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '180px 1fr',
-                      gap: '10px 16px',
-                    }}
-                  >
+                  <div className="grid grid-cols-[180px_1fr] gap-x-4 gap-y-3">
                     {items.map((it, idx) => (
                       <FragmentRow
                         key={idx}
@@ -1547,22 +1274,12 @@ export default function AdminUsers() {
                     ))}
                   </div>
 
-                  <hr
-                    style={{
-                      margin: '16px 0',
-                      border: 0,
-                      borderTop: '1px solid #eee',
-                    }}
-                  />
+                  <hr className="my-4 border-0 border-t border-gray-200" />
 
-                  <h4 style={{margin: '0 0 8px'}}>Emergency Contact (SOS)</h4>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '180px 1fr',
-                      gap: '10px 16px',
-                    }}
-                  >
+                  <h4 className="m-0 mb-3 text-lg font-semibold text-gray-800">
+                    Emergency Contact (SOS)
+                  </h4>
+                  <div className="grid grid-cols-[180px_1fr] gap-x-4 gap-y-3">
                     <FragmentRow label="SOS Phone" value={sos?.phone ?? '—'} />
                     <FragmentRow
                       label="SOS Relation"
@@ -1578,173 +1295,87 @@ export default function AdminUsers() {
 
       {/* Update Log Modal */}
       {showUpdateLog && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              background: 'white',
-              borderRadius: 12,
-              width: '90%',
-              maxWidth: 900,
-              maxHeight: '80vh',
-              overflow: 'auto',
-              padding: 24,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 20,
-              }}
-            >
-              <h2 style={{margin: 0, fontSize: 20, fontWeight: 600}}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-xl w-[90%] max-w-[900px] max-h-[80vh] overflow-y-auto p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="m-0 text-xl font-bold text-gray-900">
                 Update History: {updateLogUser?.name || 'User'}
               </h2>
               <button
                 onClick={() => setShowUpdateLog(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: 24,
-                  cursor: 'pointer',
-                }}
+                className="bg-transparent border-none text-2xl cursor-pointer text-gray-500 hover:text-gray-800"
               >
                 ×
               </button>
             </div>
 
             {loadingLogs ? (
-              <div style={{textAlign: 'center', padding: 40}}>Loading...</div>
+              <div className="text-center p-10 text-gray-500">Loading...</div>
             ) : updateLogs.length === 0 ? (
-              <div style={{textAlign: 'center', padding: 40, color: '#6b7280'}}>
+              <div className="text-center p-10 text-gray-500">
                 No update history found
               </div>
             ) : (
-              <div style={{overflowX: 'auto'}}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: 14,
-                  }}
-                >
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
                   <thead>
-                    <tr
-                      style={{
-                        borderBottom: '2px solid #e5e7eb',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <th style={{padding: 12, fontWeight: 600}}>
+                    <tr className="border-b-2 border-gray-200 text-left">
+                      <th className="p-3 font-semibold text-gray-700">
                         Date & Time
                       </th>
-                      <th style={{padding: 12, fontWeight: 600}}>Field</th>
-                      <th style={{padding: 12, fontWeight: 600}}>Old Value</th>
-                      <th style={{padding: 12, fontWeight: 600}}>New Value</th>
-                      <th style={{padding: 12, fontWeight: 600}}>Updated By</th>
-                      <th style={{padding: 12, fontWeight: 600}}>IP</th>
+                      <th className="p-3 font-semibold text-gray-700">Field</th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        Old Value
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        New Value
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        Updated By
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">IP</th>
                     </tr>
                   </thead>
                   <tbody>
                     {updateLogs.map(log => (
                       <tr
                         key={log.id}
-                        style={{borderBottom: '1px solid #f3f4f6'}}
+                        className="border-b border-gray-100 hover:bg-gray-50"
                       >
-                        <td
-                          style={{
-                            padding: 12,
-                            color: '#4b5563',
-                            fontSize: 13,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        <td className="p-3 text-gray-600 whitespace-nowrap text-xs">
                           {new Date(log.updatedAt).toLocaleString()}
                         </td>
-                        <td style={{padding: 12}}>
-                          <span style={{fontWeight: 600, color: '#1f2937'}}>
-                            {log.fieldName}
-                          </span>
+                        <td className="p-3 font-semibold text-gray-800">
+                          {log.fieldName}
                         </td>
-                        <td
-                          style={{
-                            padding: 12,
-                            color: '#dc2626',
-                            maxWidth: 200,
-                            wordBreak: 'break-word',
-                          }}
-                        >
+                        <td className="p-3 text-red-600 break-words max-w-[200px]">
                           {log.oldValue || (
-                            <span style={{color: '#9ca3af'}}>—</span>
+                            <span className="text-gray-400">—</span>
                           )}
                         </td>
-                        <td
-                          style={{
-                            padding: 12,
-                            color: '#059669',
-                            maxWidth: 200,
-                            wordBreak: 'break-word',
-                          }}
-                        >
+                        <td className="p-3 text-emerald-600 break-words max-w-[200px]">
                           {log.newValue || (
-                            <span style={{color: '#9ca3af'}}>—</span>
+                            <span className="text-gray-400">—</span>
                           )}
                         </td>
-                        <td style={{padding: 12}}>
-                          <div style={{fontWeight: 500, color: '#1f2937'}}>
+                        <td className="p-3">
+                          <div className="font-medium text-gray-800">
                             {log.updatedByName}
                           </div>
                           {log.updatedByRole && (
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: '#6b7280',
-                                marginTop: 2,
-                              }}
-                            >
-                              <span
-                                style={{
-                                  padding: '2px 6px',
-                                  background: '#e5e7eb',
-                                  borderRadius: 4,
-                                  marginRight: 4,
-                                }}
-                              >
+                            <div className="text-xs text-gray-500 mt-0.5 flex gap-1">
+                              <span className="px-1.5 py-0.5 bg-gray-200 rounded">
                                 {log.updatedByRole}
                               </span>
                               {log.updatedByEmpType && (
-                                <span
-                                  style={{
-                                    padding: '2px 6px',
-                                    background: '#dbeafe',
-                                    borderRadius: 4,
-                                  }}
-                                >
+                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">
                                   {log.updatedByEmpType.replace('_', ' ')}
                                 </span>
                               )}
                             </div>
                           )}
                         </td>
-                        <td
-                          style={{
-                            padding: 12,
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                            color: '#6b7280',
-                          }}
-                        >
+                        <td className="p-3 font-mono text-xs text-gray-500">
                           {log.ip || '—'}
                         </td>
                       </tr>
@@ -1754,24 +1385,10 @@ export default function AdminUsers() {
               </div>
             )}
 
-            <div
-              style={{
-                marginTop: 20,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowUpdateLog(false)}
-                style={{
-                  padding: '10px 20px',
-                  background: '#2d8cf0',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
+                className="px-5 py-2.5 bg-blue-500 text-white border-none rounded-lg cursor-pointer font-medium hover:bg-blue-600 transition-colors"
               >
                 Close
               </button>
@@ -1786,8 +1403,8 @@ export default function AdminUsers() {
 function FragmentRow({label, value}: {label: string; value: string}) {
   return (
     <>
-      <strong>{label}</strong>
-      <div style={{overflowWrap: 'anywhere'}}>{value}</div>
+      <strong className="text-gray-700 font-semibold">{label}</strong>
+      <div className="break-words">{value}</div>
     </>
   );
 }
@@ -1796,20 +1413,17 @@ function Tabs({tab, onChange}: {tab: Tab; onChange: (t: Tab) => void}) {
   const Btn = ({id, label}: {id: Tab; label: string}) => (
     <button
       onClick={() => onChange(id)}
-      style={{
-        padding: '10px 16px',
-        border: '1px solid #ccc',
-        background: tab === id ? '#2d8cf0' : 'white',
-        color: tab === id ? '#fff' : '#111',
-        textTransform: 'capitalize',
-        borderRadius: id === 'active' ? '8px 0 0 8px' : '0 8px 8px 0',
-      }}
+      className={`px-4 py-2.5 border border-gray-300 font-medium transition-colors cursor-pointer text-sm ${
+        tab === id
+          ? 'bg-blue-500 text-white border-blue-500'
+          : 'bg-white text-gray-900 hover:bg-gray-50'
+      } ${id === 'active' ? 'rounded-l-lg border-r-0' : 'rounded-r-lg'}`}
     >
       {label}
     </button>
   );
   return (
-    <div style={{display: 'flex'}}>
+    <div className="flex">
       <Btn id="active" label="Active Users" />
       <Btn id="inactive" label="Inactive Users" />
     </div>
