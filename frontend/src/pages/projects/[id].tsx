@@ -630,7 +630,7 @@ export default function ProjectDetailPage() {
                 <input
                   value={tTitle}
                   onChange={e => setTTitle(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   required
                 />
               </div>
@@ -644,7 +644,7 @@ export default function ProjectDetailPage() {
                     onChange={e =>
                       setTAssign(e.target.value ? Number(e.target.value) : '')
                     }
-                    className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   >
                     <option value="">Unassigned</option>
                     {proj.members.map(m => (
@@ -662,7 +662,7 @@ export default function ProjectDetailPage() {
                     type="date"
                     value={tDue}
                     onChange={e => setTDue(e.target.value)}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -702,7 +702,7 @@ export default function ProjectDetailPage() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Name or email..."
-                  className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
               <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-800 rounded-lg p-2 bg-gray-50 dark:bg-[#111]">

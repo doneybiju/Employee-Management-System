@@ -421,7 +421,7 @@ export default function AdminUsers() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/import-users"
-            className="hidden md:inline-flex items-center px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            className="hidden md:inline-flex items-center px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
           >
             Import CSV
           </Link>
@@ -465,7 +465,7 @@ export default function AdminUsers() {
               setQ(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
         </div>
         <div className="text-sm text-gray-500">
@@ -672,8 +672,8 @@ export default function AdminUsers() {
                 <input
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                />
+                  // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -683,8 +683,8 @@ export default function AdminUsers() {
                   <input
                     value={editPersonalEmail}
                     onChange={e => setEditPersonalEmail(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -693,8 +693,8 @@ export default function AdminUsers() {
                   <input
                     value={editPhone}
                     onChange={e => setEditPhone(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -715,8 +715,8 @@ export default function AdminUsers() {
                   <select
                     value={editGender}
                     onChange={e => setEditGender(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  >
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  >
                     <option value="">Select...</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -741,8 +741,8 @@ export default function AdminUsers() {
                       setEditDeptId(e.target.value ? +e.target.value : null);
                       setEditPosId(null);
                     }}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  >
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  >
                     <option value="">Select...</option>
                     {depts.map(d => (
                       <option key={d.id} value={d.id}>
@@ -761,8 +761,8 @@ export default function AdminUsers() {
                     onChange={e =>
                       setEditPosId(e.target.value ? +e.target.value : null)
                     }
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all disabled:opacity-50"
-                  >
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  >
                     <option value="">Select...</option>
                     {depts
                       .find(d => d.id === editDeptId)
@@ -781,8 +781,8 @@ export default function AdminUsers() {
                 <input
                   value={editSupervisor}
                   onChange={e => setEditSupervisor(e.target.value)}
-                  className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                />
+                  // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -793,8 +793,8 @@ export default function AdminUsers() {
                     type="date"
                     value={editStart}
                     onChange={e => setEditStart(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -804,8 +804,8 @@ export default function AdminUsers() {
                     type="date"
                     value={editEnd}
                     onChange={e => setEditEnd(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
+                    // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
                 </div>
               </div>
               {isSA && (
@@ -817,8 +817,8 @@ export default function AdminUsers() {
                     <select
                       value={editRole}
                       onChange={e => setEditRole(e.target.value as any)}
-                      className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    >
+                      // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                    >
                       <option value="intern">User</option>
                       <option value="hr">HR</option>
                       <option value="super_admin">Super Admin</option>
@@ -831,8 +831,8 @@ export default function AdminUsers() {
                     <select
                       value={editEmpType}
                       onChange={e => setEditEmpType(e.target.value as EmpType)}
-                      className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                    >
+                      // NEW className for ALL Inputs/Selects in Edit Drawer
+className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                    >
                       <option value="intern">Intern</option>
                       <option value="employee">Employee</option>
                       <option value="team_lead">Team Lead</option>
@@ -886,35 +886,35 @@ export default function AdminUsers() {
               <div className="grid grid-cols-2 gap-y-4 text-sm">
                 <div>
                   <p className="text-gray-500 text-xs">Department</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {selectedUser.department || '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Position</p>
-                  <p className="font-medium">{selectedUser.position || '—'}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedUser.position || '—'}</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Supervisor</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {viewDetail?.supervisor || selectedUser.supervisor || '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Status</p>
-                  <p className="font-medium capitalize">
-                    {selectedUser.status || 'Active'}
-                  </p>
+                  <p className="font-medium capitalize text-gray-900 dark:text-white">
+  {selectedUser.status || 'Active'}
+</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Start Date</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {dmy(viewDetail?.startDate || selectedUser.joiningDate)}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">End Date</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {dmy(viewDetail?.endDate || selectedUser.leavingDate)}
                   </p>
                 </div>
@@ -928,25 +928,25 @@ export default function AdminUsers() {
               <div className="grid grid-cols-2 gap-y-4 text-sm">
                 <div>
                   <p className="text-gray-500 text-xs">Phone</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {viewDetail?.phone || selectedUser.phone || '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Nationality</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {viewDetail?.nationality || selectedUser.nationality || '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Gender</p>
-                  <p className="font-medium capitalize">
-                    {viewDetail?.gender || selectedUser.gender || '—'}
-                  </p>
+                  <p className="font-medium capitalize text-gray-900 dark:text-white">
+  {viewDetail?.gender || selectedUser.gender || '—'}
+</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">DOB</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {dmy(viewDetail?.birthdate || selectedUser.dob)}
                   </p>
                 </div>
@@ -1004,19 +1004,19 @@ export default function AdminUsers() {
                         {log.updatedByName}
                       </span>
                     </div>
-                    <div className="text-sm">
-                      <span className="font-semibold text-gray-700">
-                        {log.fieldName}
-                      </span>{' '}
-                      changed from{' '}
-                      <span className="text-red-500 line-through">
-                        {log.oldValue || 'empty'}
-                      </span>{' '}
-                      to{' '}
-                      <span className="text-green-600 font-medium">
-                        {log.newValue || 'empty'}
-                      </span>
-                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+  <span className="font-semibold text-gray-900 dark:text-gray-200">
+    {log.fieldName}
+  </span>{' '}
+  changed from{' '}
+  <span className="text-red-500 dark:text-red-400 line-through">
+    {log.oldValue || 'empty'}
+  </span>{' '}
+  to{' '}
+  <span className="text-green-600 dark:text-green-400 font-medium">
+    {log.newValue || 'empty'}
+  </span>
+</div>
                   </div>
                 ))}
               </div>

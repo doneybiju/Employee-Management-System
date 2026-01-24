@@ -287,8 +287,7 @@ export default function RequestsReview() {
             placeholder="Search requests..."
             value={q}
             onChange={e => setQ(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-          />
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"          />
         </div>
       </div>
 
@@ -400,8 +399,8 @@ export default function RequestsReview() {
                             onChange={e =>
                               setNote(s => ({...s, [r.id]: e.target.value}))
                             }
-                            className="w-full p-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                          />
+                            className="w-full p-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+/>
                           <div className="flex gap-2">
                             <button
                               onClick={() => act(r.id, 'approve')}
@@ -453,7 +452,7 @@ export default function RequestsReview() {
                 onChange={e => setRejectionReason(e.target.value)}
                 placeholder="e.g., Overlap with team meeting..."
                 rows={4}
-                className="w-full p-3 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
+                className="w-full p-3 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"
                 autoFocus
               />
             </div>
