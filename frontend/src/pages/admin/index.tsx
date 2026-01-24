@@ -118,7 +118,7 @@ function AdminHome() {
                 : 'text-gray-900 dark:text-white'
             }`}
           >
-            {loading ? '—' : data?.pendingRequestsCount ?? 0}
+            {loading ? '—' : (data?.pendingRequestsCount ?? 0)}
           </div>
           <div className="mt-1 text-xs text-gray-400">
             Awaiting your approval
@@ -139,7 +139,7 @@ function AdminHome() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 dark:text-white">
-            {loading ? '—' : data?.activeProjectsCount ?? 0}
+            {loading ? '—' : (data?.activeProjectsCount ?? 0)}
           </div>
           <div className="mt-1 text-xs text-gray-400">
             Currently in progress
@@ -212,7 +212,9 @@ function AdminHome() {
             key={i}
             className="group bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 p-6 rounded-xl shadow-sm hover:border-blue-500 hover:shadow-md transition-all cursor-pointer flex flex-col"
           >
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${item.bg}`}>
+            <div
+              className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${item.bg}`}
+            >
               <item.icon size={24} className={item.color} />
             </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">

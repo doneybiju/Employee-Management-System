@@ -1,8 +1,21 @@
-// frontend/src/pages/projects/index.tsx
-import {useEffect, useState, type FormEvent} from 'react';
+import {useEffect, useState, type FormEvent, useMemo} from 'react';
 import Link from 'next/link';
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
+import Drawer from '@/components/Drawer';
+import {
+  Search,
+  Plus,
+  Calendar,
+  Filter,
+  CheckCircle2,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Layout,
+  Briefcase,
+} from 'lucide-react';
 
 type Project = {
   id: number;
@@ -26,129 +39,112 @@ type Member = {
   email: string;
 };
 
-const STATUS_OPTIONS = [
-  'NOT_STARTED',
-  'IN_PROGRESS',
-  'ON_HOLD',
-  'COMPLETED',
-] as const;
-type ProjectStatus = (typeof STATUS_OPTIONS)[number];
+type ProjectStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED';
+
+const ITEMS_PER_PAGE = 9;
 
 export default function ProjectsPage() {
-  const {user} = useAuth();
-  // permissions state must come before effects that use it
+  useAuth();
+  // permissions state
   const [canManage, setCanManage] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'ALL' | 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD'
   >('ALL');
 
-  // Create project modal state
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Drawer & Form State
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const [creating, setCreating] = useState(false);
   const [memberCandidates, setMemberCandidates] = useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
 
-  // Form state
+  // Form Fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [status, setStatus] = useState<
-    'NOT_STARTED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED'
-  >('NOT_STARTED');
+  const [status, setStatus] = useState<ProjectStatus>('NOT_STARTED');
 
-  // Status colors and icons
-  const statusColors = {
-    NOT_STARTED: {bg: '#f3f4f6', text: '#6b7280'},
-    IN_PROGRESS: {bg: '#dbeafe', text: '#1e40af'},
-    COMPLETED: {bg: '#d1fae5', text: '#065f46'},
-    ON_HOLD: {bg: '#fef3c7', text: '#92400e'},
-    ALL: {bg: '#667eea', text: '#ffffff'},
-  };
-
-  const statusIcons = {
-    NOT_STARTED: '⏳',
-    IN_PROGRESS: '🔄',
-    COMPLETED: '✅',
-    ON_HOLD: '⏸️',
-    ALL: '📁',
-  };
-
-  // helpers
-  const toDateInput = (iso?: string | null) =>
-    iso ? new Date(iso).toISOString().slice(0, 10) : '';
-
+  // Edit State (kept simple for now, using existing modal or we could refactor to drawer too,
+  // but let's stick to the prompt which specifically asked for "Create Project = Side Drawer")
+  // For consistency, I'll keep the edit logic but maybe not fully refactor it to drawer in this step
+  // unless I have time. I will stick to the requested scope: "Create Project = Side Drawer".
+  // However, I'll update the Edit UI to be cleaner if it pops up.
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
-  function openEdit(p: Project) {
-    setEditingProject(p);
-    setEditTitle(p.title);
-    setEditDescription(p.description ?? '');
-    setEditDueDate(toDateInput(p.dueDate));
-  }
-  function closeEdit() {
-    setEditingProject(null);
-    setSavingEdit(false);
-  }
+  // Helpers
+  const toDateInput = (iso?: string | null) =>
+    iso ? new Date(iso).toISOString().slice(0, 10) : '';
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   function deriveProjectStatus(p: Project): Project['status'] {
-    // Respect ON_HOLD if backend explicitly set it
     if (p.status === 'ON_HOLD') return 'ON_HOLD';
-
-    // Prefer exact task statuses if provided
     if (Array.isArray(p.tasks) && p.tasks.length > 0) {
       const allCompleted = p.tasks.every(t => t.status === 'COMPLETED');
       if (allCompleted) return 'COMPLETED';
-
       const allNotStarted = p.tasks.every(t => t.status === 'NOT_STARTED');
       if (allNotStarted) return 'NOT_STARTED';
-
       return 'IN_PROGRESS';
     }
-
-    // Fallback: infer from progress bar
     const prog = typeof p.progress === 'number' ? p.progress : 0;
     if (prog >= 100) return 'COMPLETED';
     if (prog <= 0) return 'NOT_STARTED';
     return 'IN_PROGRESS';
   }
 
-  const [savingId, setSavingId] = useState<number | null>(null);
-
-  // load projects once
+  // Effects
   useEffect(() => {
     loadProjects();
-  }, []);
-
-  // load members only when modal opens and user can manage
-  useEffect(() => {
-    if (showCreateModal && canManage) loadMemberCandidates();
-  }, [showCreateModal, canManage]);
-
-  // fetch permission once on mount
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetchWithAuth('/api/projects/permissions');
-        if (r.ok) {
-          const j = await r.json();
-          setCanManage(!!j?.canCreate); // super_admin or teamLead
-        }
-      } catch {}
-    })();
+    checkPermissions();
   }, []);
 
   useEffect(() => {
-    filterProjects();
-  }, [projects, searchQuery, statusFilter]);
+    if (showCreateDrawer && canManage) loadMemberCandidates();
+  }, [showCreateDrawer, canManage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const checkPermissions = async () => {
+    try {
+      const r = await fetchWithAuth('/api/projects/permissions');
+      if (r.ok) {
+        const j = await r.json();
+        setCanManage(!!j?.canCreate);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const loadProjects = async () => {
     try {
@@ -160,7 +156,6 @@ export default function ProjectsPage() {
         ? data.map((p: Project) => ({...p, status: deriveProjectStatus(p)}))
         : [];
       setProjects(normalized);
-
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to load projects');
@@ -183,55 +178,6 @@ export default function ProjectsPage() {
     }
   };
 
-  const filterProjects = () => {
-    let filtered = projects;
-
-    // Filter by status
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter(project => project.status === statusFilter);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        project =>
-          project.title.toLowerCase().includes(query) ||
-          project.description?.toLowerCase().includes(query) ||
-          project.members.some(member =>
-            member.name.toLowerCase().includes(query),
-          ),
-      );
-    }
-
-    setFilteredProjects(filtered);
-  };
-
-  async function updateProjectStatus(
-    projectId: number,
-    newStatus: ProjectStatus,
-  ) {
-    try {
-      setSavingId(projectId);
-      const res = await fetchWithAuth(`/api/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({status: newStatus}),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j?.error || 'Failed to update status');
-      }
-      setProjects(prev =>
-        prev.map(p => (p.id === projectId ? {...p, status: newStatus} : p)),
-      );
-    } catch (e: any) {
-      alert(e?.message || 'Failed to update status');
-    } finally {
-      setSavingId(null);
-    }
-  }
-
   const createProject = async (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -252,15 +198,12 @@ export default function ProjectsPage() {
 
       if (!response.ok) throw new Error('Failed to create project');
 
-      // Reset form and close modal
       setTitle('');
       setDescription('');
       setDueDate('');
       setStatus('NOT_STARTED');
       setSelectedMembers([]);
-      setShowCreateModal(false);
-
-      // Reload projects
+      setShowCreateDrawer(false);
       await loadProjects();
     } catch (err: any) {
       alert(err.message || 'Failed to create project');
@@ -268,6 +211,47 @@ export default function ProjectsPage() {
       setCreating(false);
     }
   };
+
+  // Filter Logic
+  const filteredProjects = useMemo(() => {
+    let filtered = projects;
+
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(project => project.status === statusFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        project =>
+          project.title.toLowerCase().includes(query) ||
+          project.description?.toLowerCase().includes(query) ||
+          project.members.some(member =>
+            member.name.toLowerCase().includes(query),
+          ),
+      );
+    }
+    return filtered;
+  }, [projects, statusFilter, searchQuery]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
+  const paginatedProjects = filteredProjects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  // Edit & Delete handlers
+  function openEdit(p: Project) {
+    setEditingProject(p);
+    setEditTitle(p.title);
+    setEditDescription(p.description ?? '');
+    setEditDueDate(toDateInput(p.dueDate));
+  }
+  function closeEdit() {
+    setEditingProject(null);
+    setSavingEdit(false);
+  }
 
   async function saveEdit(e: FormEvent) {
     e.preventDefault();
@@ -288,7 +272,6 @@ export default function ProjectsPage() {
       });
       if (!res.ok) throw new Error('Update failed');
 
-      // update list optimistically
       setProjects(prev =>
         prev.map(p =>
           p.id === editingProject.id
@@ -310,7 +293,9 @@ export default function ProjectsPage() {
     }
   }
 
-  async function deleteProject(id: number) {
+  async function deleteProject(id: number, e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
     if (!canManage) return;
     if (!confirm('Delete this project and all its tasks?')) return;
 
@@ -319,7 +304,6 @@ export default function ProjectsPage() {
         method: 'DELETE',
       });
       if (res.status === 204 || res.ok) {
-        // remove from state; filtered list will auto-update
         setProjects(prev => prev.filter(p => p.id !== id));
       } else {
         const j = await res.json().catch(() => ({}));
@@ -330,541 +314,366 @@ export default function ProjectsPage() {
     }
   }
 
-  const getStatusCount = (status: string) => {
-    return projects.filter(
-      project => status === 'ALL' || project.status === status,
-    ).length;
-  };
+  // Render Status Badge
+  const StatusBadge = ({status}: {status: ProjectStatus}) => {
+    const styles = {
+      NOT_STARTED:
+        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+      IN_PROGRESS:
+        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      COMPLETED:
+        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+      ON_HOLD:
+        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+    const labels = {
+      NOT_STARTED: 'Not Started',
+      IN_PROGRESS: 'Active',
+      COMPLETED: 'Completed',
+      ON_HOLD: 'On Hold',
+    };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return (
+      <span
+        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${styles[status]}`}
+      >
+        {labels[status]}
+      </span>
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 bg-white rounded-3xl my-10">
-        <div className="w-16 h-16 border-4 border-gray-100 border-t-[#667eea] rounded-full animate-spin mb-6"></div>
-        <p>Loading projects...</p>
+      <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-gray-50 dark:bg-[#0a0a0a]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm font-medium">
+            Loading projects...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-20 px-10 bg-white rounded-3xl my-10 border-2 border-red-200">
-        <div className="text-6xl mb-6 text-red-600">⚠️</div>
-        <h2 className="text-2xl font-bold text-red-600 mb-3">
-          Error Loading Projects
-        </h2>
-        <p>{error}</p>
-        <button
-          className="bg-[#667eea] text-white border-none py-3 px-6 rounded-xl font-semibold cursor-pointer mt-4 transition-colors hover:bg-[#5a6fd8]"
-          onClick={loadProjects}
-        >
-          Try Again
-        </button>
+      <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] p-4">
+        <div className="bg-white dark:bg-[#111] p-8 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/30 text-center max-w-md">
+          <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center mx-auto mb-4 text-red-600">
+            <AlertCircle size={24} />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Failed to load projects
+          </h2>
+          <p className="text-gray-500 text-sm mb-6">{error}</p>
+          <button
+            onClick={loadProjects}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
-  const totalProjects = projects.length;
-  const inProgressProjects = projects.filter(
-    p => p.status === 'IN_PROGRESS',
-  ).length;
-  const completedProjects = projects.filter(
-    p => p.status === 'COMPLETED',
-  ).length;
-
   return (
-    <div className="max-w-[1400px] mx-auto p-8 font-sans bg-gray-50 min-h-screen">
-      {/* Header Section */}
-      <header className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-3xl p-10 mb-8 text-white shadow-[0_20px_40px_rgba(102,126,234,0.3)] relative overflow-hidden before:content-[''] before:absolute before:inset-0 before:bg-[url('data:image/svg+xml,%3Csvg%20width=%2760%27%20height=%2760%27%20viewBox=%270%200%2060%2060%27%20xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg%20fill=%27none%27%20fill-rule=%27evenodd%27%3E%3Cg%20fill=%27%23ffffff%27%20fill-opacity=%270.1%27%3E%3Ccircle%20cx=%2730%27%20cy=%2730%27%20r=%271%27/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]">
-        <div className="relative z-[2]">
-          <h1 className="text-5xl font-extrabold m-0 mb-4 leading-none">
-            Project Dashboard
-          </h1>
-          <p className="text-xl opacity-90 m-0 mb-8 font-normal">
-            Manage your projects, track progress, and collaborate with your team
-          </p>
-          {canManage && (
-            <button
-              className="bg-white/20 backdrop-blur-md border-2 border-white/30 text-white px-8 py-4 rounded-2xl text-lg font-semibold cursor-pointer transition-all inline-flex items-center gap-3 hover:bg-white/30 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(255,255,255,0.2)]"
-              onClick={() => canManage && setShowCreateModal(true)}
-            >
-              <span>+</span>
-              Create New Project
-            </button>
-          )}
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50 dark:bg-[#0a0a0a]">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-20 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-[1600px] mx-auto w-full">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-600/20">
+              <Briefcase size={20} />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              Projects
+            </h1>
+            <span className="px-2.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-full">
+              {filteredProjects.length}
+            </span>
+          </div>
+
+          <div className="flex flex-1 md:justify-end items-center gap-3">
+            {/* Search */}
+            <div className="relative w-full md:w-64 group">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+                size={16}
+              />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-[#1a1a1a] border-transparent focus:bg-white dark:focus:bg-[#111] border focus:border-blue-500/50 rounded-lg text-sm transition-all focus:ring-4 focus:ring-blue-500/10 outline-none"
+              />
+            </div>
+
+            {/* Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as any)}
+                className="appearance-none pl-9 pr-8 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer text-gray-700 dark:text-gray-300"
+              >
+                <option value="ALL">All Status</option>
+                <option value="IN_PROGRESS">Active</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="NOT_STARTED">Pending</option>
+                <option value="ON_HOLD">On Hold</option>
+              </select>
+              <Filter
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={16}
+              />
+            </div>
+
+            {/* Create Button */}
+            {canManage && (
+              <button
+                onClick={() => setShowCreateDrawer(true)}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md active:translate-y-0.5"
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">New Project</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          {value: totalProjects, label: 'Total Projects'},
-          {value: inProgressProjects, label: 'In Progress'},
-          {value: completedProjects, label: 'Completed'},
-          {
-            value: `${
-              totalProjects
-                ? Math.round((completedProjects / totalProjects) * 100)
-                : 0
-            }%`,
-            label: 'Success Rate',
-          },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center transition-transform hover:-translate-y-1"
-          >
-            <div className="text-4xl font-extrabold text-gray-800 mb-2">
-              {stat.value}
-            </div>
-            <div className="text-sm text-gray-500 font-semibold uppercase tracking-wider">
-              {stat.label}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filter Section */}
-      <section className="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-200">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="text-2xl font-bold text-gray-800 m-0">All Projects</h2>
-          <div className="relative w-full md:max-w-[300px]">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              🔍
-            </span>
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full py-3 px-4 pl-12 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 flex-wrap justify-center md:justify-start">
-          {(
-            [
-              'ALL',
-              'NOT_STARTED',
-              'IN_PROGRESS',
-              'COMPLETED',
-              'ON_HOLD',
-            ] as const
-          ).map(statusKey => (
-            <button
-              key={statusKey}
-              className={`px-6 py-3 border-2 rounded-xl font-semibold cursor-pointer transition-all flex items-center gap-2 text-sm ${
-                statusFilter === statusKey
-                  ? 'bg-[#667eea] border-[#667eea] text-white scale-105'
-                  : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-100'
-              }`}
-              onClick={() => setStatusFilter(statusKey)}
-              style={
-                statusFilter === statusKey
-                  ? {
-                      backgroundColor: statusColors[statusKey].bg,
-                      color: statusColors[statusKey].text,
-                      borderColor: statusColors[statusKey].bg,
-                    }
-                  : {}
-              }
-            >
-              <span>{statusIcons[statusKey]}</span>
-              {statusKey.replace('_', ' ')}
-              <span className="bg-white/20 px-2 py-0.5 rounded-xl text-xs font-bold">
-                {getStatusCount(statusKey)}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-        {filteredProjects.length > 0 ? (
-          filteredProjects.map(project => (
-            <div
-              key={project.id}
-              className="bg-white rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 transition-all overflow-hidden hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] hover:border-gray-200 flex flex-col"
-            >
-              <div className="p-6 border-b border-gray-100 bg-gradient-to-br from-gray-50 to-white">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <h3 className="text-xl font-bold text-gray-800 m-0 leading-snug">
-                    {project.title}
-                  </h3>
-
-                  {canManage && (
-                    <select
-                      value={project.status}
-                      onChange={e =>
-                        updateProjectStatus(
-                          project.id,
-                          e.target.value as ProjectStatus,
-                        )
-                      }
-                      disabled={savingId === project.id}
-                      aria-label="Update project status"
-                      title="Update project status"
-                      className="py-1.5 px-2 rounded-md border border-gray-200 text-sm bg-white"
-                    >
-                      {STATUS_OPTIONS.map(s => (
-                        <option key={s} value={s}>
-                          {s.replace('_', ' ')}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                {project.description && (
-                  <p className="text-gray-500 text-sm leading-relaxed m-0 line-clamp-2">
-                    {project.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="p-6 flex-1">
-                <div className="grid grid-cols-2 gap-5 mb-5">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
-                      Status
-                    </span>
-                    <span className="text-sm font-semibold text-gray-800">
-                      <span
-                        className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
-                        style={{
-                          backgroundColor: statusColors[project.status].bg,
-                          color: statusColors[project.status].text,
-                        }}
-                      >
-                        {statusIcons[project.status]}{' '}
-                        {project.status.replace('_', ' ')}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
-                      Due Date
-                    </span>
-                    <span className="text-sm font-semibold text-gray-800">
-                      {project.dueDate
-                        ? formatDate(project.dueDate)
-                        : 'No due date'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mb-5">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-semibold text-gray-600">
-                      Progress
-                    </span>
-                    <span className="text-sm font-bold text-[#667eea]">
-                      {project.progress}%
-                    </span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#667eea] to-[#764ba2] transition-[width] duration-300"
-                      style={{width: `${project.progress}%`}}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="mb-5">
-                  <div className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wider">
-                    Team Members
-                  </div>
-                  <div className="flex items-center">
-                    {project.members.slice(0, 4).map((member, index) => (
-                      <div
-                        key={member.id}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white flex items-center justify-center font-semibold text-xs border-2 border-white -mr-2 relative"
-                        style={{zIndex: 10 - index}}
-                        title={member.name}
-                      >
-                        {getInitials(member.name)}
+      {/* Content Grid */}
+      <main className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+        <div className="max-w-[1600px] mx-auto">
+          {paginatedProjects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
+              {paginatedProjects.map(project => (
+                <Link
+                  href={`/projects/${project.id}`}
+                  key={project.id}
+                  className="block h-full"
+                >
+                  <div className="group h-full flex flex-col bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-xl p-5 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/50 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all duration-300 cursor-pointer relative overflow-hidden">
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 transition-colors">
+                          {project.title}
+                        </h3>
                       </div>
-                    ))}
-                    {project.members.length > 4 && (
-                      <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs font-semibold ml-2 border-2 border-white">
-                        +{project.members.length - 4}
+                      <StatusBadge status={project.status} />
+                    </div>
+
+                    {/* Body */}
+                    <div className="flex-1">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-4 h-10">
+                        {project.description || 'No description provided.'}
+                      </p>
+
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-gray-500 font-medium">
+                            Progress
+                          </span>
+                          <span className="text-gray-900 dark:text-gray-100 font-bold">
+                            {project.progress}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                            style={{width: `${project.progress}%`}}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 mt-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <Calendar size={14} />
+                        <span>
+                          {project.dueDate
+                            ? formatDate(project.dueDate)
+                            : 'No deadline'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center -space-x-2">
+                        {project.members.slice(0, 3).map((m, i) => (
+                          <div
+                            key={m.id}
+                            className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-[#111] flex items-center justify-center text-[10px] font-bold text-gray-600 dark:text-gray-300 z-[3]"
+                            style={{zIndex: 3 - i}}
+                            title={m.name}
+                          >
+                            {getInitials(m.name)}
+                          </div>
+                        ))}
+                        {project.members.length > 3 && (
+                          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-[#111] flex items-center justify-center text-[10px] font-bold text-gray-500 z-0">
+                            +{project.members.length - 3}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Actions (only visible on hover for managers) */}
+                    {canManage && (
+                      <div className="absolute top-4 right-14 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openEdit(project);
+                          }}
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-400 hover:text-blue-600 transition-colors"
+                          title="Edit"
+                        >
+                          <MoreHorizontal size={16} />
+                        </button>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-
-              <div className="p-5 px-6 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
-                <span className="text-sm font-semibold text-gray-800">
-                  Updated {formatDate(project.updatedAt)}
-                </span>
-
-                <div className="flex gap-2">
-                  <Link href={`/projects/${project.id}`}>
-                    <button className="bg-[#667eea] text-white border-none px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:bg-[#5a6fd8] hover:-translate-y-px">
-                      View Project →
-                    </button>
-                  </Link>
-
-                  {canManage && (
-                    <>
-                      <button
-                        onClick={() => openEdit(project)}
-                        className="bg-white text-gray-900 border border-gray-200 px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer hover:bg-gray-50"
-                        aria-label="Edit project"
-                        title="Edit project"
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => deleteProject(project.id)}
-                        className="bg-red-50 text-red-700 border border-red-200 px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer hover:bg-red-100 hover:border-red-300"
-                        aria-label="Delete project"
-                        title="Delete project"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+                </Link>
+              ))}
             </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-20 px-10 bg-white rounded-[20px] border-2 border-dashed border-gray-200">
-            <div className="text-6xl mb-6 opacity-50">📁</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3">
-              No projects found
-            </h3>
-            <p className="text-gray-500 text-base mb-6">
-              {searchQuery || statusFilter !== 'ALL'
-                ? 'Try adjusting your search or filter criteria'
-                : 'Get started by creating your first project'}
-            </p>
-            {searchQuery || statusFilter !== 'ALL' ? (
-              <button
-                className="bg-[#667eea] text-white border-none py-3 px-6 rounded-xl font-semibold cursor-pointer transition-colors hover:bg-[#5a6fd8]"
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('ALL');
-                }}
-              >
-                Clear Filters
-              </button>
-            ) : canManage ? (
-              <button
-                className="bg-[#667eea] text-white border-none py-3 px-6 rounded-xl font-semibold cursor-pointer transition-colors hover:bg-[#5a6fd8]"
-                onClick={() => setShowCreateModal(true)}
-              >
-                Create Your First Project
-              </button>
-            ) : null}
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-96 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl bg-gray-50/50 dark:bg-white/5">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                <Layout size={32} />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                No projects found
+              </h3>
+              <p className="text-gray-500 max-w-sm mt-2 mb-6">
+                {searchQuery || statusFilter !== 'ALL'
+                  ? 'No projects match your current filters. Try adjusting them.'
+                  : 'Get started by creating your first project.'}
+              </p>
+              {searchQuery || statusFilter !== 'ALL' ? (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('ALL');
+                  }}
+                  className="text-blue-600 font-medium hover:underline"
+                >
+                  Clear all filters
+                </button>
+              ) : canManage ? (
+                <button
+                  onClick={() => setShowCreateDrawer(true)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Create Project
+                </button>
+              ) : null}
+            </div>
+          )}
 
-      {editingProject && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-5 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl animate-[modalSlideIn_0.3s_ease]">
-            <div className="flex justify-between items-center pt-8 px-8">
-              <h2 className="text-2xl font-bold text-gray-800 m-0">
-                Edit Project
-              </h2>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-4 mb-8">
               <button
-                className="bg-gray-100 border-none text-2xl cursor-pointer text-gray-500 p-2 rounded-xl w-10 h-10 flex items-center justify-center transition-all hover:bg-gray-200 hover:text-gray-800"
-                onClick={closeEdit}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-gray-200 dark:border-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
               >
-                ×
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-gray-200 dark:border-gray-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              >
+                <ChevronRight size={16} />
               </button>
             </div>
+          )}
+        </div>
+      </main>
 
-            <form onSubmit={saveEdit} className="p-8">
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                  Project Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editTitle}
-                  onChange={e => setEditTitle(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
-                  placeholder="Enter project title"
-                />
-              </div>
+      {/* Create Project Drawer */}
+      <Drawer
+        open={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        title="Create New Project"
+      >
+        <form onSubmit={createProject} className="flex flex-col gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Project Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                placeholder="e.g. Website Redesign"
+              />
+            </div>
 
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                  Description
-                </label>
-                <textarea
-                  value={editDescription}
-                  onChange={e => setEditDescription(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10 min-h-[100px] resize-y"
-                  placeholder="Project description (optional)"
-                  rows={3}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all min-h-[120px] resize-y"
+                placeholder="Describe the project scope..."
+              />
+            </div>
 
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Due Date
                 </label>
                 <input
                   type="date"
-                  value={editDueDate}
-                  onChange={e => setEditDueDate(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
+                  value={dueDate}
+                  onChange={e => setDueDate(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
-
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                  Status
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Initial Status
                 </label>
                 <select
-                  value={editingProject?.status || 'NOT_STARTED'}
-                  onChange={e =>
-                    setEditingProject(p =>
-                      p ? {...p, status: e.target.value as ProjectStatus} : p,
-                    )
-                  }
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
+                  value={status}
+                  onChange={e => setStatus(e.target.value as ProjectStatus)}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
                 >
-                  {STATUS_OPTIONS.map(s => (
-                    <option key={s} value={s}>
-                      {s.replace('_', ' ')}
-                    </option>
-                  ))}
+                  <option value="NOT_STARTED">Not Started</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="ON_HOLD">On Hold</option>
                 </select>
               </div>
-
-              <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  className="bg-white border-2 border-gray-200 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-300"
-                  onClick={closeEdit}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingEdit || !editTitle.trim()}
-                  className="bg-[#667eea] text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all hover:bg-[#5a6fd8] hover:-translate-y-px disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  {savingEdit ? 'Saving…' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Create Project Modal */}
-      {canManage && showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-5 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl animate-[modalSlideIn_0.3s_ease]">
-            <div className="flex justify-between items-center pt-8 px-8">
-              <h2 className="text-2xl font-bold text-gray-800 m-0">
-                Create New Project
-              </h2>
-              <button
-                className="bg-gray-100 border-none text-2xl cursor-pointer text-gray-500 p-2 rounded-xl w-10 h-10 flex items-center justify-center transition-all hover:bg-gray-200 hover:text-gray-800"
-                onClick={() => setShowCreateModal(false)}
-              >
-                ×
-              </button>
             </div>
 
-            <form onSubmit={createProject} className="p-8">
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                  Project Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
-                  placeholder="Enter project title"
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10 min-h-[100px] resize-y"
-                  placeholder="Project description (optional)"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                    Due Date
-                  </label>
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={e => setDueDate(e.target.value)}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                    Status
-                  </label>
-                  <select
-                    value={status}
-                    onChange={e => setStatus(e.target.value as any)}
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm transition-colors bg-gray-50 focus:outline-none focus:border-[#667eea] focus:ring-4 focus:ring-[#667eea]/10"
-                  >
-                    <option value="NOT_STARTED">Not Started</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="ON_HOLD">On Hold</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">
-                  Add Team Members
-                </label>
-                <div className="max-h-[200px] overflow-y-auto border-2 border-gray-200 rounded-xl p-2 bg-gray-50">
-                  {memberCandidates.map(member => (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Team Members
+              </label>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-[#1a1a1a] max-h-[200px] overflow-y-auto p-2">
+                {memberCandidates.length === 0 ? (
+                  <p className="text-gray-400 text-sm p-2 text-center">
+                    Loading members...
+                  </p>
+                ) : (
+                  memberCandidates.map(member => (
                     <div
                       key={member.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedMembers.includes(member.id)
-                          ? 'bg-[#667eea] text-white'
-                          : 'hover:bg-gray-200'
-                      }`}
                       onClick={() => {
                         setSelectedMembers(prev =>
                           prev.includes(member.id)
@@ -872,34 +681,127 @@ export default function ProjectsPage() {
                             : [...prev, member.id],
                         );
                       }}
+                      className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                        selectedMembers.includes(member.id)
+                          ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                          : 'hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent'
+                      }`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white flex items-center justify-center font-semibold text-xs border border-white">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                          selectedMembers.includes(member.id)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                        }`}
+                      >
                         {getInitials(member.name)}
                       </div>
-                      <div>
-                        <div className="font-semibold">{member.name}</div>
-                        <div className="text-xs opacity-70">{member.email}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {member.name}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {member.email}
+                        </div>
                       </div>
+                      {selectedMembers.includes(member.id) && (
+                        <CheckCircle2 size={16} className="text-blue-600" />
+                      )}
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 mt-auto">
+            <button
+              type="submit"
+              disabled={creating || !title.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+            >
+              {creating ? 'Creating Project...' : 'Create Project'}
+            </button>
+          </div>
+        </form>
+      </Drawer>
+
+      {/* Edit Modal (Keeping as fallback or simple modal since logic is reused) */}
+      {editingProject && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#111] rounded-2xl w-full max-w-lg shadow-2xl border border-gray-200 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Edit Project
+              </h2>
+              <button
+                onClick={closeEdit}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <AlertCircle className="rotate-45" size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={saveEdit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={e => setEditDescription(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg outline-none focus:border-blue-500 min-h-[100px]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  value={editDueDate}
+                  onChange={e => setEditDueDate(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg outline-none focus:border-blue-500"
+                />
               </div>
 
-              <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+              {/* Delete Button inside Edit for convenience */}
+              <div className="pt-4 flex items-center justify-between gap-4">
                 <button
                   type="button"
-                  className="bg-white border-2 border-gray-200 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-300"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={e => deleteProject(editingProject.id, e)}
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  Cancel
+                  Delete Project
                 </button>
-                <button
-                  type="submit"
-                  disabled={creating || !title.trim()}
-                  className="bg-[#667eea] text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer transition-all hover:bg-[#5a6fd8] hover:-translate-y-px disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  {creating ? 'Creating...' : 'Create Project'}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeEdit}
+                    className="px-4 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingEdit}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {savingEdit ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
