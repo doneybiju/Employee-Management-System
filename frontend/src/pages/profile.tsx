@@ -284,8 +284,7 @@ export default function ProfilePage() {
           href="/change-password"
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium shadow-sm transition-all hover:bg-blue-700 hover:-translate-y-px hover:shadow-md no-underline"
         >
-          <i className="fas fa-lock text-white" />{' '}
-          <span>Change password</span>
+          <i className="fas fa-lock text-white" /> <span>Change password</span>
         </Link>
       </div>
 
@@ -686,9 +685,7 @@ function DocTile({
           )}
         </div>
 
-        {extra && (
-          <div className="mt-1.5 text-xs text-gray-500">{extra}</div>
-        )}
+        {extra && <div className="mt-1.5 text-xs text-gray-500">{extra}</div>}
 
         {proxied && (
           <div className="mt-1.5">
