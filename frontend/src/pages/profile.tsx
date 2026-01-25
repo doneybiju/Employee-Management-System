@@ -743,6 +743,25 @@ function InfoBox({
   );
 }
 
+async function downloadWithAuth(url: string, baseName: string, kind: string) {
+  try {
+    const res = await fetchWithAuth(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${baseName}_${kind}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }, 0);
+  } catch (e: any) {
+    alert(e?.message || 'Download failed');
+  }
+}
+
 function DocTile({
   label,
   value,
