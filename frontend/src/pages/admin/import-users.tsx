@@ -9,6 +9,16 @@ import {
   ImportCommitResult,
   ImportField,
 } from '@/lib/api';
+import {
+  UploadCloud,
+  TableProperties,
+  CheckCircle,
+  FileSpreadsheet,
+  AlertCircle,
+  Check,
+  Loader2,
+  Download,
+} from 'lucide-react';
 
 type Step = 'upload' | 'map' | 'result';
 
@@ -36,27 +46,13 @@ function ImportUsersPageInner() {
     );
   };
 
-  const hasPreview = !!preview && !!file;
-
-  // Progress steps configuration
   const steps = [
-    {id: 'upload', label: 'Upload File', description: 'Select your CSV file'},
-    {
-      id: 'map',
-      label: 'Map Columns',
-      description: 'Match CSV columns to fields',
-    },
-    {
-      id: 'result',
-      label: 'Import Result',
-      description: 'Review import outcome',
-    },
+    {id: 'upload', label: 'Upload File', icon: UploadCloud},
+    {id: 'map', label: 'Map Columns', icon: TableProperties},
+    {id: 'result', label: 'Review & Finish', icon: CheckCircle},
   ];
 
   const stepIndex = steps.findIndex(s => s.id === step);
-  const progressPct =
-    steps.length <= 1 ? 0 : (stepIndex / (steps.length - 1)) * 100;
-  const edgePct = 100 / (steps.length * 2);
 
   const [retryLoading, setRetryLoading] = useState(false);
 
@@ -151,44 +147,6 @@ function ImportUsersPageInner() {
     }
   };
 
-  const handleColumnMappingChange = (colIndex: number, fieldId: string) => {
-    setMapping(prev => {
-      const next: Record<string, number | null> = {...prev};
-
-      // Remove this column from any field currently using it
-      for (const key of Object.keys(next)) {
-        if (next[key] === colIndex) {
-          next[key] = null;
-        }
-      }
-
-      if (!fieldId) {
-        // User chose "Ignore"
-        return next;
-      }
-
-      next[fieldId] = colIndex;
-      return next;
-    });
-  };
-
-  const getSelectedFieldForColumn = (colIndex: number): string => {
-    for (const [fieldId, col] of Object.entries(mapping)) {
-      if (col === colIndex) return fieldId;
-    }
-    return '';
-  };
-
-  const getUsedFieldIdsExcludingColumn = (
-    excludeColIndex: number,
-  ): Set<string> => {
-    const used = new Set<string>();
-    for (const [fieldId, col] of Object.entries(mapping)) {
-      if (col != null && col !== excludeColIndex) used.add(fieldId);
-    }
-    return used;
-  };
-
   const getMissingRequiredFields = (fields: ImportField[]) => {
     return fields.filter(f => {
       if (companyEmailMode === 'generate' && isCompanyEmailField(f))
@@ -255,1073 +213,401 @@ function ImportUsersPageInner() {
     fileInputRef.current?.click();
   };
 
-  const getStepStatus = (stepId: Step) => {
-    if (stepId === step) return 'current';
-    const stepIndex = steps.findIndex(s => s.id === stepId);
-    const currentIndex = steps.findIndex(s => s.id === step);
-    return stepIndex < currentIndex ? 'completed' : 'upcoming';
-  };
-
   return (
-    <div style={{maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem'}}>
-      <div style={{marginBottom: '2rem'}}>
-        <h1
-          style={{
-            fontSize: '1.875rem',
-            fontWeight: 700,
-            marginBottom: '0.5rem',
-            color: '#1f2937',
-          }}
-        >
+    <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Import Employees
         </h1>
-        <p style={{color: '#6b7280', fontSize: '1rem'}}>
+        <p className="text-gray-500 dark:text-gray-400 text-lg">
           Upload a CSV file to import employee data into the system
         </p>
       </div>
 
-      {/* Progress Steps */}
-      <div style={{marginBottom: '3rem'}}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            position: 'relative',
-          }}
-        >
-          {steps.map((stepItem, index) => {
-            const status = getStepStatus(stepItem.id as Step);
+      {/* Stepper */}
+      <div className="mb-12">
+        <div className="relative flex justify-between">
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 dark:bg-gray-700 -z-10 -translate-y-1/2" />
+          {steps.map((s, idx) => {
+            const isActive = s.id === step;
+            const isCompleted = stepIndex > idx;
             return (
               <div
-                key={stepItem.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  zIndex: 2,
-                  flex: 1,
-                }}
+                key={s.id}
+                className="flex flex-col items-center bg-white dark:bg-[#0a0a0a] px-4"
               >
                 <div
-                  style={{
-                    width: '2.5rem',
-                    height: '2.5rem',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    marginBottom: '0.5rem',
-                    ...(status === 'completed'
-                      ? {backgroundColor: '#10b981', color: 'white'}
-                      : status === 'current'
-                        ? {backgroundColor: '#3b82f6', color: 'white'}
-                        : {backgroundColor: '#f3f4f6', color: '#9ca3af'}),
-                  }}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : isCompleted
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+                  }`}
                 >
-                  {status === 'completed' ? '✓' : index + 1}
+                  {isCompleted ? (
+                    <Check className="w-6 h-6" />
+                  ) : (
+                    <s.icon className="w-5 h-5" />
+                  )}
                 </div>
-                <div style={{textAlign: 'center'}}>
-                  <div
-                    style={{
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color:
-                        status === 'completed'
-                          ? '#10b981'
-                          : status === 'current'
-                            ? '#3b82f6'
-                            : '#9ca3af',
-                    }}
-                  >
-                    {stepItem.label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      marginTop: '0.25rem',
-                    }}
-                  >
-                    {stepItem.description}
-                  </div>
-                </div>
+                <span
+                  className={`text-sm font-medium ${
+                    isActive
+                      ? 'text-blue-600'
+                      : isCompleted
+                        ? 'text-blue-600'
+                        : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  {s.label}
+                </span>
               </div>
             );
           })}
-          {/* Progress line
-          below*/}
-          <div
-            style={{
-              position: 'absolute',
-              top: '1.25rem',
-              left: `${edgePct}%`,
-              right: `${edgePct}%`,
-              height: '2px',
-              backgroundColor: '#e5e7eb',
-              zIndex: 1,
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                backgroundColor: '#10b981',
-                width: `${progressPct}%`,
-                transition: 'width 0.3s ease',
-              }}
-            />
-          </div>
-          {/* <div style={{
-            position: 'absolute',
-            top: '1.25rem',
-            left: '25%',
-            right: '25%',
-            height: '2px',
-            backgroundColor: '#e5e7eb',
-            zIndex: 1
-          }}>
-            <div style={{
-              height: '100%',
-              backgroundColor: '#10b981',
-              width: step === 'upload' ? '0%' : step === 'map' ? '50%' : '100%',
-              transition: 'width 0.3s ease'
-            }} />
-          </div> */}
         </div>
       </div>
 
       {/* Error Alert */}
       {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '8px',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.75rem',
-          }}
-        >
-          <div style={{color: '#dc2626', flexShrink: 0}}>
-            <svg
-              style={{width: '1.25rem', height: '1.25rem'}}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div style={{color: '#dc2626', fontSize: '0.875rem'}}>{error}</div>
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/20 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
         </div>
       )}
 
       {/* Step 1: Upload */}
       {step === 'upload' && (
-        <section
-          style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
+        <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
           <div
-            style={{textAlign: 'center', maxWidth: '500px', margin: '0 auto'}}
+            className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer group ${
+              loading
+                ? 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-700'
+                : 'border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10'
+            }`}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={triggerFileInput}
           >
-            <div
-              style={{
-                border: '2px dashed #d1d5db',
-                borderRadius: '8px',
-                padding: '3rem 2rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                backgroundColor: loading ? '#f9fafb' : '#fafafa',
-                ...(!loading && {
-                  ':hover': {
-                    borderColor: '#3b82f6',
-                    backgroundColor: '#f0f9ff',
-                  },
-                }),
-              }}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onClick={triggerFileInput}
-            >
-              <div style={{color: '#6b7280', marginBottom: '1rem'}}>
-                <svg
-                  style={{width: '3rem', height: '3rem', margin: '0 auto'}}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-              </div>
-              <div style={{marginBottom: '0.5rem'}}>
-                <span style={{color: '#3b82f6', fontWeight: 600}}>
-                  Click to upload
+            <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+            <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Drag CSV here or click to browse
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Max file size: 10MB
+            </p>
+
+            {loading && (
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                <span className="text-gray-600 dark:text-gray-300">
+                  Processing file...
                 </span>
-                <span style={{color: '#6b7280'}}> or drag and drop</span>
               </div>
-              <p
-                style={{
-                  color: '#6b7280',
-                  fontSize: '0.875rem',
-                  marginBottom: '1rem',
-                }}
-              >
-                CSV files only (max 10MB)
-              </p>
-              {loading && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '1rem',
-                      height: '1rem',
-                      border: '2px solid #e5e7eb',
-                      borderTop: '2px solid #3b82f6',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                    }}
-                  />
-                  <span style={{color: '#6b7280', fontSize: '0.875rem'}}>
-                    Processing file...
-                  </span>
-                </div>
-              )}
-            </div>
+            )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              onChange={handleFileChange}
-              disabled={loading}
-              style={{display: 'none'}}
-            />
-
-            <div style={{marginTop: '2rem', textAlign: 'left'}}>
-              <h3
-                style={{
-                  fontWeight: 600,
-                  marginBottom: '0.5rem',
-                  color: '#374151',
-                }}
-              >
-                CSV Format Requirements
-              </h3>
-              <ul
-                style={{
-                  color: '#6b7280',
-                  fontSize: '0.875rem',
-                  listStyle: 'disc',
-                  paddingLeft: '1.5rem',
-                }}
-              >
-                <li>First row should contain column headers</li>
-                <li>Supported fields: Name, Email, Department, Position</li>
-                <li>Date format: YYYY-MM-DD</li>
-                <li>File size limit: 10MB</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Company Email Mode */}
-      {hasPreview && step === 'map' && (
-        <div
-          style={{
-            backgroundColor: '#f8fafc',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1rem',
-          }}
-        >
-          <div
-            style={{fontWeight: 600, color: '#111827', marginBottom: '0.5rem'}}
-          >
-            Company Email
-          </div>
-
-          <label
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginRight: '1rem',
-            }}
-          >
-            <input
-              type="radio"
-              name="companyEmailMode"
-              checked={companyEmailMode === 'csv'}
-              onChange={() => setCompanyEmailMode('csv')}
-            />
-            Use from CSV
-          </label>
-
-          <label
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            <input
-              type="radio"
-              name="companyEmailMode"
-              checked={companyEmailMode === 'generate'}
-              onChange={() => {
-                setCompanyEmailMode('generate');
-
-                // Clear any existing company email mapping
-                setMapping(prev => {
-                  const next = {...prev};
-                  if (preview) {
-                    for (const f of preview.fields) {
-                      if (isCompanyEmailField(f)) next[f.id] = null;
-                    }
-                  }
-                  return next;
-                });
+            <a
+              href="#"
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
               }}
-            />
-            Generate new (ignore CSV company email)
-          </label>
+              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Download Template
+            </a>
+          </div>
 
-          <div
-            style={{
-              marginTop: '0.5rem',
-              fontSize: '0.875rem',
-              color: '#6b7280',
-            }}
-          >
-            If “Generate new” is selected, the Company Email column will not be
-            imported from the CSV.
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            onChange={handleFileChange}
+            disabled={loading}
+            className="hidden"
+          />
+
+          <div className="mt-8">
+            <h3 className="font-medium text-gray-900 dark:text-white mb-2">
+              CSV Requirements
+            </h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-gray-500 dark:text-gray-400">
+              <li>First row must be headers</li>
+              <li>Required: Name, Email, Department, Position</li>
+              <li>Date format: YYYY-MM-DD</li>
+            </ul>
           </div>
         </div>
       )}
 
-      {/* Step 2: Mapping */}
-      {hasPreview && step === 'map' && (
-        <section
-          style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <div style={{marginBottom: '1.5rem'}}>
-            <h2
-              style={{
-                fontSize: '1.25rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#1f2937',
-              }}
-            >
-              Map CSV Columns
-            </h2>
-            <p style={{color: '#6b7280', fontSize: '0.875rem'}}>
-              Match your CSV columns to the system fields. Required fields are
-              marked with <span style={{color: '#ef4444'}}>*</span>.
-            </p>
-          </div>
-
-          {/* File Info */}
-          <div
-            style={{
-              backgroundColor: '#f0f9ff',
-              padding: '1rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem',
-              border: '1px solid #e0f2fe',
-            }}
-          >
-            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-              <svg
-                style={{width: '1.25rem', height: '1.25rem', color: '#0ea5e9'}}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+      {/* Step 2: Map */}
+      {step === 'map' && preview && (
+        <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Map CSV Columns
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Match your CSV columns to the system fields.
+              </p>
+            </div>
+            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setCompanyEmailMode('csv')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  companyEmailMode === 'csv'
+                    ? 'bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <div>
-                <span style={{fontWeight: 600}}>{preview.fileName}</span>
-                <span
-                  style={{
-                    color: '#6b7280',
-                    fontSize: '0.875rem',
-                    marginLeft: '0.75rem',
-                  }}
-                >
-                  {preview.rowCount} rows • {preview.columnCount} columns
-                </span>
-              </div>
+                Use CSV Email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCompanyEmailMode('generate');
+                  setMapping(prev => {
+                    const next = {...prev};
+                    for (const f of preview.fields) {
+                      if (isCompanyEmailField(f)) next[f.id] = null;
+                    }
+                    return next;
+                  });
+                }}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  companyEmailMode === 'generate'
+                    ? 'bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                }`}
+              >
+                Auto-Generate
+              </button>
             </div>
           </div>
 
-          {/* Mapping Table */}
-          <div
-            style={{
-              overflowX: 'auto',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-            }}
-          >
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.875rem',
-                minWidth: '800px',
-              }}
-            >
-              <thead>
-                <tr style={{backgroundColor: '#f9fafb'}}>
-                  <th
-                    style={{
-                      padding: '0.75rem',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: '#374151',
-                      borderBottom: '1px solid #e5e7eb',
-                      width: '120px',
-                    }}
-                  >
+          {/* File Info */}
+          <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-lg mb-8">
+            <FileSpreadsheet className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div>
+              <span className="font-medium text-gray-900 dark:text-white">
+                {preview.fileName}
+              </span>
+              <span className="text-gray-500 dark:text-gray-400 ml-2 text-sm">
+                {preview.rowCount} rows • {preview.columnCount} columns
+              </span>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                  <th className="px-4 py-3 font-medium text-gray-900 dark:text-white w-1/3">
                     System Field
                   </th>
-                  {preview.header.map((h, colIndex) => {
-                    const currentFieldId = getSelectedFieldForColumn(colIndex);
-                    const usedElsewhere =
-                      getUsedFieldIdsExcludingColumn(colIndex);
-
-                    return (
-                      <th
-                        key={colIndex}
-                        style={{
-                          padding: '0.75rem',
-                          borderBottom: '1px solid #e5e7eb',
-                          fontWeight: 600,
-                          color: '#374151',
-                          minWidth: 150,
-                          backgroundColor: '#f9fafb',
-                        }}
-                      >
-                        <div style={{marginBottom: '0.5rem'}}>
-                          {h || (
-                            <span
-                              style={{color: '#9ca3af', fontStyle: 'italic'}}
-                            >
-                              (empty header)
-                            </span>
-                          )}
-                        </div>
-
-                        <select
-                          value={currentFieldId}
-                          onChange={e =>
-                            handleColumnMappingChange(colIndex, e.target.value)
-                          }
-                          style={{
-                            width: '100%',
-                            padding: '0.375rem 0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid #d1d5db',
-                            fontSize: '0.8rem',
-                            backgroundColor: 'white',
-                          }}
-                        >
-                          <option value="">Ignore column</option>
-
-                          {preview.fields
-                            // keep your existing “generate mode hides companyEmail” rule
-                            .filter(
-                              f =>
-                                !(
-                                  companyEmailMode === 'generate' &&
-                                  isCompanyEmailField(f)
-                                ),
-                            )
-                            // NEW: hide fields already selected in other columns (but keep current selection)
-                            .filter(
-                              f =>
-                                !usedElsewhere.has(f.id) ||
-                                f.id === currentFieldId,
-                            )
-                            .map(f => (
-                              <option key={f.id} value={f.id}>
-                                {f.label}
-                                {f.required ? ' *' : ''}
-                              </option>
-                            ))}
-                        </select>
-                      </th>
-                    );
-                  })}
+                  <th className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                    CSV Column
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {preview.rows.slice(0, 10).map((row, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    style={{
-                      backgroundColor: rowIndex % 2 === 0 ? 'white' : '#f9fafb',
-                      transition: 'background-color 0.1s ease',
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: '0.75rem',
-                        borderBottom: '1px solid #e5e7eb',
-                        fontWeight: 500,
-                        color: '#6b7280',
-                        fontSize: '0.8rem',
-                      }}
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {preview.fields
+                  .filter(
+                    f =>
+                      !(
+                        companyEmailMode === 'generate' &&
+                        isCompanyEmailField(f)
+                      ),
+                  )
+                  .map(field => (
+                    <tr
+                      key={field.id}
+                      className="bg-white dark:bg-[#111] hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     >
-                      Row {rowIndex + 2}
-                    </td>
-                    {preview.header.map((_h, colIndex) => (
-                      <td
-                        key={colIndex}
-                        style={{
-                          padding: '0.75rem',
-                          borderBottom: '1px solid #e5e7eb',
-                          whiteSpace: 'nowrap',
-                          maxWidth: 200,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          color: '#374151',
-                        }}
-                        title={row[colIndex] || ''}
-                      >
-                        {row[colIndex] || (
-                          <span style={{color: '#9ca3af'}}>-</span>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                        {field.label}{' '}
+                        {field.required && (
+                          <span className="text-red-500">*</span>
                         )}
                       </td>
-                    ))}
-                  </tr>
-                ))}
+                      <td className="px-4 py-3">
+                        <select
+                          value={mapping[field.id] ?? ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setMapping(prev => ({
+                              ...prev,
+                              [field.id]: val === '' ? null : Number(val),
+                            }));
+                          }}
+                          className="w-full p-2.5 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="">Select CSV Column...</option>
+                          {preview.header.map((h, idx) => (
+                            <option key={idx} value={idx}>
+                              {h || `Column ${idx + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
 
-          {preview.rows.length > 10 && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '1rem',
-                color: '#6b7280',
-                fontSize: '0.875rem',
-              }}
-            >
-              Showing first 10 rows of {preview.rows.length} total rows
-            </div>
-          )}
-
-          {/* Required Fields Info */}
-          <div
-            style={{
-              marginTop: '1.5rem',
-              padding: '1rem',
-              backgroundColor: '#fffbeb',
-              border: '1px solid #fef3c7',
-              borderRadius: '8px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.5rem',
-              }}
-            >
-              <svg
-                style={{width: '1rem', height: '1rem', color: '#d97706'}}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-              <span style={{fontWeight: 600, color: '#92400e'}}>
-                Required Fields
-              </span>
-            </div>
-            <div style={{color: '#92400e', fontSize: '0.875rem'}}>
-              {preview.fields
-                .filter(
-                  f =>
-                    f.required &&
-                    !(
-                      companyEmailMode === 'generate' && isCompanyEmailField(f)
-                    ),
-                )
-                .map(f => f.label)
-                .join(', ')}
-            </div>
-          </div>
-
           {/* Action Buttons */}
-          <div
-            style={{
-              marginTop: '2rem',
-              display: 'flex',
-              gap: '0.75rem',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="mt-8 flex gap-4">
             <button
               type="button"
               onClick={handleImport}
               disabled={loading}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '6px',
-                border: 'none',
-                background: loading ? '#9ca3af' : '#3b82f6',
-                color: '#ffffff',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.2s ease',
-                ...(!loading && {
-                  ':hover': {backgroundColor: '#2563eb'},
-                }),
-              }}
+              className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <>
-                  <div
-                    style={{
-                      width: '1rem',
-                      height: '1rem',
-                      border: '2px solid transparent',
-                      borderTop: '2px solid currentColor',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                    }}
-                  />
-                  Importing...
-                </>
+                <Loader2 className="animate-spin w-4 h-4" />
               ) : (
-                <>
-                  <svg
-                    style={{width: '1rem', height: '1rem'}}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                    />
-                  </svg>
-                  Import Employees
-                </>
+                <Check className="w-4 h-4" />
               )}
+              {loading ? 'Importing...' : 'Import Users'}
             </button>
             <button
               type="button"
               onClick={resetAll}
               disabled={loading}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                background: '#ffffff',
-                color: '#374151',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-                ...(!loading && {
-                  ':hover': {backgroundColor: '#f9fafb'},
-                }),
-              }}
+              className="bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Start Over
+              Cancel
             </button>
           </div>
-        </section>
+        </div>
       )}
 
       {/* Step 3: Result */}
-      {result && step === 'result' && (
-        <section
-          style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <div
-            style={{textAlign: 'center', maxWidth: '600px', margin: '0 auto'}}
-          >
-            <div
-              style={{
-                width: '4rem',
-                height: '4rem',
-                borderRadius: '50%',
-                background: '#ecfdf5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1.5rem',
-                border: '2px solid #10b981',
-              }}
-            >
-              <svg
-                style={{width: '2rem', height: '2rem', color: '#10b981'}}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-
-            <h2
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                marginBottom: '0.5rem',
-                color: '#1f2937',
-              }}
-            >
-              Import Complete
-            </h2>
-            <p style={{color: '#6b7280', marginBottom: '2rem'}}>
-              Your employee data has been successfully imported
-            </p>
-
-            {/* Results Grid */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1rem',
-                marginBottom: '2rem',
-              }}
-            >
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '1.5rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    color: '#3b82f6',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  {result.total}
-                </div>
-                <div style={{fontSize: '0.875rem', color: '#6b7280'}}>
-                  Total Rows
-                </div>
-              </div>
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '1.5rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    color: '#10b981',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  {result.createdUsers}
-                </div>
-                <div style={{fontSize: '0.875rem', color: '#6b7280'}}>
-                  Users Created
-                </div>
-              </div>
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '1.5rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    color: '#10b981',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  {result.createdInterns}
-                </div>
-                <div style={{fontSize: '0.875rem', color: '#6b7280'}}>
-                  Intern Profiles
-                </div>
-              </div>
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '1.5rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    color: '#10b981',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  {result.createdInternships}
-                </div>
-                <div style={{fontSize: '0.875rem', color: '#6b7280'}}>
-                  Internships
-                </div>
-              </div>
-            </div>
-
-            {/* Skipped Rows */}
-            {(result.skippedExisting > 0 || result.skippedEmpty > 0) && (
-              <div
-                style={{
-                  backgroundColor: '#fffbeb',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  marginBottom: '2rem',
-                  textAlign: 'left',
-                }}
-              >
-                <h3
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: '0.5rem',
-                    color: '#92400e',
-                  }}
-                >
-                  Skipped Rows
-                </h3>
-                <div style={{color: '#92400e', fontSize: '0.875rem'}}>
-                  {result.skippedExisting > 0 && (
-                    <div>
-                      • {result.skippedExisting} rows with existing users
-                    </div>
-                  )}
-                  {result.skippedEmpty > 0 && (
-                    <div>• {result.skippedEmpty} empty rows</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* __________________________________________________________________________________ */}
-
-            {result.setupEmails && (
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 10,
-                  padding: 16,
-                  marginBottom: 16,
-                  textAlign: 'left',
-                }}
-              >
-                <h3 style={{margin: 0, marginBottom: 8, fontWeight: 600}}>
-                  Password setup emails
-                </h3>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 16,
-                    flexWrap: 'wrap',
-                    marginBottom: 10,
-                  }}
-                >
-                  <div>
-                    <strong>Sent:</strong>{' '}
-                    {result.setupEmailsSent ??
-                      result.setupEmails.filter(r => r.ok).length}
-                  </div>
-                  <div>
-                    <strong>Failed:</strong>{' '}
-                    {result.setupEmailsFailed ??
-                      result.setupEmails.filter(r => !r.ok).length}
-                  </div>
-                </div>
-
-                {result.setupEmails.some(r => !r.ok) && (
-                  <button
-                    type="button"
-                    onClick={retryFailedEmails}
-                    disabled={retryLoading}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      border: '1px solid #e5e7eb',
-                      background: '#fff',
-                      cursor: retryLoading ? 'not-allowed' : 'pointer',
-                      marginBottom: 10,
-                    }}
-                  >
-                    {retryLoading ? 'Retrying…' : 'Retry failed emails'}
-                  </button>
-                )}
-
-                <div
-                  style={{
-                    maxHeight: 160,
-                    overflowY: 'auto',
-                    fontSize: 13,
-                    color: '#374151',
-                  }}
-                >
-                  {result.setupEmails.map(r => (
-                    <div
-                      key={r.userId}
-                      style={{padding: '6px 0', borderTop: '1px solid #e5e7eb'}}
-                    >
-                      <div>
-                        <strong>{r.email}</strong> — {r.ok ? 'Sent' : 'Failed'}
-                      </div>
-                      {!r.ok && r.error && (
-                        <div style={{color: '#b91c1c'}}>{r.error}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Errors */}
-            {result.rowErrors.length > 0 && (
-              <div
-                style={{
-                  backgroundColor: '#fef2f2',
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  marginBottom: '2rem',
-                  textAlign: 'left',
-                }}
-              >
-                <h3
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: '0.5rem',
-                    color: '#dc2626',
-                  }}
-                >
-                  Import Errors
-                </h3>
-                <div
-                  style={{
-                    fontSize: '0.875rem',
-                    color: '#dc2626',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                  }}
-                >
-                  {result.rowErrors.map((e, idx) => (
-                    <div key={idx} style={{marginBottom: '0.25rem'}}>
-                      <strong>Row {e.row}:</strong> {e.error}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={resetAll}
-              style={{
-                padding: '0.75rem 2rem',
-                borderRadius: '6px',
-                border: '1px solid #3b82f6',
-                background: '#3b82f6',
-                color: '#ffffff',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Import Another File
-            </button>
+      {step === 'result' && result && (
+        <div className="bg-white dark:bg-[#111] rounded-xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm text-center">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8" />
           </div>
-        </section>
-      )}
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Import Complete
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">
+            Processed {result.total} rows successfully.
+          </p>
 
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {result.createdUsers}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Users Created
+              </div>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {result.createdInterns}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Intern Profiles
+              </div>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {result.createdInternships}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Internships
+              </div>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                {result.total}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Total Rows
+              </div>
+            </div>
+          </div>
+
+          {result.setupEmails && result.setupEmails.length > 0 && (
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-lg mb-8 text-left">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+                Password Setup Emails
+              </h3>
+              <div className="flex gap-4 mb-4 text-sm">
+                <div>
+                  <span className="font-medium text-green-600">Sent:</span>{' '}
+                  {result.setupEmailsSent ??
+                    result.setupEmails.filter(r => r.ok).length}
+                </div>
+                <div>
+                  <span className="font-medium text-red-600">Failed:</span>{' '}
+                  {result.setupEmailsFailed ??
+                    result.setupEmails.filter(r => !r.ok).length}
+                </div>
+              </div>
+
+              {result.setupEmails.some(r => !r.ok) && (
+                <button
+                  type="button"
+                  onClick={retryFailedEmails}
+                  disabled={retryLoading}
+                  className="mb-4 text-sm bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  {retryLoading ? 'Retrying...' : 'Retry failed emails'}
+                </button>
+              )}
+
+              <div className="max-h-40 overflow-y-auto border-t border-gray-200 dark:border-gray-700 pt-2 text-sm text-gray-600 dark:text-gray-300">
+                {result.setupEmails.map((r, i) => (
+                  <div
+                    key={i}
+                    className="py-1 flex justify-between items-center"
+                  >
+                    <span>{r.email}</span>
+                    <span className={r.ok ? 'text-green-600' : 'text-red-600'}>
+                      {r.ok ? 'Sent' : 'Failed'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {result.rowErrors.length > 0 && (
+            <div className="mb-8 text-left">
+              <h3 className="text-red-600 font-medium mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Errors ({result.rowErrors.length})
+              </h3>
+              <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-lg p-4 max-h-60 overflow-y-auto font-mono text-sm text-red-700 dark:text-red-400">
+                {result.rowErrors.map((e, i) => (
+                  <div
+                    key={i}
+                    className="mb-1 border-b border-red-100 dark:border-red-800/20 last:border-0 pb-1"
+                  >
+                    <span className="font-bold">Row {e.row}:</span> {e.error}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={resetAll}
+            className="bg-blue-600 text-white px-8 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Import Another File
+          </button>
+        </div>
+      )}
     </div>
   );
 }
