@@ -1,13 +1,12 @@
-// frontend/src/pages/login.tsx
-
-import {useEffect, useState, FormEvent} from 'react';
-import {useRouter} from 'next/router';
-import {useAuth} from '@/context/AuthContext';
+import { useEffect, useState, FormEvent } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { Hexagon, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const {login, isAuthenticated, ready} = useAuth();
+  const { login, isAuthenticated, ready } = useAuth();
   const [showPw, setShowPw] = useState(false);
 
   const [email, setEmail] = useState('');
@@ -48,7 +47,6 @@ export default function LoginPage() {
         typeof navigator !== 'undefined' ? navigator.platform : undefined,
       userAgent:
         typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      // fpHash: 'optional-fingerprint-hash', // add if you implement one
     };
   }
 
@@ -62,8 +60,7 @@ export default function LoginPage() {
     setErr(null);
     setLoading(true);
     try {
-      await login(email.trim().toLowerCase(), password, buildHints()); // ⬅ pass hints
-      // redirect happens in AuthContext
+      await login(email.trim().toLowerCase(), password, buildHints());
     } catch (e: any) {
       setErr(e?.message || 'Login failed');
     } finally {
@@ -71,117 +68,130 @@ export default function LoginPage() {
     }
   }
 
-  // simple inline SVG icons
-  const MailIcon = () => (
-    <svg
-      className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M2 6.5A2.5 2.5 0 0 1 4.5 4h15A2.5 2.5 0 0 1 22 6.5v11A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5v-11Zm2.4-.5 7.6 5 7.6-5H4.4Zm15.6 2.3-7.2 4.8a1.5 1.5 0 0 1-1.6 0L4 8.3V17.5c0 .28.22.5.5.5h15c.28 0 .5-.22.5-.5V8.3Z" />
-    </svg>
-  );
-  const LockIcon = () => (
-    <svg
-      className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M7 10V7a5 5 0 1 1 10 0v3h1.5A1.5 1.5 0 0 1 20 11.5v8A1.5 1.5 0 0 1 18.5 21h-13A1.5 1.5 0 0 1 4 19.5v-8A1.5 1.5 0 0 1 5.5 10H7Zm2 0h6V7a3 3 0 0 0-6 0v3Z" />
-    </svg>
-  );
-
   return (
-    <main className="min-h-[100dvh] grid place-items-center p-6 bg-gradient-to-br from-[#eef2f7] to-[#f7f9fc] overflow-hidden">
-      <section className="w-full max-w-[420px] p-8 md:p-7 bg-white/96 rounded-[18px] shadow-[0_14px_32px_rgba(0,0,0,0.14)] backdrop-blur-[6px] box-border">
-        <header className="text-center mb-[22px]">
-          <h1 className="text-[26px] font-bold text-gray-900">Welcome back</h1>
-          <p className="mt-1.5 text-gray-500 text-sm">Sign in to continue</p>
-        </header>
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-8">
 
+        {/* Header */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center mb-4">
+            <Hexagon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Sign in to your account
+          </h1>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Welcome back! Please enter your details.
+          </p>
+        </div>
+
+        {/* Error Alert */}
         {err && (
-          <div className="bg-red-50 text-red-700 border border-red-200 p-2.5 rounded-[10px] text-sm mb-[14px]">
+          <div className="mb-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
             {err}
           </div>
         )}
 
-        <form className="flex flex-col" onSubmit={onSubmit} noValidate>
-          <div className="relative mb-4">
-            <MailIcon />
-            <input
-              className="w-full border-none outline-none bg-gray-100 text-gray-900 py-[14px] px-[14px] pl-[44px] rounded-xl text-[15px] transition-all focus:bg-[#eef1f5] focus:ring-2 focus:ring-blue-500/25"
-              type="email"
-              placeholder="Company email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
+        <form className="space-y-5" onSubmit={onSubmit} noValidate>
+          {/* Email Input */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Email address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-2.5 w-5 h-5 text-gray-400" />
+              <input
+                id="email"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
           </div>
 
-          <div className="relative mb-4">
-            <LockIcon />
-            <input
-              className="w-full border-none outline-none bg-gray-100 text-gray-900 py-[14px] px-[14px] pl-[44px] rounded-xl text-[15px] transition-all focus:bg-[#eef1f5] focus:ring-2 focus:ring-blue-500/25"
-              type={showPw ? 'text' : 'password'}
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-            <button
-              type="button"
-              aria-label={showPw ? 'Hide password' : 'Show password'}
-              onClick={() => setShowPw(s => !s)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 border-none bg-transparent p-1.5 cursor-pointer text-gray-500"
-            >
-              {showPw ? '🙈' : '👁️'}
-            </button>
+          {/* Password Input */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-2.5 w-5 h-5 text-gray-400" />
+              <input
+                id="password"
+                className="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                type={showPw ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                aria-label={showPw ? 'Hide password' : 'Show password'}
+              >
+                {showPw ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            <div className="flex justify-end mt-2">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
-          <Link
-            href="/forgot-password"
-            className="inline-block ml-auto mb-[18px] text-blue-600 text-sm hover:underline"
-          >
-            Forgot password?
-          </Link>
-
+          {/* Submit Button */}
           <button
-            className="w-full p-[14px] border-none rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-semibold cursor-pointer shadow-[0_6px_14px_rgba(79,70,229,0.35)] transition-all hover:-translate-y-px hover:shadow-[0_8px_18px_rgba(79,70,229,0.45)] disabled:opacity-60 disabled:cursor-not-allowed"
             type="submit"
             disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
-
-          <div className="flex items-center gap-3 my-5 text-gray-400 text-[13px] before:flex-1 before:h-px before:bg-gray-200 after:flex-1 after:h-px after:bg-gray-200">
-            <span>or</span>
-          </div>
-
-          <button
-            type="button"
-            className="w-full p-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium cursor-pointer flex items-center justify-center gap-3 hover:bg-gray-50"
-            onClick={() => {
-              window.location.href = '/api/auth/google';
-            }}
-          >
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google logo"
-              width={20}
-              height={20}
-            />
-            Continue with Google
-          </button>
-
-          <div className="text-center mt-4 text-gray-500 text-sm">
-            Need access? Contact IT.
-          </div>
         </form>
-      </section>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-[#111] text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        {/* Google Button */}
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = '/api/auth/google';
+          }}
+          className="w-full flex items-center justify-center gap-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-[#111] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors text-gray-700 dark:text-gray-200 font-medium"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google logo"
+            width={20}
+            height={20}
+          />
+          Google
+        </button>
+
+        <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+          Need access?{' '}
+          <a href="#" className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400">
+            Contact IT Support
+          </a>
+        </p>
+      </div>
     </main>
   );
 }
