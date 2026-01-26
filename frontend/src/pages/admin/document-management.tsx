@@ -15,7 +15,7 @@ type UserRow = {
   department: string | null;
   position: string | null;
   status: 'active' | 'inactive' | null;
-  internId: string | null;
+  employeeId: string | null;
   companyEmail: string | null;
   personalEmail: string | null;
   avatarUrl?: string | null;
@@ -70,7 +70,7 @@ const DOC_TYPE_MAP: Record<Kind,'ACCEPTANCE_LETTER'|'LEARNING_AGREEMENT'|'ID_PAS
 };
 
 type ExpiringPassportRow = {
-  internId: string;
+  employeeId: string;
   userId: number | null;
   displayName: string;
   companyEmail: string | null;
@@ -151,7 +151,7 @@ export default function AdminDocumentManagement() {
       try {
         const res = await fetchWithAuth(`/api/admin/users?tab=active&q=${encodeURIComponent(q)}`);
         const rows = await res.json();
-        if (!dead) setUsers((rows || []).filter((r: any) => !!r.internId));
+        if (!dead) setUsers((rows || []).filter((r: any) => !!r.employeeId));
       } finally { if (!dead) setLoading(false); }
     })();
     return () => { dead = true; };
@@ -159,12 +159,12 @@ export default function AdminDocumentManagement() {
 
   // Load docs-summary for filters
   useEffect(() => {
-    const internIds = users.filter(u => u.internId).map(u => String(u.internId));
-    if (!internIds.length) { setDocSummary({}); return; }
+    const employeeIds = users.filter(u => u.employeeId).map(u => String(u.employeeId));
+    if (!employeeIds.length) { setDocSummary({}); return; }
     let dead = false;
     (async () => {
       try {
-        const url = `/api/admin/users/docs-summary?ids=${encodeURIComponent(internIds.join(','))}`;
+        const url = `/api/admin/users/docs-summary?ids=${encodeURIComponent(employeeIds.join(','))}`;
         const res = await fetchWithAuth(url);
         const j = await res.json();
         if (!dead) setDocSummary(j?.byIntern || {});
@@ -225,8 +225,8 @@ export default function AdminDocumentManagement() {
             if (!resp.ok) throw new Error(String(resp.status));
             const blob = await resp.blob();
             const obj = URL.createObjectURL(blob);
-            if (!u.internId) continue;
-next[u.internId] = obj;
+            if (!u.employeeId) continue;
+next[u.employeeId] = obj;
             toRevoke.push(obj);
           } else {
             next[u.id] = url;
@@ -241,8 +241,8 @@ next[u.internId] = obj;
   // Load a user's document URLs
   async function loadDocs(u: UserRow | null) {
     setDocs(null);
-    if (!u?.internId) return;
-    const res = await fetchWithAuth(`/api/profile/admin/documents/${u.internId}`);
+    if (!u?.employeeId) return;
+    const res = await fetchWithAuth(`/api/profile/admin/documents/${u.employeeId}`);
     const j = await res.json();
     setDocs({
       acceptanceLetter: j?.documents?.acceptanceLetter ?? null,
@@ -251,7 +251,7 @@ next[u.internId] = obj;
       cv: j?.documents?.cv ?? null,
     });
     if (j?.avatarUrl) {
-  setSel(prev => (prev && prev.internId === u.internId) ? { ...prev, avatarUrl: j.avatarUrl } : prev);
+  setSel(prev => (prev && prev.employeeId === u.employeeId) ? { ...prev, avatarUrl: j.avatarUrl } : prev);
 }
   }
 
@@ -283,7 +283,7 @@ next[u.internId] = obj;
 
   // Upload & replace
   async function upload() {
-    if (!sel?.internId) return alert('Pick a user first');
+    if (!sel?.employeeId) return alert('Pick a user first');
     if (!file) return alert('Choose a file');
     if (!/\.pdf$/i.test(file.name) && (file.type || '').toLowerCase() !== 'application/pdf') {
        return alert('Only PDF files are allowed.');
@@ -292,7 +292,7 @@ next[u.internId] = obj;
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('internId', sel.internId);
+      fd.append('employeeId', sel.employeeId);
 
       // only send expiry for passport_id
 if (selectedKind === 'passport_id' && passportExpiry.trim()) {
@@ -307,7 +307,7 @@ const up = await upRes.json();
 if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
       
 
-      await fetchWithAuth(`/api/profile/admin/documents/${sel.internId}/${selectedKind}/complete`, {
+      await fetchWithAuth(`/api/profile/admin/documents/${sel.employeeId}/${selectedKind}/complete`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({
@@ -344,14 +344,14 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
 
   // NEW: Deletions
   async function deleteDoc(kind: Kind) {
-    if (!sel?.internId) return;
+    if (!sel?.employeeId) return;
     if (!confirm(`Delete ${kindLabel(kind, sel?.empType)} for ${fullname(sel)}?`)) return;
     setBusy(true);
     try {
       const res = await fetchWithAuth('/api/admin/documents/delete', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ internId: sel.internId, documentType: DOC_TYPE_MAP[kind] }),
+        body: JSON.stringify({ employeeId: sel.employeeId, documentType: DOC_TYPE_MAP[kind] }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error || `HTTP ${res.status}`);
@@ -363,14 +363,14 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
   }
 
   async function deleteAllDocs() {
-    if (!sel?.internId) return;
+    if (!sel?.employeeId) return;
     if (!confirm(`Delete ALL 4 documents for ${fullname(sel)}?`)) return;
     setBusy(true);
     try {
       const res = await fetchWithAuth('/api/admin/documents/delete-all', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ internId: sel.internId }),
+        body: JSON.stringify({ employeeId: sel.employeeId }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error || `HTTP ${res.status}`);
@@ -382,14 +382,14 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
   }
 
   async function deleteAvatar() {
-    if (!sel?.internId) return;
+    if (!sel?.employeeId) return;
     if (!confirm(`Delete profile avatar for ${fullname(sel)}?`)) return;
     setBusy(true);
     try {
       const res = await fetchWithAuth('/api/admin/avatar/delete', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ internId: sel.internId }),
+        body: JSON.stringify({ employeeId: sel.employeeId }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error || `HTTP ${res.status}`);
@@ -409,8 +409,8 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
     }
     if (docFilter !== 'all') {
       rows = rows.filter(u => {
-        if (!u.internId) return false;
-        const s = docSummary[String(u.internId)];
+        if (!u.employeeId) return false;
+        const s = docSummary[String(u.employeeId)];
         if (!s) return docFilter !== 'missing_any' ? false : true;
         if (docFilter === 'missing_any') return s.missingAny;
         if (docFilter === 'acceptance_letter') return !s.acc;
@@ -533,7 +533,7 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
             const dateOnly = String(r.expiryDate).slice(0, 10);
             const leftLabel = r.daysLeft <= 0 ? 'Expired' : `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left`;
             return (
-              <div key={r.internId} className="expiry-row">
+              <div key={r.employeeId} className="expiry-row">
                 <div className="expiry-row-main">
                   <div className="expiry-name">{r.displayName}</div>
                   {r.companyEmail && <div className="expiry-email">{r.companyEmail}</div>}
@@ -546,7 +546,7 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
                   <button
                     className="tab"
                     onClick={() => {
-                      const match = users.find(u => u.internId === r.internId);
+                      const match = users.find(u => u.employeeId === r.employeeId);
                       if (match) { setSel(match); loadDocs(match); }
                     }}
                     title="Select this user"
@@ -588,8 +588,8 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
           <div className="user-list">
             {loading && <div style={{ padding: 12 }}>Loading…</div>}
             {!loading && filtered.map(u => {
-  const key = String(u.internId);                 // consistent key
-  const active = sel?.internId === u.internId;    // consistent selection check
+  const key = String(u.employeeId);                 // consistent key
+  const active = sel?.employeeId === u.employeeId;    // consistent selection check
 
   return (
     <div
@@ -632,7 +632,7 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
               <button
                 className="mini-danger"
                 onClick={deleteAvatar}
-                disabled={!sel?.internId || !selAvatarSrc || busy}
+                disabled={!sel?.employeeId || !selAvatarSrc || busy}
                 title="Delete profile picture"
               >
                 <i className="fas fa-trash" /> Delete avatar
@@ -741,7 +741,7 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
                         className="doc-action delete-action"
                         title="Delete document"
                         onClick={(e) => { e.stopPropagation(); void deleteDoc(d.kind); }}
-                        disabled={busy || !sel?.internId}
+                        disabled={busy || !sel?.employeeId}
                       >
                         <i className="fas fa-trash" />
                       </button>
@@ -751,7 +751,7 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
               })}
             </div>
 
-            <button className="upload-btn" disabled={!sel?.internId || !file || busy} onClick={upload}>
+            <button className="upload-btn" disabled={!sel?.employeeId || !file || busy} onClick={upload}>
               {busy ? 'Working…' : 'Upload / Replace'}
             </button>
 
@@ -760,7 +760,7 @@ if (!upRes.ok) throw new Error(up?.error || `HTTP ${upRes.status}`);
               <button
                 className="mini-danger"
                 onClick={deleteAllDocs}
-                disabled={!sel?.internId || !hasAnyDocs || busy}
+                disabled={!sel?.employeeId || !hasAnyDocs || busy}
                 title="Delete all 4 documents"
               >
                 <i className="fas fa-trash" /> Delete all documents

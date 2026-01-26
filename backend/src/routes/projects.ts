@@ -112,7 +112,7 @@ router.get('/member-candidates', ensureAuthenticated, async (req, res) => {
       { role: { in: ['hr', 'super_admin'] } },
       { empType: 'team_lead' },
       {
-        internDetails: {
+        employeeDetails: {
           some: {
             internships: { some: { status: 'Active' } }, // enum value from schema
           },

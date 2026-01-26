@@ -109,9 +109,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
-    const intern = await prisma.internDetail.findFirst({ where: { userId } });
+    const employee = await prisma.employeeDetail.findFirst({ where: { userId } });
 
-    if (!intern) {
+    if (!employee) {
       return res.json({
         firstName: user.firstName,
         surname: user.surname,
@@ -130,24 +130,24 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         department: null,
         position: null,
         avatarUrl: null,
-        sos: { relativePhoneNumber: null, relationWithIntern: null },
+        sos: { relativePhoneNumber: null, relationWithEmployee: null },
         documents: { acceptanceLetter: null, learningAgreement: null, passportId: null, cv: null, linkedin: null },
       });
     }
 
-    const internship = await prisma.internshipInfo.findFirst({
-      where: { internId: intern.internId },
+    const employment = await prisma.employeeInfo.findFirst({
+      where: { employeeId: employee.employeeId },
       orderBy: [{ startDate: 'desc' }],
       include: { department: true, position: true },
     });
 
-    const sos = await prisma.internsSosDetail.findFirst({
-      where: { internId: intern.internId },
-      select: { relativePhoneNumber: true, relationWithIntern: true },
+    const sos = await prisma.employeeSosDetail.findFirst({
+      where: { employeeId: employee.employeeId },
+      select: { relativePhoneNumber: true, relationWithEmployee: true },
     });
 
-    const docsRows = await prisma.internDocument.findMany({
-  where: { internId: intern.internId, isActive: true },
+    const docsRows = await prisma.employeeDocument.findMany({
+  where: { employeeId: employee.employeeId, isActive: true },
   select: { documentType: true, filePath: true, fileName: true, expiryDate: true }, // NEW
 });
 
@@ -166,21 +166,21 @@ return res.json({
       role: user.role,
       empType: user.empType, 
       companyEmail: user.companyEmail,
-      personalEmail: intern.email,
-      nationality: intern.nationality,
-      gender: intern.gender,
-      birthdate: intern.birthdate,
-      phone: intern.phone,
-      supervisor: internship?.supervisor ?? null,
-      startDate: internship?.startDate ?? null,
-      endDate: internship?.endDate ?? null,
-      status: internship?.status ?? null,
-      department: internship?.department?.departmentName ?? null,
-      position: internship?.position?.name ?? null,
+      personalEmail: employee.email,
+      nationality: employee.nationality,
+      gender: employee.gender,
+      birthdate: employee.birthdate,
+      phone: employee.phone,
+      supervisor: employment?.supervisor ?? null,
+      startDate: employment?.startDate ?? null,
+      endDate: employment?.endDate ?? null,
+      status: employment?.status ?? null,
+      department: employment?.department?.departmentName ?? null,
+      position: employment?.position?.name ?? null,
       avatarUrl,
       sos: {
         relativePhoneNumber: sos?.relativePhoneNumber ?? null,
-        relationWithIntern: sos?.relationWithIntern ?? null,
+        relationWithEmployee: sos?.relationWithEmployee ?? null,
       },
       documents: foldDocs(docsRows),
     });
@@ -192,14 +192,14 @@ return res.json({
 /* ----------------- ADMIN docs for /admin/document-management ----------------- */
 
 router.get(
-  '/admin/documents/:internId',
+  '/admin/documents/:employeeId',
   ensureAuthenticated,
   ...authorize('hr', 'super_admin'),
   async (req, res) => {
     try {
-      const internId = String(req.params.internId);
-      const rows = await prisma.internDocument.findMany({
-        where: { internId, isActive: true },
+      const employeeId = String(req.params.employeeId);
+      const rows = await prisma.employeeDocument.findMany({
+        where: { employeeId, isActive: true },
         select: { documentType: true, filePath: true, fileName: true },
       });
       const avatarRaw = rows.find(r => r.documentType === 'PROFILE_PICTURE')?.filePath ?? null;
@@ -216,12 +216,12 @@ return res.json({ avatarUrl, documents: foldDocs(rows as any) });
 
 // replace old admin complete route with this one
 router.post(
-  '/admin/documents/:internId/:kind/complete',
+  '/admin/documents/:employeeId/:kind/complete',
   ensureAuthenticated,
   ...authorize('hr', 'super_admin'),
   async (req, res) => {
     try {
-      const internId = String(req.params.internId);
+      const employeeId = String(req.params.employeeId);
       const kind     = String(req.params.kind);
       const { url, fileId, originalName, mimeType, fileSize } = req.body || {};
       if (!url) return res.status(400).json({ error: 'url required' });
@@ -230,8 +230,8 @@ router.post(
       const documentType = kindToDocType(kind);
 
       // 1) read previous file (if any) BEFORE we write the new row
-      const prev = await prisma.internDocument.findUnique({
-        where: { intern_document_per_type: { internId, documentType } },
+      const prev = await prisma.employeeDocument.findUnique({
+        where: { employee_document_per_type: { employeeId, documentType } },
         select: { filePath: true },
       });
 
@@ -251,8 +251,8 @@ router.post(
       const newId  = extractDriveFileId(url);
 
       // 2) upsert the document record with the NEW file
-      await prisma.internDocument.upsert({
-        where: { intern_document_per_type: { internId, documentType } },
+      await prisma.employeeDocument.upsert({
+        where: { employee_document_per_type: { employeeId, documentType } },
         update: {
           fileName:     String(fileId || originalName || `document_${kind}`),
           originalName: String(originalName || fileId || `document_${kind}`),
@@ -264,7 +264,7 @@ router.post(
           status:       'pending',
         },
         create: {
-          internId,
+          employeeId,
           documentType,
           fileName:     String(fileId || originalName || `document_${kind}`),
           originalName: String(originalName || fileId || `document_${kind}`),
@@ -305,12 +305,12 @@ router.post('/avatar/complete', ensureAuthenticated, async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
     if (!url)   return res.status(400).json({ error: 'url required' });
 
-    const intern = await prisma.internDetail.findFirst({ where: { userId } });
-    if (!intern) return res.status(400).json({ error: 'intern_not_found' });
+    const employee = await prisma.employeeDetail.findFirst({ where: { userId } });
+    if (!employee) return res.status(400).json({ error: 'employee_not_found' });
 
     // fetch existing avatar row to delete old file from Drive
-    const existing = await prisma.internDocument.findFirst({
-      where: { internId: intern.internId, documentType: 'PROFILE_PICTURE', isActive: true },
+    const existing = await prisma.employeeDocument.findFirst({
+      where: { employeeId: employee.employeeId, documentType: 'PROFILE_PICTURE', isActive: true },
       select: { filePath: true },
     });
     const prevId = extractDriveId(existing?.filePath);
@@ -321,8 +321,8 @@ router.post('/avatar/complete', ensureAuthenticated, async (req, res) => {
       try { const { deleteDriveFile } = await import('../google/drive'); await deleteDriveFile(prevId); } catch {}
     }
 
-    await prisma.internDocument.upsert({
-      where: { intern_document_per_type: { internId: intern.internId, documentType: 'PROFILE_PICTURE' } },
+    await prisma.employeeDocument.upsert({
+      where: { employee_document_per_type: { employeeId: employee.employeeId, documentType: 'PROFILE_PICTURE' } },
       update: {
         fileName:     String(fileId || originalName || 'avatar'),
         originalName: String(originalName || fileId || 'avatar'),
@@ -334,7 +334,7 @@ router.post('/avatar/complete', ensureAuthenticated, async (req, res) => {
         status:       'pending',
       },
       create: {
-        internId:     intern.internId,
+        employeeId:   employee.employeeId,
         documentType: 'PROFILE_PICTURE',
         fileName:     String(fileId || originalName || 'avatar'),
         originalName: String(originalName || fileId || 'avatar'),
@@ -356,7 +356,7 @@ router.post('/avatar/complete', ensureAuthenticated, async (req, res) => {
 
 
 
-// Save a personal document for the logged-in intern
+// Save a personal document for the logged-in employee
 router.post('/documents/:kind/complete', ensureAuthenticated, async (req, res) => {
   try {
     const userId = Number((req as any).user?.id);
@@ -365,13 +365,13 @@ router.post('/documents/:kind/complete', ensureAuthenticated, async (req, res) =
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
     if (!url)   return res.status(400).json({ error: 'url required' });
 
-    const intern = await prisma.internDetail.findFirst({ where: { userId } });
-    if (!intern) return res.status(400).json({ error: 'intern_not_found' });
+    const employee = await prisma.employeeDetail.findFirst({ where: { userId } });
+    if (!employee) return res.status(400).json({ error: 'employee_not_found' });
 
     const documentType = kindToDocType(kind);
 
-    await prisma.internDocument.upsert({
-      where: { intern_document_per_type: { internId: intern.internId, documentType } },
+    await prisma.employeeDocument.upsert({
+      where: { employee_document_per_type: { employeeId: employee.employeeId, documentType } },
       update: {
         fileName:     String(fileId || originalName || `document_${kind}`),
         originalName: String(originalName || fileId || `document_${kind}`),
@@ -383,7 +383,7 @@ router.post('/documents/:kind/complete', ensureAuthenticated, async (req, res) =
         status:       'pending',
       },
       create: {
-        internId:     intern.internId,
+        employeeId:   employee.employeeId,
         documentType,
         fileName:     String(fileId || originalName || `document_${kind}`),
         originalName: String(originalName || fileId || `document_${kind}`),
@@ -406,27 +406,27 @@ router.post('/documents/:kind/complete', ensureAuthenticated, async (req, res) =
 router.put('/sos', ensureAuthenticated, async (req, res) => {
   try {
     const userId = Number((req as any).user?.id);
-    const { relativePhoneNumber, relationWithIntern } = req.body || {};
+    const { relativePhoneNumber, relationWithEmployee } = req.body || {};
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
-    const intern = await prisma.internDetail.findFirst({ where: { userId } });
-    if (!intern) return res.status(400).json({ error: 'intern_not_found' });
+    const employee = await prisma.employeeDetail.findFirst({ where: { userId } });
+    if (!employee) return res.status(400).json({ error: 'employee_not_found' });
 
-    const existing = await prisma.internsSosDetail.findFirst({ where: { internId: intern.internId } });
+    const existing = await prisma.employeeSosDetail.findFirst({ where: { employeeId: employee.employeeId } });
     if (existing) {
-      await prisma.internsSosDetail.update({
+      await prisma.employeeSosDetail.update({
         where: { id: existing.id },
         data: {
           relativePhoneNumber: relativePhoneNumber || null,
-          relationWithIntern: relationWithIntern || null,
+          relationWithEmployee: relationWithEmployee || null,
         },
       });
     } else {
-      await prisma.internsSosDetail.create({
+      await prisma.employeeSosDetail.create({
         data: {
-          internId: intern.internId,
+          employeeId: employee.employeeId,
           relativePhoneNumber: relativePhoneNumber || null,
-          relationWithIntern: relationWithIntern || null,
+          relationWithEmployee: relationWithEmployee || null,
         },
       });
     }
@@ -444,12 +444,12 @@ router.put('/social', ensureAuthenticated, async (req, res) => {
     const { linkedin } = req.body || {};
     if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
-    const intern = await prisma.internDetail.findFirst({ where: { userId } });
-    if (!intern) return res.status(400).json({ error: 'intern_not_found' });
+    const employee = await prisma.employeeDetail.findFirst({ where: { userId } });
+    if (!employee) return res.status(400).json({ error: 'employee_not_found' });
 
     if (linkedin && String(linkedin).trim()) {
-      await prisma.internDocument.upsert({
-        where: { intern_document_per_type: { internId: intern.internId, documentType: 'OTHER' } },
+      await prisma.employeeDocument.upsert({
+        where: { employee_document_per_type: { employeeId: employee.employeeId, documentType: 'OTHER' } },
         update: {
           fileName: 'linkedin',
           originalName: 'linkedin',
@@ -461,7 +461,7 @@ router.put('/social', ensureAuthenticated, async (req, res) => {
           status: 'pending',
         },
         create: {
-          internId: intern.internId,
+          employeeId: employee.employeeId,
           documentType: 'OTHER',
           fileName: 'linkedin',
           originalName: 'linkedin',
@@ -475,8 +475,8 @@ router.put('/social', ensureAuthenticated, async (req, res) => {
       });
     } else {
       // clear it if empty
-      await prisma.internDocument.deleteMany({
-        where: { internId: intern.internId, documentType: 'OTHER' },
+      await prisma.employeeDocument.deleteMany({
+        where: { employeeId: employee.employeeId, documentType: 'OTHER' },
       });
     }
 

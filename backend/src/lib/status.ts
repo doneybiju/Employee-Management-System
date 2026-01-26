@@ -2,12 +2,12 @@
 import prisma from '../prisma';
 
 
-export async function loadInternDashboardByUserId(userId: number) {
-  const detail = await prisma.internDetail.findFirst({ where: { userId } });
-  if (!detail) return { hasIntern: false } as const;
+export async function loadEmployeeDashboardByUserId(userId: number) {
+  const detail = await prisma.employeeDetail.findFirst({ where: { userId } });
+  if (!detail) return { hasEmployee: false } as const;
 
-  const internship = await prisma.internshipInfo.findFirst({
-    where: { internId: detail.internId },
+  const employment = await prisma.employeeInfo.findFirst({
+    where: { employeeId: detail.employeeId },
     orderBy: { startDate: 'desc' },
     include: { department: true, position: true },
   });
@@ -19,20 +19,20 @@ export async function loadInternDashboardByUserId(userId: number) {
     status: 'Paid' | 'Pending';
   }> = [];
 
-  const end = internship?.endDate ?? null;
+  const end = employment?.endDate ?? null;
   const daysRemaining = end
     ? Math.max(0, Math.ceil((+end - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
 
   return {
-    hasIntern: true,
-    internId: detail.internId,
-    status: internship?.status ?? null,
-    startDate: internship?.startDate ?? null,
+    hasEmployee: true,
+    employeeId: detail.employeeId,
+    status: employment?.status ?? null,
+    startDate: employment?.startDate ?? null,
     endDate: end,
-    department: internship?.department?.departmentName ?? null,
-    position: internship?.position?.name ?? null,
-    supervisor: internship?.supervisor ?? null,
+    department: employment?.department?.departmentName ?? null,
+    position: employment?.position?.name ?? null,
+    supervisor: employment?.supervisor ?? null,
     daysRemaining,
     payments,
   };
@@ -71,9 +71,9 @@ export async function loadAdminSummary() {
     },
     select: {
       id: true,
-      internDetails: {
+      employeeDetails: {
         select: {
-          internDocuments: {
+          employeeDocuments: {
             where: { isActive: true, status: { not: 'rejected' } },
             select: { documentType: true },
           },
@@ -87,8 +87,8 @@ export async function loadAdminSummary() {
   for (const u of internUsers) {
     const present = new Set<ReqDoc>();
 
-    for (const det of u.internDetails ?? []) {
-      for (const doc of det.internDocuments ?? []) {
+    for (const det of u.employeeDetails ?? []) {
+      for (const doc of det.employeeDocuments ?? []) {
         // doc.documentType is like 'CV', 'ID_PASSPORT', etc.
         const dt = doc.documentType as ReqDoc;
         if (REQUIRED_DOCS.includes(dt)) present.add(dt);
@@ -114,16 +114,16 @@ export async function loadAdminSummary() {
 
 
 export async function loadAdminPeopleCounts() {
-  // Active interns = latest internship row per intern with status 'Active'
-  const rows = await prisma.internshipInfo.findMany({
-    orderBy: [{ internId: 'asc' }, { startDate: 'desc' }],
-    select: { internId: true, status: true },
+  // Active interns = latest employment row per employee with status 'Active'
+  const rows = await prisma.employeeInfo.findMany({
+    orderBy: [{ employeeId: 'asc' }, { startDate: 'desc' }],
+    select: { employeeId: true, status: true },
   });
   const seen = new Set<string>();
   let activeInterns = 0;
   for (const r of rows) {
-    if (seen.has(r.internId)) continue;
-    seen.add(r.internId);
+    if (seen.has(r.employeeId)) continue;
+    seen.add(r.employeeId);
     if (String(r.status) === 'Active') activeInterns++;
   }
 
@@ -136,7 +136,7 @@ export async function loadAdminPeopleCounts() {
   return { interns: activeInterns, employees, owners };
 }
 
-export async function refreshInternStatuses() {
+export async function refreshEmployeeStatuses() {
   // Using midday to avoid timezone boundary issues when comparing against @db.Date columns.
 const today = new Date();
 today.setHours(12, 0, 0, 0);
@@ -148,21 +148,21 @@ today.setHours(12, 0, 0, 0);
   });
   const wlUserIds = new Set(wl.map(w => w.userId));
 
-  // 2) map to internIds (intern_details.user_id -> intern_details.intern_id)
-  const wlInternsRows = wlUserIds.size
-    ? await prisma.internDetail.findMany({
+  // 2) map to employeeIds (employee_details.user_id -> employee_details.employee_id)
+  const wlEmployeesRows = wlUserIds.size
+    ? await prisma.employeeDetail.findMany({
         where: { userId: { in: Array.from(wlUserIds) } },
-        select: { internId: true },
+        select: { employeeId: true },
       })
     : [];
-  const wlInternIds = wlInternsRows.map(r => r.internId);
+  const wlEmployeeIds = wlEmployeesRows.map(r => r.employeeId);
 
-  // 3) update statuses, but NEVER touch whitelisted internIds
+  // 3) update statuses, but NEVER touch whitelisted employeeIds
   const [act, inact] = await prisma.$transaction([
-    prisma.internshipInfo.updateMany({
+    prisma.employeeInfo.updateMany({
   where: {
-    internId: { notIn: wlInternIds },
-    intern: { is: { userId: { not: null } } }, // <- don’t re-activate deprovisioned accounts
+    employeeId: { notIn: wlEmployeeIds },
+    employee: { is: { userId: { not: null } } }, // <- don’t re-activate deprovisioned accounts
     startDate: { lte: today },
     OR: [
       { endDate: null },
@@ -172,9 +172,9 @@ today.setHours(12, 0, 0, 0);
   data: { status: 'Active' },
 }),
 
-    prisma.internshipInfo.updateMany({
+    prisma.employeeInfo.updateMany({
       where: {
-        internId: { notIn: wlInternIds },
+        employeeId: { notIn: wlEmployeeIds },
         OR: [
           { endDate:   { lt: today } },
           { startDate: { gt: today } },

@@ -125,17 +125,17 @@ const IMPORT_FIELDS = [
 
 
 
-  // delete one InternDocument row (Drive + DB)
-  async function deleteOneInternDocument(doc: { id:number; filePath:string|null }) {
+  // delete one EmployeeDocument row (Drive + DB)
+  async function deleteOneEmployeeDocument(doc: { id:number; filePath:string|null }) {
     const fileId = extractDriveId(doc.filePath || '') || '';
     if (fileId) { await deleteDriveFile(fileId); }
-    await prisma.internDocument.delete({ where: { id: doc.id } });
+    await prisma.employeeDocument.delete({ where: { id: doc.id } });
   }
 
-  // delete all four required docs for an intern
-  async function deleteAllRequiredDocsForIntern(internId: string) {
-    const docs = await prisma.internDocument.findMany({
-      where: { internId, documentType: { in: DOC_REQUIRED }, isActive: true },
+  // delete all four required docs for an employee
+  async function deleteAllRequiredDocsForEmployee(employeeId: string) {
+    const docs = await prisma.employeeDocument.findMany({
+      where: { employeeId, documentType: { in: DOC_REQUIRED }, isActive: true },
       select: { id: true, filePath: true }
     });
 
@@ -147,7 +147,7 @@ const IMPORT_FIELDS = [
       if (ok) driveDeleted += 1;
     }
     if (docs.length) {
-      await prisma.internDocument.deleteMany({ where: { id: { in: docs.map(d => d.id) } } });
+      await prisma.employeeDocument.deleteMany({ where: { id: { in: docs.map(d => d.id) } } });
     }
     return { rows: docs.length, driveDeleted };
   }
@@ -272,7 +272,7 @@ const IMPORT_FIELDS = [
   }
 
   interface DetailLite {
-    internId: string;             // UUID
+    employeeId: string;             // UUID
     userId: number | null;
     email: string | null;
     nationality: string | null;
@@ -283,7 +283,7 @@ const IMPORT_FIELDS = [
 
   interface InfoLite {
     id: number;
-    internId: string;
+    employeeId: string;
     departmentId: number | null;
     positionId: number | null;
     startDate: Date | null;
@@ -315,51 +315,51 @@ const IMPORT_FIELDS = [
           .some((v: string) => String(v).toLowerCase().includes(q));
 
       if (tab === 'inactive') {
-    const rowsRaw = await prisma.internshipInfo.findMany({
+    const rowsRaw = await prisma.employeeInfo.findMany({
     where: { status: 'Inactive' },          // Prisma expects 'Inactive'
-    orderBy: [{ internId: 'asc' }, { startDate: 'desc' }],
+    orderBy: [{ employeeId: 'asc' }, { startDate: 'desc' }],
     include: {
       department: { select: { departmentName: true } },
       position:   { select: { name: true } },
-      intern: { include: { user: { select: { id:true, firstName:true, surname:true, role:true, companyEmail:true, empId:true } } } },
+      employee: { include: { user: { select: { id:true, firstName:true, surname:true, role:true, companyEmail:true, empId:true } } } },
     },
   });
 
   const seen = new Set<string>();
   const latest: InfoLite[] = [];
-  for (const r of rowsRaw) if (!seen.has(r.internId)) { seen.add(r.internId); latest.push(r); }
+  for (const r of rowsRaw) if (!seen.has(r.employeeId)) { seen.add(r.employeeId); latest.push(r); }
 
-  // Avatars for these inactive interns
-  const inactiveInternIds = latest.map(i => i.internId);
-  const inactiveAvRows = inactiveInternIds.length
-    ? await prisma.internDocument.findMany({
-        where: { internId: { in: inactiveInternIds }, documentType: 'PROFILE_PICTURE', isActive: true },
-        select: { internId: true, filePath: true },
+  // Avatars for these inactive employees
+  const inactiveEmployeeIds = latest.map(i => i.employeeId);
+  const inactiveAvRows = inactiveEmployeeIds.length
+    ? await prisma.employeeDocument.findMany({
+        where: { employeeId: { in: inactiveEmployeeIds }, documentType: 'PROFILE_PICTURE', isActive: true },
+        select: { employeeId: true, filePath: true },
       })
     : [];
-  const inactiveAvatarByIntern = new Map(
-    inactiveAvRows.map(r => [r.internId, normalizeAvatarUrl(r.filePath)])
+  const inactiveAvatarByEmployee = new Map(
+    inactiveAvRows.map(r => [r.employeeId, normalizeAvatarUrl(r.filePath)])
   );
 
 
   let rows = latest.map((i: InfoLite) => {
-    const u = (i as any).intern?.user as (UserLite|undefined); // select came via include
-    const name = (u ? `${u.firstName} ${u.surname}` : ((i as any).intern?.name || '')).trim();
+    const u = (i as any).employee?.user as (UserLite|undefined); // select came via include
+    const name = (u ? `${u.firstName} ${u.surname}` : ((i as any).employee?.name || '')).trim();
     const [firstName, ...rest] = name.split(/\s+/);
     const surname = rest.join(' ');
     return {
-      avatarUrl: inactiveAvatarByIntern.get(i.internId) ?? null,
+      avatarUrl: inactiveAvatarByEmployee.get(i.employeeId) ?? null,
       kind: 'intern' as const,
       id: u?.id ?? 0,
       userId: u?.id ?? null,
-      internId: i.internId,
+      employeeId: i.employeeId,
       name: u ? `${u.firstName} ${u.surname}`.trim()
-              : ((i as any).intern?.name || ''),
+              : ((i as any).employee?.name || ''),
       firstName,
       surname,
       role: (u?.role ?? 'intern') as Role,
       companyEmail: u?.companyEmail ?? null,
-      personalEmail: (i as any).intern?.email ?? null,
+      personalEmail: (i as any).employee?.email ?? null,
       department: i.department?.departmentName ?? null,
       position:   i.position?.name ?? null,
       startDate:  i.startDate ?? null,
@@ -367,14 +367,13 @@ const IMPORT_FIELDS = [
       joiningDate: i.startDate ?? null,            // ← add
       leavingDate: i.endDate ?? null,  
       status: 'inactive',
-      nationality: (i as any).intern?.nationality ?? null,
-      gender: (i as any).intern?.gender ?? null,
-      birthdate: (i as any).intern?.birthdate ?? null,
-      dob: (i as any).intern?.birthdate ?? null,
-      phone: (i as any).intern?.phone ?? null,
+      nationality: (i as any).employee?.nationality ?? null,
+      gender: (i as any).employee?.gender ?? null,
+      birthdate: (i as any).employee?.birthdate ?? null,
+      dob: (i as any).employee?.birthdate ?? null,
+      phone: (i as any).employee?.phone ?? null,
       supervisor: i.supervisor ?? null,
       empId: u?.empId ?? null,
-      employeeId: u?.empId ?? null,
     };
   });
 
@@ -383,17 +382,17 @@ const IMPORT_FIELDS = [
 
     if (q) rows = rows.filter(matches);
 
-    // attach avatarUrl for these interns
+    // attach avatarUrl for these employees
   {
     const ids = Array.from(new Set(
-      rows.filter(r => r.internId).map(r => r.internId as string)
+      rows.filter(r => r.employeeId).map(r => r.employeeId as string)
     ));
-    const pics = ids.length ? await prisma.internDocument.findMany({
-      where: { internId: { in: ids }, documentType: 'PROFILE_PICTURE', isActive: true },
-      select: { internId: true, filePath: true },
+    const pics = ids.length ? await prisma.employeeDocument.findMany({
+      where: { employeeId: { in: ids }, documentType: 'PROFILE_PICTURE', isActive: true },
+      select: { employeeId: true, filePath: true },
     }) : [];
-    const picMap = new Map(pics.map(p => [p.internId, normalizeAvatarUrl(p.filePath)]));
-    rows = rows.map(r => r.internId ? { ...r, avatarUrl: picMap.get(r.internId) ?? null } : r);
+    const picMap = new Map(pics.map(p => [p.employeeId, normalizeAvatarUrl(p.filePath)]));
+    rows = rows.map(r => r.employeeId ? { ...r, avatarUrl: picMap.get(r.employeeId) ?? null } : r);
   }
 
     return res.json(rows);
@@ -403,13 +402,13 @@ const IMPORT_FIELDS = [
 
       // === ACTIVE (default): one row per Active internship ===
   {
-    const rowsRaw = await prisma.internshipInfo.findMany({
+    const rowsRaw = await prisma.employeeInfo.findMany({
       where: { status: 'Active' },
-      orderBy: [{ internId: 'asc' }, { startDate: 'desc' }],
+      orderBy: [{ employeeId: 'asc' }, { startDate: 'desc' }],
       include: {
         department: { select: { departmentName: true } },
         position:   { select: { name: true } },
-        intern: {
+        employee: {
           include: {
             user: {
               select: {
@@ -417,7 +416,7 @@ const IMPORT_FIELDS = [
                 firstName: true,
                 surname: true,
                 role: true,
-                companyEmail: true,   // per-intern portal email
+                companyEmail: true,   // per-employee portal email
                 empId: true,
                 empType: true,
                 blocked: true,
@@ -428,37 +427,37 @@ const IMPORT_FIELDS = [
       },
     });
 
-    // keep latest row per internId
+    // keep latest row per employeeId
     const seen = new Set<string>();
     const latest = [];
     for (const r of rowsRaw) {
-      if (!seen.has(r.internId)) { seen.add(r.internId); latest.push(r); }
+      if (!seen.has(r.employeeId)) { seen.add(r.employeeId); latest.push(r); }
     }
 
     // avatars
     const avRows = latest.length
-      ? await prisma.internDocument.findMany({
+      ? await prisma.employeeDocument.findMany({
           where: {
-            internId: { in: latest.map(r => r.internId) },
+            employeeId: { in: latest.map(r => r.employeeId) },
             documentType: 'PROFILE_PICTURE',
             isActive: true,
           },
-          select: { internId: true, filePath: true },
+          select: { employeeId: true, filePath: true },
         })
       : [];
-    const avatarByIntern = new Map(avRows.map(a => [a.internId, normalizeAvatarUrl(a.filePath)]));
+    const avatarByEmployee = new Map(avRows.map(a => [a.employeeId, normalizeAvatarUrl(a.filePath)]));
 
     let rows = latest.map(i => {
-      const u = i.intern?.user ?? null;
-      const fullName = u ? `${u.firstName} ${u.surname}`.trim() : (i.intern?.name || '').trim();
+      const u = i.employee?.user ?? null;
+      const fullName = u ? `${u.firstName} ${u.surname}`.trim() : (i.employee?.name || '').trim();
 
       return {
         kind: 'intern' as const,
-        avatarUrl: avatarByIntern.get(i.internId) ?? null,
+        avatarUrl: avatarByEmployee.get(i.employeeId) ?? null,
 
         id: u?.id ?? 0,  
         userId: u?.id ?? null,
-        internId: i.internId,
+        employeeId: i.employeeId,
 
         name: fullName,
         firstName: u?.firstName ?? fullName.split(' ')[0] ?? '',
@@ -466,7 +465,7 @@ const IMPORT_FIELDS = [
 
         role: (u?.role ?? 'intern') as Role,
         companyEmail: u?.companyEmail ?? null,     // <-- fixes duplicate email issue
-        personalEmail: i.intern?.email ?? null,
+        personalEmail: i.employee?.email ?? null,
 
         department: i.department?.departmentName ?? null,
         position:   i.position?.name ?? null,
@@ -476,15 +475,14 @@ const IMPORT_FIELDS = [
         leavingDate: i.endDate ?? null,
         status: 'active',
 
-        nationality: i.intern?.nationality ?? null,
-        gender: i.intern?.gender ?? null,
-        birthdate: i.intern?.birthdate ?? null,
-        dob: i.intern?.birthdate ?? null,
-        phone: i.intern?.phone ?? null,
+        nationality: i.employee?.nationality ?? null,
+        gender: i.employee?.gender ?? null,
+        birthdate: i.employee?.birthdate ?? null,
+        dob: i.employee?.birthdate ?? null,
+        phone: i.employee?.phone ?? null,
         supervisor: i.supervisor ?? null,
 
         empId: u?.empId ?? null,
-        employeeId: u?.empId ?? null,
         blocked: !!u?.blocked,
         empType: u?.empType ?? null,
       };
@@ -525,7 +523,7 @@ router.get(
       end.setMonth(end.getMonth() + months);
       end.setHours(23, 59, 59, 999);
 
-      const docs = await prisma.internDocument.findMany({
+      const docs = await prisma.employeeDocument.findMany({
         where: {
           documentType: $Enums.DocumentType.ID_PASSPORT,
           isActive: true,
@@ -536,7 +534,7 @@ router.get(
           },
         },
         include: {
-          intern: {
+          employee: {
             include: {
               user: {
                 select: {
@@ -556,15 +554,15 @@ router.get(
         const expiry = d.expiryDate as Date;
         const daysLeft = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-        const user = d.intern.user;
+        const user = d.employee.user;
         const displayName =
-          (user ? `${user.firstName} ${user.surname}`.trim() : '') || d.intern.name || d.intern.email || 'Unknown';
+          (user ? `${user.firstName} ${user.surname}`.trim() : '') || d.employee.name || d.employee.email || 'Unknown';
 
         return {
-          internId: d.internId,
-          userId: d.intern.userId,
+          employeeId: d.employeeId,
+          userId: d.employee.userId,
           displayName,
-          companyEmail: user?.companyEmail ?? d.intern.email ?? null,
+          companyEmail: user?.companyEmail ?? d.employee.email ?? null,
           expiryDate: d.expiryDate,
           daysLeft,
           filePath: d.filePath, // used to open the doc
@@ -593,20 +591,20 @@ router.get(
         });
         const blockedSet = new Set(blocked.map(w => w.userId));
 
-        // 2) pull only users that have at least one intern profile
-        //    and consistently pick ONE profile (latest by internId)
+        // 2) pull only users that have at least one employee profile
+        //    and consistently pick ONE profile (latest by employeeId)
         const users = await prisma.user.findMany({
-          where: { internDetails: { some: {} } },
+          where: { employeeDetails: { some: {} } },
           select: {
             id: true,
-            internDetails: {
+            employeeDetails: {
               select: {
-                internId: true,
-                internDocuments: {
+                employeeId: true,
+                employeeDocuments: {
                   select: { documentType: true, status: true, isActive: true },
                 },
               },
-              orderBy: { internId: 'desc' }, // if you have createdAt, prefer: { createdAt: 'desc' }
+              orderBy: { employeeId: 'desc' }, // if you have createdAt, prefer: { createdAt: 'desc' }
               take: 1,
             },
           },
@@ -618,11 +616,11 @@ router.get(
         for (const u of users) {
           if (blockedSet.has(u.id)) continue;
 
-          const det = u.internDetails[0];
+          const det = u.employeeDetails[0];
           if (!det) continue;
 
           const uploaded = new Set(
-            det.internDocuments
+            det.employeeDocuments
               .filter(d => d.isActive && d.status !== 'rejected')
               .map(d => d.documentType)
           );
@@ -649,8 +647,8 @@ router.get(
 
 
   // ===== Doc summary for filtering on the UI =====
-  // GET /api/admin/users/docs-summary?ids=<comma-separated internIds>
-  // Returns: { byIntern: { [internId]: { acc:boolean, la:boolean, pid:boolean, cv:boolean, missingAny:boolean } } }
+  // GET /api/admin/users/docs-summary?ids=<comma-separated employeeIds>
+  // Returns: { byIntern: { [employeeId]: { acc:boolean, la:boolean, pid:boolean, cv:boolean, missingAny:boolean } } }
   router.get(
     '/users/docs-summary',
     ensureAuthenticated as any,
@@ -658,35 +656,35 @@ router.get(
     async (req, res) => {
       try {
         const idsParam = String(req.query.ids || '').trim();
-        let internIds: string[] = [];
+        let employeeIds: string[] = [];
 
         if (idsParam) {
-          internIds = idsParam.split(',').map(s => s.trim()).filter(Boolean);
+          employeeIds = idsParam.split(',').map(s => s.trim()).filter(Boolean);
         } else {
-          // Fallback: all active interns
-          const act = await prisma.internshipInfo.findMany({
+          // Fallback: all active employees
+          const act = await prisma.employeeInfo.findMany({
             where: { status: 'Active' },
-            select: { internId: true },
-            distinct: ['internId'],
+            select: { employeeId: true },
+            distinct: ['employeeId'],
           });
-          internIds = act.map(r => r.internId);
+          employeeIds = act.map(r => r.employeeId);
         }
 
-        if (!internIds.length) return res.json({ byIntern: {} });
+        if (!employeeIds.length) return res.json({ byIntern: {} });
 
-        const rows = await prisma.internDocument.findMany({
+        const rows = await prisma.employeeDocument.findMany({
           where: {
-            internId: { in: internIds },
+            employeeId: { in: employeeIds },
             isActive: true,
             documentType: { in: ['ACCEPTANCE_LETTER','LEARNING_AGREEMENT','ID_PASSPORT','CV'] as any },
           },
-          select: { internId: true, documentType: true },
+          select: { employeeId: true, documentType: true },
         });
 
         const by = new Map<string, { acc:boolean; la:boolean; pid:boolean; cv:boolean }>();
-        for (const id of internIds) by.set(id, { acc:false, la:false, pid:false, cv:false });
+        for (const id of employeeIds) by.set(id, { acc:false, la:false, pid:false, cv:false });
         for (const r of rows) {
-          const m = by.get(r.internId);
+          const m = by.get(r.employeeId);
           if (!m) continue;
           if (r.documentType === 'ACCEPTANCE_LETTER') m.acc = true;
           if (r.documentType === 'LEARNING_AGREEMENT') m.la  = true;
@@ -758,12 +756,12 @@ router.get(
   });
   if (!u) return res.status(404).json({ error: 'user not found' });
 
-  const d = await prisma.internDetail.findFirst({
+  const d = await prisma.employeeDetail.findFirst({
     where: { userId: id },
-    select: { internId: true, nationality: true, gender: true, birthdate: true, email: true, phone: true },
+    select: { employeeId: true, nationality: true, gender: true, birthdate: true, email: true, phone: true },
   });
-  const i = d ? await prisma.internshipInfo.findFirst({
-    where: { internId: d.internId },
+  const i = d ? await prisma.employeeInfo.findFirst({
+    where: { employeeId: d.employeeId },
     orderBy: { startDate: 'desc' },
   }) : null;
 
@@ -791,7 +789,7 @@ router.get(
 
   /**
    * PUT /api/admin/users
-   * Update user, intern_detail, and latest internship row.
+   * Update user, employee_detail, and latest employment row.
    * Body: { companyEmail?: string, personalEmail?: string, updates: {...} }
    */
   router.put('/users', authorize('hr', 'super_admin'), async (req: Request, res: Response) => {
@@ -802,16 +800,16 @@ router.get(
         updates: any;
       };
 
-      // resolve user + intern detail
+      // resolve user + employee detail
       let user = null as Awaited<ReturnType<typeof prisma.user.findUnique>> | null;
-      let detail = null as Awaited<ReturnType<typeof prisma.internDetail.findFirst>> | null;
+      let detail = null as Awaited<ReturnType<typeof prisma.employeeDetail.findFirst>> | null;
 
       if (companyEmail) {
         user = await prisma.user.findUnique({ where: { companyEmail } });
-        if (user) detail = await prisma.internDetail.findFirst({ where: { userId: user.id } });
+        if (user) detail = await prisma.employeeDetail.findFirst({ where: { userId: user.id } });
       }
       if (!detail && personalEmail) {
-        detail = await prisma.internDetail.findFirst({ where: { email: personalEmail } });
+        detail = await prisma.employeeDetail.findFirst({ where: { email: personalEmail } });
         if (detail) user = await prisma.user.findUnique({ where: { id: detail.userId ?? -1 } });
       }
       if (!detail && !user) return res.status(400).json({ error: 'User not found' });
@@ -840,10 +838,10 @@ router.get(
   }
 
 
-      // upsert intern_detail by internId (uuid)
-      if (detail?.internId) {
-        await prisma.internDetail.update({
-          where: { internId: detail.internId },
+      // upsert employee_detail by employeeId (uuid)
+      if (detail?.employeeId) {
+        await prisma.employeeDetail.update({
+          where: { employeeId: detail.employeeId },
           data: {
             name: `${updates.firstName ?? user?.firstName ?? ''} ${updates.surname ?? user?.surname ?? ''}`.trim() || undefined,
             nationality: updates.nationality ?? undefined,
@@ -856,14 +854,14 @@ router.get(
         });
       }
 
-      // latest internship_info
-      if (detail?.internId) {
-        const latest = await prisma.internshipInfo.findFirst({
-          where: { internId: detail.internId },
+      // latest employee_info
+      if (detail?.employeeId) {
+        const latest = await prisma.employeeInfo.findFirst({
+          where: { employeeId: detail.employeeId },
           orderBy: { startDate: 'desc' },
         });
         if (latest) {
-          await prisma.internshipInfo.update({
+          await prisma.employeeInfo.update({
             where: { id: latest.id },
             data: {
               startDate: updates.startDate ? new Date(updates.startDate) : undefined,
@@ -885,51 +883,51 @@ router.get(
 
 
   // POST /api/admin/users/deactivate
-  // Active tab -> mark latest internships Inactive and delete the portal user
+  // Active tab -> mark latest employments Inactive and delete the portal user
   router.post(
     '/users/deactivate',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req: Request, res: Response) => {
       try {
-        const { userId, internId, companyEmail } = (req.body ?? {}) as {
+        const { userId, employeeId, companyEmail } = (req.body ?? {}) as {
           userId?: number | null;
-          internId?: string | null;
+          employeeId?: string | null;
           companyEmail?: string | null;
         };
 
-        // Resolve user + intern detail
+        // Resolve user + employee detail
         let user = null as Awaited<ReturnType<typeof prisma.user.findUnique>> | null;
-        let detail = null as Awaited<ReturnType<typeof prisma.internDetail.findFirst>> | null;
+        let detail = null as Awaited<ReturnType<typeof prisma.employeeDetail.findFirst>> | null;
 
         if (userId) user = await prisma.user.findUnique({ where: { id: Number(userId) } });
         if (!user && companyEmail) user = await prisma.user.findUnique({ where: { companyEmail } });
-        if (!detail && internId) detail = await prisma.internDetail.findFirst({ where: { internId } });
-        if (!detail && user) detail = await prisma.internDetail.findFirst({ where: { userId: user.id } });
+        if (!detail && employeeId) detail = await prisma.employeeDetail.findFirst({ where: { employeeId } });
+        if (!detail && user) detail = await prisma.employeeDetail.findFirst({ where: { userId: user.id } });
 
         if (!user && !detail) return res.status(400).json({ error: 'User not found' });
 
 
-        // Require endDate before deprovisioning an intern
-const iid = detail?.internId ?? null;
+        // Require endDate before deprovisioning an employee
+const iid = detail?.employeeId ?? null;
 
 if (iid) {
-  const hasEndDate = await prisma.internshipInfo.findFirst({
-    where: { internId: iid, endDate: { not: null } },
+  const hasEndDate = await prisma.employeeInfo.findFirst({
+    where: { employeeId: iid, endDate: { not: null } },
     select: { id: true },
   });
 
   if (!hasEndDate) {
-    return res.status(400).json({ ok: false, error: 'end_date_required', internId: iid });
+    return res.status(400).json({ ok: false, error: 'end_date_required', employeeId: iid });
   }
 }
 
 
-        // Deactivate internships + delete portal user
+        // Deactivate employments + delete portal user
         const txRes = await prisma.$transaction(async (tx) => {
           const inactivated = iid
-            ? await tx.internshipInfo.updateMany({
-                where: { internId: iid },
+            ? await tx.employeeInfo.updateMany({
+                where: { employeeId: iid },
                 data: { status: 'Inactive' },
               })
             : { count: 0 };
@@ -938,7 +936,7 @@ if (iid) {
             await tx.user.delete({ where: { id: user.id } }).catch(() => {});
           }
 
-          return { inactivated: inactivated.count, deletedUsers: user ? 1 : 0, internId: iid };
+          return { inactivated: inactivated.count, deletedUsers: user ? 1 : 0, employeeId: iid };
         });
 
         return res.json({ ok: true, portal: txRes });
@@ -967,30 +965,30 @@ if (iid) {
     try { return await deleteDriveFile(id); } catch { return false; }
   }
 
-  // POST /api/admin/documents/delete  { internId, documentType }
+  // POST /api/admin/documents/delete  { employeeId, documentType }
   router.post(
     '/documents/delete',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req, res) => {
       try {
-        const { internId, documentType } = (req.body || {}) as {
-          internId?: string;
+        const { employeeId, documentType } = (req.body || {}) as {
+          employeeId?: string;
           documentType?: typeof ALLOWED_DOC_TYPES[number];
         };
-        if (!internId) return res.status(400).json({ error: 'internId required' });
+        if (!employeeId) return res.status(400).json({ error: 'employeeId required' });
         if (!documentType || !ALLOWED_DOC_TYPES.includes(documentType)) {
           return res.status(400).json({ error: 'invalid documentType' });
         }
 
-        const rows = await prisma.internDocument.findMany({
-          where: { internId, documentType, isActive: true },
+        const rows = await prisma.employeeDocument.findMany({
+          where: { employeeId, documentType, isActive: true },
           select: { id: true, filePath: true, fileName: true, originalName: true, expiryDate: true },
         });
 
-        // Get intern info for logging
-        const internDetail = await prisma.internDetail.findUnique({
-          where: { internId },
+        // Get employee info for logging
+        const employeeDetail = await prisma.employeeDetail.findUnique({
+          where: { employeeId },
           select: { name: true, userId: true },
         });
 
@@ -1007,7 +1005,7 @@ if (iid) {
         await Promise.allSettled(rows.map(r => safeDeleteDriveByFilePath(r.filePath)));
 
         // Remove DB rows
-        const del = await prisma.internDocument.deleteMany({
+        const del = await prisma.employeeDocument.deleteMany({
           where: { id: { in: rows.map(r => r.id) } },
         });
 
@@ -1020,9 +1018,9 @@ if (iid) {
             documentType: kind,
             fileName: row.fileName || row.originalName || `document_${kind}`,
             fileId,
-            internId,
-            internName: internDetail?.name || null,
-            userId: internDetail?.userId || null,
+            employeeId,
+            employeeName: employeeDetail?.name || null,
+            userId: employeeDetail?.userId || null,
             performedBy: actor.id,
             expiryDate: row.expiryDate || null,
             req,
@@ -1036,28 +1034,28 @@ if (iid) {
     }
   );
 
-  // POST /api/admin/documents/delete-all  { internId }
+  // POST /api/admin/documents/delete-all  { employeeId }
   router.post(
     '/documents/delete-all',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req, res) => {
       try {
-        const { internId } = (req.body || {}) as { internId?: string };
-        if (!internId) return res.status(400).json({ error: 'internId required' });
+        const { employeeId } = (req.body || {}) as { employeeId?: string };
+        if (!employeeId) return res.status(400).json({ error: 'employeeId required' });
 
-        const rows = await prisma.internDocument.findMany({
+        const rows = await prisma.employeeDocument.findMany({
           where: {
-            internId,
+            employeeId,
             isActive: true,
             documentType: { in: ALLOWED_DOC_TYPES as any },
           },
           select: { id: true, filePath: true, fileName: true, originalName: true, documentType: true, expiryDate: true },
         });
 
-        // Get intern info for logging
-        const internDetail = await prisma.internDetail.findUnique({
-          where: { internId },
+        // Get employee info for logging
+        const employeeDetail = await prisma.employeeDetail.findUnique({
+          where: { employeeId },
           select: { name: true, userId: true },
         });
 
@@ -1071,7 +1069,7 @@ if (iid) {
 
         await Promise.allSettled(rows.map(r => safeDeleteDriveByFilePath(r.filePath)));
 
-        const del = await prisma.internDocument.deleteMany({
+        const del = await prisma.employeeDocument.deleteMany({
           where: { id: { in: rows.map(r => r.id) } },
         });
 
@@ -1085,9 +1083,9 @@ if (iid) {
             documentType: kind,
             fileName: row.fileName || row.originalName || `document_${kind}`,
             fileId,
-            internId,
-            internName: internDetail?.name || null,
-            userId: internDetail?.userId || null,
+            employeeId,
+            employeeName: employeeDetail?.name || null,
+            userId: employeeDetail?.userId || null,
             performedBy: actor.id,
             expiryDate: row.expiryDate || null,
             req,
@@ -1101,24 +1099,24 @@ if (iid) {
     }
   );
 
-  // POST /api/admin/avatar/delete  { internId }
+  // POST /api/admin/avatar/delete  { employeeId }
   router.post(
     '/avatar/delete',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req, res) => {
       try {
-        const { internId } = (req.body || {}) as { internId?: string };
-        if (!internId) return res.status(400).json({ error: 'internId required' });
+        const { employeeId } = (req.body || {}) as { employeeId?: string };
+        if (!employeeId) return res.status(400).json({ error: 'employeeId required' });
 
-        const rows = await prisma.internDocument.findMany({
-          where: { internId, isActive: true, documentType: 'PROFILE_PICTURE' as any },
+        const rows = await prisma.employeeDocument.findMany({
+          where: { employeeId, isActive: true, documentType: 'PROFILE_PICTURE' as any },
           select: { id: true, filePath: true },
         });
 
         await Promise.allSettled(rows.map(r => safeDeleteDriveByFilePath(r.filePath)));
 
-        const del = await prisma.internDocument.deleteMany({
+        const del = await prisma.employeeDocument.deleteMany({
           where: { id: { in: rows.map(r => r.id) } },
         });
 
@@ -1131,20 +1129,20 @@ if (iid) {
 
 
 
-  // DELETE /api/admin/users/intern/:internId
-  // Hard delete an inactive intern and all dependent rows (Inactive tab)
+  // DELETE /api/admin/users/employee/:employeeId
+  // Hard delete an inactive employee and all dependent rows (Inactive tab)
   router.delete(
-    '/users/intern/:internId',
+    '/users/employee/:employeeId',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req: Request, res: Response) => {
       try {
-        const internId = String(req.params.internId || '').trim();
-        if (!internId) return res.status(400).json({ error: 'internId required' });
+        const employeeId = String(req.params.employeeId || '').trim();
+        if (!employeeId) return res.status(400).json({ error: 'employeeId required' });
 
         // collect Drive file IDs (docs + profile picture) BEFORE we delete DB rows
-        const docRows = await prisma.internDocument.findMany({
-          where: { internId },
+        const docRows = await prisma.employeeDocument.findMany({
+          where: { employeeId },
           select: { filePath: true },
         });
           const fileIds = docRows
@@ -1152,27 +1150,27 @@ if (iid) {
             .filter((v): v is string => !!v);
 
         await prisma.$transaction(async (tx) => {
-          await tx.notification.deleteMany({ where: { internId } });
-          await tx.documentVerification.deleteMany({ where: { internId } });
-          await tx.internDocument.deleteMany({ where: { internId } });
-          await tx.internsSosDetail.deleteMany({ where: { internId } });
-          await tx.internshipInfo.deleteMany({ where: { internId } });
+          await tx.notification.deleteMany({ where: { employeeId } });
+          await tx.documentVerification.deleteMany({ where: { employeeId } });
+          await tx.employeeDocument.deleteMany({ where: { employeeId } });
+          await tx.employeeSosDetail.deleteMany({ where: { employeeId } });
+          await tx.employeeInfo.deleteMany({ where: { employeeId } });
 
-          // delete rent_email_log rows linked to this intern's allocations
-  const allocs = await tx.allocation.findMany({
-    where: { internId },
-    select: { id: true },
-  });
-  if (allocs.length) {
-    await tx.rentEmailLog.deleteMany({
-      where: { allocationId: { in: allocs.map(a => a.id) } },
-    });
-  }
-
-          await tx.allocation.deleteMany({ where: { internId } });
-          await tx.internDetail.delete({ where: { internId } });
+          // delete rent_email_log rows linked to this employee's allocations
+//  const allocs = await tx.allocation.findMany({
+//    where: { employeeId },
+//    select: { id: true },
+//  });
+//  if (allocs.length) {
+//    await tx.rentEmailLog.deleteMany({
+//      where: { allocationId: { in: allocs.map(a => a.id) } },
+//    });
+//  }
+//
+//          await tx.allocation.deleteMany({ where: { employeeId } });
+          await tx.employeeDetail.delete({ where: { employeeId } });
         });
-
+//
       // best-effort Drive cleanup (don’t fail the request if some deletions fail)
           let driveDeleted = 0;
           if (fileIds.length) {
@@ -1182,8 +1180,8 @@ if (iid) {
 
           return res.json({
             ok: true,
-            mode: 'intern_detail_deleted',
-            internId,
+            mode: 'employee_detail_deleted',
+            employeeId,
             driveFilesTried: fileIds.length,
             driveFilesDeleted: driveDeleted,
           });
@@ -1296,25 +1294,25 @@ if (iid) {
 
 
   // DELETE one specific document for an intern
-  // DELETE /api/admin/interns/:internId/docs/:kind
+  // DELETE /api/admin/interns/:employeeId/docs/:kind
   router.delete(
-    '/interns/:internId/docs/:kind',
+    '/interns/:employeeId/docs/:kind',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req, res) => {
       try {
-        const internId = String(req.params.internId || '').trim();
+        const employeeId = String(req.params.employeeId || '').trim();
         const kind = String(req.params.kind || '').toLowerCase();
         const enumType = KIND_TO_ENUM[kind];
-        if (!internId || !enumType) return res.status(400).json({ error: 'invalid params' });
+        if (!employeeId || !enumType) return res.status(400).json({ error: 'invalid params' });
 
-        const doc = await prisma.internDocument.findFirst({
-          where: { internId, documentType: enumType, isActive: true },
+        const doc = await prisma.employeeDocument.findFirst({
+          where: { employeeId, documentType: enumType, isActive: true },
           select: { id: true, filePath: true },
         });
         if (!doc) return res.json({ ok: true, deleted: 0, driveDeleted: false });
 
-        await deleteOneInternDocument(doc);
+        await deleteOneEmployeeDocument(doc);
         return res.json({ ok: true, deleted: 1, driveDeleted: true });
       } catch (e:any) {
         return res.status(500).json({ error: e?.message || 'delete_failed' });
@@ -1323,16 +1321,16 @@ if (iid) {
   );
 
   // DELETE all four required docs for an intern
-  // DELETE /api/admin/interns/:internId/docs-all
+  // DELETE /api/admin/interns/:employeeId/docs-all
   router.delete(
-    '/interns/:internId/docs-all',
+    '/interns/:employeeId/docs-all',
     ensureAuthenticated as any,
     ...authorize('hr','super_admin'),
     async (req, res) => {
       try {
-        const internId = String(req.params.internId || '').trim();
-        if (!internId) return res.status(400).json({ error: 'internId required' });
-        const out = await deleteAllRequiredDocsForIntern(internId);
+        const employeeId = String(req.params.employeeId || '').trim();
+        if (!employeeId) return res.status(400).json({ error: 'employeeId required' });
+        const out = await deleteAllRequiredDocsForEmployee(employeeId);
         return res.json({ ok: true, ...out });
       } catch (e:any) {
         return res.status(500).json({ error: e?.message || 'bulk_delete_failed' });
@@ -1354,11 +1352,11 @@ if (iid) {
         const delay = toDays(delayAmount, delayUnit);
 
         // latest internship row per intern (with an endDate)
-        const rows = await prisma.internshipInfo.findMany({
+        const rows = await prisma.employeeInfo.findMany({
           where: { endDate: { not: null } },
-          orderBy: [{ internId: 'asc' }, { startDate: 'desc' }],
+          orderBy: [{ employeeId: 'asc' }, { startDate: 'desc' }],
           include: {
-            intern: { select: { name: true, email: true } },
+            employee: { select: { name: true, email: true } },
             department: { select: { departmentName: true } },
             position: { select: { name: true } },
           },
@@ -1366,34 +1364,34 @@ if (iid) {
 
         const seen = new Set<string>();
         const latest: typeof rows = [];
-        for (const r of rows) if (!seen.has(r.internId)) { seen.add(r.internId); latest.push(r); }
+        for (const r of rows) if (!seen.has(r.employeeId)) { seen.add(r.employeeId); latest.push(r); }
 
         const now = new Date();
         const soon = addDays(now, windowDays);
         const out: any[] = [];
 
         // pre-load docs for these interns
-        const internIds = latest.map(r => r.internId);
-        const docs = internIds.length ? await prisma.internDocument.findMany({
-          where: { internId: { in: internIds }, isActive: true, documentType: { in: DOC_REQUIRED } },
-          select: { internId: true, documentType: true },
+        const employeeIds = latest.map(r => r.employeeId);
+        const docs = employeeIds.length ? await prisma.employeeDocument.findMany({
+          where: { employeeId: { in: employeeIds }, isActive: true, documentType: { in: DOC_REQUIRED } },
+          select: { employeeId: true, documentType: true },
         }) : [];
         const docsMap = new Map<string, Set<string>>();
         for (const d of docs) {
-          const s = docsMap.get(d.internId) || new Set<string>();
+          const s = docsMap.get(d.employeeId) || new Set<string>();
           s.add(d.documentType as string);
-          docsMap.set(d.internId, s);
+          docsMap.set(d.employeeId, s);
         }
 
         for (const r of latest) {
           const end = r.endDate!;
           const scheduled = addDays(end, delay);
           if (scheduled >= now && scheduled <= soon) {
-            const hasAny = (docsMap.get(r.internId)?.size || 0) > 0;
+            const hasAny = (docsMap.get(r.employeeId)?.size || 0) > 0;
             if (!hasAny) continue;
             out.push({
-              internId: r.internId,
-              name: r.intern?.name ?? '',
+              employeeId: r.employeeId,
+              name: r.employee?.name ?? '',
               department: r.department?.departmentName ?? null,
               position: r.position?.name ?? null,
               endDate: end,
@@ -1967,10 +1965,10 @@ if (birthdateStr && !birthdate) {
   continue;
 }
 
-// If personal email already exists in InternDetail => treat as existing
-const existingByPersonal = await tx.internDetail.findFirst({
+// If personal email already exists in EmployeeDetail => treat as existing
+const existingByPersonal = await tx.employeeDetail.findFirst({
   where: { email: { equals: personalEmail, mode: 'insensitive' } },
-  select: { internId: true },
+  select: { employeeId: true },
 });
 if (existingByPersonal) {
   stats.skippedExisting++;
@@ -2042,8 +2040,8 @@ if (existingUser) {
 });
 
 
-          // InternDetail
-          const intern = await tx.internDetail.create({
+          // EmployeeDetail
+          const employee = await tx.employeeDetail.create({
             data: {
               userId: newUser.id,
               name: `${firstName} ${surname}`.trim(),
@@ -2053,16 +2051,16 @@ if (existingUser) {
               email: personalEmail,
               birthdate,
             },
-            select: { internId: true },
+            select: { employeeId: true },
           });
           stats.createdInterns++;
 
           const departmentId = await getDepartmentId(department);
           const positionId   = await getPositionId(position, departmentId);
 
-          await tx.internshipInfo.create({
+          await tx.employeeInfo.create({
             data: {
-              internId: intern.internId,
+              employeeId: employee.employeeId,
               departmentId,
               positionId,
               startDate,

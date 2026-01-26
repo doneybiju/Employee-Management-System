@@ -7,8 +7,8 @@ interface DocumentLog {
   documentType: string;
   fileName: string;
   fileId: string | null;
-  internId: string;
-  internName: string | null;
+  employeeId: string;
+  employeeName: string | null;
   userId: number | null;
   performedBy: number;
   performedByName: string;
@@ -127,10 +127,10 @@ export default function DocumentLogsPage() {
                       </td>
                       <td style={{ padding: 12 }}>
                         <div style={{ fontWeight: 500, color: '#1f2937' }}>
-                          {log.internName || 'Unknown'}
+                          {log.employeeName || 'Unknown'}
                         </div>
                         <div style={{ fontSize: 11, color: '#6b7280', fontFamily: 'monospace' }}>
-                          {log.internId.substring(0, 8)}...
+                          {log.employeeId.substring(0, 8)}...
                         </div>
                       </td>
                       <td style={{ padding: 12 }}>

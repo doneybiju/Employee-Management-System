@@ -102,11 +102,11 @@ router.get(
       const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '50'), 10)));
       const offset = (page - 1) * limit;
       const userId = req.query.userId ? parseInt(String(req.query.userId), 10) : undefined;
-      const internId = req.query.internId ? String(req.query.internId) : undefined;
+      const employeeId = req.query.employeeId ? String(req.query.employeeId) : undefined;
 
       const where: any = {};
       if (userId) where.userId = userId;
-      if (internId) where.internId = internId;
+      if (employeeId) where.employeeId = employeeId;
 
       const [logs, total] = await Promise.all([
         prisma.userUpdateLog.findMany({
@@ -117,7 +117,7 @@ router.get(
           select: {
             id: true,
             userId: true,
-            internId: true,
+            employeeId: true,
             updatedBy: true,
             updatedAt: true,
             fieldName: true,
@@ -152,16 +152,16 @@ router.get(
         }])
       );
 
-      // Get intern names for internId
-      const internIds = Array.from(new Set(logs.map(l => l.internId).filter(Boolean))) as string[];
-      const interns = internIds.length
-        ? await prisma.internDetail.findMany({
-            where: { internId: { in: internIds } },
-            select: { internId: true, name: true },
+      // Get employee names for employeeId
+      const employeeIds = Array.from(new Set(logs.map(l => l.employeeId).filter(Boolean))) as string[];
+      const employees = employeeIds.length
+        ? await prisma.employeeDetail.findMany({
+            where: { employeeId: { in: employeeIds } },
+            select: { employeeId: true, name: true },
           })
         : [];
       
-      const internMap = new Map(interns.map(i => [i.internId, i.name]));
+      const employeeMap = new Map(employees.map(i => [i.employeeId, i.name]));
 
       const enrichedLogs = logs.map(log => ({
         ...log,
@@ -169,7 +169,7 @@ router.get(
         updatedByRole: userMap.get(log.updatedBy)?.role || null,
         updatedByEmpType: userMap.get(log.updatedBy)?.empType || null,
         userName: log.userId ? userMap.get(log.userId)?.name : null,
-        internName: log.internId ? internMap.get(log.internId) : null,
+        employeeName: log.employeeId ? employeeMap.get(log.employeeId) : null,
       }));
 
       return res.json({
@@ -198,11 +198,11 @@ router.get(
       const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
       const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '50'), 10)));
       const offset = (page - 1) * limit;
-      const internId = req.query.internId ? String(req.query.internId) : undefined;
+      const employeeId = req.query.employeeId ? String(req.query.employeeId) : undefined;
       const action = req.query.action ? String(req.query.action) : undefined;
 
       const where: any = {};
-      if (internId) where.internId = internId;
+      if (employeeId) where.employeeId = employeeId;
       if (action && (action === 'upload' || action === 'delete')) where.action = action;
 
       const [logs, total] = await Promise.all([
@@ -233,8 +233,8 @@ router.get(
         documentType: log.documentType,
         fileName: log.fileName,
         fileId: log.fileId,
-        internId: log.internId,
-        internName: log.internName,
+        employeeId: log.employeeId,
+        employeeName: log.employeeName,
         userId: log.userId,
         performedBy: log.performedBy,
         performedByName: `${log.performer.firstName} ${log.performer.surname}`.trim() || log.performer.companyEmail,

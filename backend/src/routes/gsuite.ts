@@ -133,10 +133,10 @@ const personalEmailNorm = String(personalEmail || '').trim().toLowerCase();
 if (!personalEmailNorm) {
   return res.status(400).json({ ok: false, error: 'Personal email required' });
 }
-const existing = await prisma.internDetail.findFirst({
+const existing = await prisma.employeeDetail.findFirst({
   where: { email: { equals: personalEmailNorm, mode: 'insensitive' } },
   select: {
-    internId: true,
+    employeeId: true,
     user: { select: { firstName: true, surname: true, companyEmail: true } },
   },
 });
@@ -213,7 +213,7 @@ const siteTempPassword = generatePassword(12);
         });
         newUserId = user.id;
 
-        const intern = await tx.internDetail.create({
+        const intern = await tx.employeeDetail.create({
           data: {
             userId: newUserId,
             name: `${capWord(firstName)} ${capWord(surname)}`,
@@ -223,13 +223,13 @@ const siteTempPassword = generatePassword(12);
             email: personalEmailNorm,
             phone: phone || null,
           },
-          select: { internId: true },
+          select: { employeeId: true },
         });
-        internUUID = intern.internId;
+        internUUID = intern.employeeId;
 
-        await tx.internshipInfo.create({
+        await tx.employeeInfo.create({
           data: {
-            internId: intern.internId,
+            employeeId: intern.employeeId,
             departmentId: Number(departmentId),
             positionId: Number(positionId),
             startDate: joiningDate ? new Date(joiningDate) : null,
@@ -299,7 +299,7 @@ try {
       return res.json({
         ok: true,
         userId: newUserId,
-        internId: internUUID,
+        employeeId: internUUID,
         companyEmail,
         empId,
         tempPasswords: {
@@ -371,7 +371,7 @@ router.post(
       const user = await prisma.user.findUnique({
         where: { companyEmail },
         include: {
-          internDetails: {
+          employeeDetails: {
             select: { email: true },
           },
         },
@@ -389,7 +389,7 @@ router.post(
 
       // Prefer the intern's personal email; fall back to company email
       const personalEmail =
-        user.internDetails?.[0]?.email || user.companyEmail;
+        user.employeeDetails?.[0]?.email || user.companyEmail;
 
       // 2) Try Google Workspace creation again for THIS companyEmail
       const googleTempPassword = generatePassword(12);

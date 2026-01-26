@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import styles from './login.module.css';
 import Link from 'next/link';
+import LoginButton from '@/components/LoginButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -142,10 +143,7 @@ export default function LoginPage() {
 
           <div className={styles.divider}><span>or</span></div>
 
-          {/* Placeholder SSO button; wire to your OAuth endpoint when ready */}
-          <button type="button" className={styles.sso} onClick={() => alert('SSO not configured')}>
-            Continue with Google
-          </button>
+          <LoginButton />
 
           <div className={styles.footer}>
             Need access? Contact IT.

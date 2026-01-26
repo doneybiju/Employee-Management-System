@@ -64,7 +64,7 @@ router.delete('/:id', authorize('hr', 'super_admin'), async (req: Request, res: 
   const posIds = (await prisma.position.findMany({ where: { departmentId: id }, select: { id: true } }))
     .map((p) => p.id);
 
-  const usedInInfo = await prisma.internshipInfo.count({ where: { OR: [{ departmentId: id }, { positionId: { in: posIds } }] } });
+  const usedInInfo = await prisma.employeeInfo.count({ where: { OR: [{ departmentId: id }, { positionId: { in: posIds } }] } });
   const usedInReq  = await prisma.request.count({ where: { OR: [{ departmentId: id }, { positionId: { in: posIds } }] } });
 
   if (usedInInfo > 0 || usedInReq > 0) {
@@ -100,7 +100,7 @@ router.put('/positions/:pid', authorize('hr', 'super_admin'), async (req: Reques
 // --- Delete position (only if unused)
 router.delete('/positions/:pid', authorize('hr', 'super_admin'), async (req: Request, res: Response) => {
   const id = Number(req.params.pid);
-  const usedInInfo = await prisma.internshipInfo.count({ where: { positionId: id } });
+  const usedInInfo = await prisma.employeeInfo.count({ where: { positionId: id } });
   const usedInReq  = await prisma.request.count({ where: { positionId: id } });
   if (usedInInfo > 0 || usedInReq > 0) return res.status(409).json({ error: 'Position is in use' });
 
