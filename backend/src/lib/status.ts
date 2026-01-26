@@ -50,10 +50,24 @@ export async function loadAdminSummary() {
   type ReqDoc = typeof REQUIRED_DOCS[number];
 
   // 1) People counts MUST come from users.empType (this matches what you see in the Users table)
-  const [activeInterns, activeEmployees, activeTeamLeads] = await Promise.all([
+  // Also fetch recent intern registrations for timeline
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setDate(1); // Set to 1st to avoid rollover on 31st (e.g. Jul 31 -> Feb 28/29 -> Mar 3/2)
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+  sixMonthsAgo.setHours(0, 0, 0, 0);
+
+  const [activeInterns, activeEmployees, activeTeamLeads, recentInterns] = await Promise.all([
     prisma.user.count({ where: { blocked: false, empType: 'intern' } }),
     prisma.user.count({ where: { blocked: false, empType: 'employee' } }),
     prisma.user.count({ where: { blocked: false, empType: 'team_lead' } }),
+    prisma.user.findMany({
+      where: {
+        empType: 'intern',
+        blocked: false,
+        createdAt: { gte: sixMonthsAgo },
+      },
+      select: { createdAt: true },
+    }),
   ]);
 
   // 2) Document completion for intern users (optionally honor skipDocs whitelist)
@@ -102,12 +116,32 @@ export async function loadAdminSummary() {
   const total = internUsers.length;
   const percent = total > 0 ? Math.round((missingCount / total) * 100) : 0;
 
+  // Build timeline (last 6 months)
+  const timelineMap = new Map<string, number>();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(sixMonthsAgo);
+    d.setMonth(d.getMonth() + i);
+    const key = d.toISOString().slice(0, 7); // YYYY-MM
+    timelineMap.set(key, 0);
+  }
+
+  for (const u of recentInterns) {
+    const key = u.createdAt.toISOString().slice(0, 7);
+    if (timelineMap.has(key)) {
+      timelineMap.set(key, (timelineMap.get(key) || 0) + 1);
+    }
+  }
+
+  const timeline = Array.from(timelineMap.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   return {
     activeInterns,
     activeEmployees,
     activeTeamLeads,
     missingDocs: { count: missingCount, total, percent },
-    timeline: [] as Array<{ date: string; count: number }>, // keep as placeholder for now
+    timeline,
   };
 }
 
