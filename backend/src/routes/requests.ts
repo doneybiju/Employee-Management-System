@@ -188,11 +188,23 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
   if (!['approve', 'reject'].includes(action)) return res.status(400).json({ error: 'invalid action' });
 
   try {
-    // Common: pull request + user
+    // Common: pull request + user (including personalEmail via employeeDetails)
     const reqRow = await prisma.employeeRequest.findUnique({
       where: { id },
       include: {
-        user: { select: { id: true, firstName: true, surname: true, empId: true, companyEmail: true } },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            surname: true,
+            empId: true,
+            companyEmail: true,
+            employeeDetails: {
+              select: { email: true },
+              take: 1, // assumes the first one is relevant/active
+            },
+          },
+        },
       },
     });
     if (!reqRow) return res.status(404).json({ error: 'not_found' });
@@ -204,79 +216,92 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
     });
     const approvedBy = reviewer ? `${reviewer.firstName} ${reviewer.surname}` : 'HR';
 
+    // Prepare email variables
+    const kindLabel = reqRow.kind === 'EXTRA_HOURS' ? 'Extra Hours' : 'Absence';
+    const dateLabel =
+      reqRow.date
+        ? reqRow.date.toISOString().slice(0, 10)
+        : (reqRow.rangeStart && reqRow.rangeEnd
+            ? `${reqRow.rangeStart.toISOString().slice(0, 10)} → ${reqRow.rangeEnd.toISOString().slice(0, 10)}`
+            : '—');
+
+    const timeStr = (v?: number | null) => (v == null ? '' : `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`);
+    const windowLabel = (reqRow.startMin != null && reqRow.endMin != null)
+      ? `${timeStr(reqRow.startMin)}–${timeStr(reqRow.endMin)}`
+      : '';
+
+    // Reason line: combine request reason and comment
+    const reasonParts: string[] = [];
+    if (reqRow.reason) reasonParts.push(`Reason: ${reqRow.reason}`);
+    if (reqRow.comment) reasonParts.push(`Comment: ${reqRow.comment}`);
+    const reasonLine = reasonParts.join('\n');
+
+    const noteLine = note ? `Reviewer note: ${note}` : '';
+
+    const recipientName = `${reqRow.user.firstName} ${reqRow.user.surname}`.trim() || reqRow.user.companyEmail;
+
+    // Determine recipient email: try companyEmail, fallback to personalEmail
+    const personalEmail = reqRow.user.employeeDetails?.[0]?.email;
+    const recipientEmail = reqRow.user.companyEmail || personalEmail;
+
+    // Helper to send email if address exists
+    const sendNotification = async (key: 'request_approved' | 'request_rejected') => {
+      if (!recipientEmail) return; // Skip if no email found
+      await sendTemplateMail({
+        key,
+        to: recipientEmail,
+        data: {
+          recipientName,
+          kindLabel,
+          dateLabel,
+          windowLabel,
+          reasonLine, // Combined reason + comment
+          noteLine,
+          approvedBy,
+        },
+      });
+    };
+
     if (action === 'reject') {
-      const updated = await prisma.employeeRequest.update({
+      // 1. Update status to REJECTED and save note
+      await prisma.employeeRequest.update({
         where: { id },
-        data: { status: 'REJECTED', reviewNote: note, reviewerId, reviewedAt: new Date() },
-        select: { id: true, kind: true, date: true, rangeStart: true, rangeEnd: true, startMin: true, endMin: true, reason: true },
+        data: {
+          status: 'REJECTED',
+          reviewNote: note,
+          reviewerId,
+          reviewedAt: new Date(),
+        },
       });
 
-      // Build email
-      const kindLabel = updated.kind === 'EXTRA_HOURS' ? 'Extra Hours' : 'Absence';
-      const dateLabel =
-        updated.date
-          ? updated.date.toISOString().slice(0,10)
-          : (updated.rangeStart && updated.rangeEnd
-              ? `${updated.rangeStart.toISOString().slice(0,10)} → ${updated.rangeEnd.toISOString().slice(0,10)}`
-              : '—');
-      const timeStr = (v?: number|null) => (v==null ? '' : `${String(Math.floor(v/60)).padStart(2,'0')}:${String(v%60).padStart(2,'0')}`);
-      const windowLabel = (updated.startMin!=null && updated.endMin!=null) ? `${timeStr(updated.startMin)}–${timeStr(updated.endMin)}` : '';
-      const reasonLine = updated.kind === 'ABSENCE' && updated.reason ? `Reason: ${updated.reason}\n` : '';
-      const noteLine = note ? `Reviewer note: ${note}\n` : '';
+      // 2. Send Email
+      await sendNotification('request_rejected');
 
-      const text = [
-        `Hello ${reqRow.user.firstName},`,
-        ``,
-        `Your ${kindLabel} request has been REJECTED.`,
-        ``,
-        `Details:`,
-        `  Date(s): ${dateLabel}`,
-        updated.kind === 'EXTRA_HOURS' && windowLabel ? `  Window: ${windowLabel}` : '',
-        updated.kind === 'ABSENCE' ? `  ${reasonLine.trimEnd()}` : '',
-        noteLine ? `  ${noteLine.trimEnd()}` : '',
-        ``,
-        `— ${approvedBy}`,
-      ].filter(Boolean).join('\n');
-
-      void sendTemplateMail({
-  key: 'request_rejected',
-  to: reqRow.user.companyEmail || '',
-  data: {
-    recipientName: `${reqRow.user.firstName} ${reqRow.user.surname}`.trim() || reqRow.user.companyEmail,
-    kindLabel,
-    dateLabel,
-    windowLabel,
-    reasonLine: reasonLine.trim(),
-    noteLine: noteLine.trim(),
-    approvedBy,
-  },
-});
-
-
-      // Delete rejected request as per policy
+      // 3. Delete the request from DB
       await prisma.employeeRequest.delete({ where: { id } });
+
       return res.json({ id, deleted: true });
     }
 
-    // APPROVE → append to Sheets (headers differ), email, then delete
+    // --- APPROVE Flow ---
+
+    // 1. Append to Sheets (preserve existing logic)
     const approvedAt = new Date().toISOString();
 
-    // Sheet headers:
-    // EXTRA_HOURS: no Reason col
+    // Sheet headers and logic
     const EH_HEADERS = [
       'Name','Surname','EmpID','Position','Exported At',
       'Date','Range Start','Range End','Start','End',
       'Approved At','Approved By'
     ];
-    // ABSENCE: includes Reason
     const AB_HEADERS = [
       'Name','Surname','EmpID','Position','Exported At',
       'Date','Range Start','Range End','Start','End','Reason',
       'Approved At','Approved By'
     ];
 
-    // latest active position
-    const intern = await prisma.employeeDetail.findFirst({
+    // Get position name (legacy logic finding active internship)
+    const empDetail = await prisma.employeeDetail.findFirst({
       where: { userId: reqRow.user.id },
       include: {
         internships: {
@@ -287,9 +312,9 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
         },
       },
     });
-    const positionName = intern?.internships?.[0]?.position?.name ?? '';
+    const positionName = empDetail?.internships?.[0]?.position?.name ?? '';
 
-    const common = [
+    const commonCols = [
       reqRow.user.firstName,
       reqRow.user.surname,
       reqRow.user.empId,
@@ -297,10 +322,7 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
       new Date().toISOString(), // Exported At
     ];
 
-    const mm = (v?: number | null) =>
-      v == null ? '' : `${String(Math.floor(v/60)).padStart(2,'0')}:${String(v%60).padStart(2,'0')}`;
-
-        try {
+    try {
       const { appendRowWithHeader } = await import('../lib/sheets');
       const { getSystemConfig } = await import('../lib/systemConfig');
 
@@ -309,24 +331,23 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
       const absenceSheet    = cfg.googleSheetsAbsence   || 'Absence';
 
       if (reqRow.kind === 'EXTRA_HOURS') {
-        // If single date → Date col; if range → fill Range Start/End
         const row = [
-          ...common,
-          reqRow.date ? reqRow.date.toISOString().slice(0,10) : '',
-          reqRow.date ? '' : (reqRow.rangeStart ? reqRow.rangeStart.toISOString().slice(0,10) : ''),
-          reqRow.date ? '' : (reqRow.rangeEnd   ? reqRow.rangeEnd.toISOString().slice(0,10)   : ''),
-          mm(reqRow.startMin),
-          mm(reqRow.endMin),
+          ...commonCols,
+          reqRow.date ? reqRow.date.toISOString().slice(0, 10) : '',
+          reqRow.date ? '' : (reqRow.rangeStart ? reqRow.rangeStart.toISOString().slice(0, 10) : ''),
+          reqRow.date ? '' : (reqRow.rangeEnd   ? reqRow.rangeEnd.toISOString().slice(0, 10)   : ''),
+          timeStr(reqRow.startMin),
+          timeStr(reqRow.endMin),
           approvedAt,
           approvedBy,
         ];
         await appendRowWithHeader(extraHoursSheet, EH_HEADERS, row);
       } else {
         const row = [
-          ...common,
+          ...commonCols,
           '', // Date (single)
-          reqRow.rangeStart ? reqRow.rangeStart.toISOString().slice(0,10) : '',
-          reqRow.rangeEnd   ? reqRow.rangeEnd.toISOString().slice(0,10)   : '',
+          reqRow.rangeStart ? reqRow.rangeStart.toISOString().slice(0, 10) : '',
+          reqRow.rangeEnd   ? reqRow.rangeEnd.toISOString().slice(0, 10)   : '',
           '', // Start
           '', // End
           reqRow.reason ?? '',
@@ -340,56 +361,17 @@ router.patch('/:id/review', authorize('hr', 'super_admin'), async (req: Request,
       return res.status(502).json({ error: 'sheets_append_failed' });
     }
 
+    // 2. Send Email
+    await sendNotification('request_approved');
 
-    // Email (approval)
-    const kindLabel = reqRow.kind === 'EXTRA_HOURS' ? 'Extra Hours' : 'Absence';
-    const dateLabel =
-      reqRow.date
-        ? reqRow.date.toISOString().slice(0,10)
-        : (reqRow.rangeStart && reqRow.rangeEnd
-            ? `${reqRow.rangeStart.toISOString().slice(0,10)} → ${reqRow.rangeEnd.toISOString().slice(0,10)}`
-            : '—');
-    const timeStr = (v?: number|null) => (v==null ? '' : `${String(Math.floor(v/60)).padStart(2,'0')}:${String(v%60).padStart(2,'0')}`);
-    const windowLabel = (reqRow.startMin!=null && reqRow.endMin!=null) ? `${timeStr(reqRow.startMin)}–${timeStr(reqRow.endMin)}` : '';
-    const noteLine = note ? `Reviewer note: ${note}\n` : '';
-    const reasonLine = (reqRow.kind === 'ABSENCE' && reqRow.reason) ? `Reason: ${reqRow.reason}\n` : '';
-    const commentLine = (reqRow.kind === 'ABSENCE' && (reqRow as any).comment) ? `Comment: ${(reqRow as any).comment}\n` : '';
-
-    const text = [
-      `Hello ${reqRow.user.firstName},`,
-      ``,
-      `Your ${kindLabel} request has been APPROVED.`,
-      ``,
-      `Details:`,
-      `  Date(s): ${dateLabel}`,
-      reqRow.kind === 'EXTRA_HOURS' && windowLabel ? `  Window: ${windowLabel}` : '',
-      reqRow.kind === 'ABSENCE' ? `  ${reasonLine.trimEnd()}` : '',
-      commentLine ? `  ${commentLine.trimEnd()}` : '',
-      noteLine ? `  ${noteLine.trimEnd()}` : '',
-      ``,
-      `— ${approvedBy}`,
-    ].filter(Boolean).join('\n');
-
-    void sendTemplateMail({
-  key: 'request_approved',
-  to: reqRow.user.companyEmail || '',
-  data: {
-    recipientName: `${reqRow.user.firstName} ${reqRow.user.surname}`.trim() || reqRow.user.companyEmail,
-    kindLabel,
-    dateLabel,
-    windowLabel,
-    reasonLine: [reasonLine.trim(), commentLine.trim()].filter(Boolean).join('\n'),
-    noteLine: noteLine.trim(),
-    approvedBy,
-  },
-});
-
-
-    // delete after success
+    // 3. Delete the request
     await prisma.employeeRequest.delete({ where: { id } });
+
     return res.json({ id, deleted: true });
+
   } catch (e: any) {
     if (e?.code === 'P2025') return res.status(404).json({ error: 'not_found' });
+    console.error(e);
     return res.status(500).json({ error: 'update_failed' });
   }
 });
