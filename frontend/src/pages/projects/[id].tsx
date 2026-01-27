@@ -4,6 +4,7 @@ import {useRouter} from 'next/router';
 import Link from 'next/link';
 import {useAuth} from '@/context/AuthContext';
 import {fetchWithAuth} from '@/lib/api';
+import Drawer from '@/components/Drawer';
 import {
   Calendar,
   CheckCircle,
@@ -15,6 +16,8 @@ import {
   Plus,
   Trash2,
   User,
+  X,
+  ListTodo,
 } from 'lucide-react';
 
 type Member = {id: number; name: string; email?: string};
@@ -119,8 +122,8 @@ export default function ProjectDetailPage() {
   const [showTaskModal, setShowTaskModal] = useState(false);
 
   // checklist (creation only)
-  const [tChecklistEnabled, setTChecklistEnabled] = useState(false);
-  const [tChecklistItems, setTChecklistItems] = useState<string[]>(['']);
+  const [tChecklistItems, setTChecklistItems] = useState<string[]>([]);
+  const [newItemText, setNewItemText] = useState('');
 
   function normalizeProject(raw: any): ProjectDetail {
     const members: Member[] = (raw?.members ?? []).map((m: any) => {
@@ -303,13 +306,63 @@ export default function ProjectDetailPage() {
     }
   }
 
+  function handleAddChecklistItem() {
+    if (!newItemText.trim()) return;
+    setTChecklistItems([...tChecklistItems, newItemText.trim()]);
+    setNewItemText('');
+  }
+
+  function handleRemoveChecklistItem(index: number) {
+    setTChecklistItems(tChecklistItems.filter((_, i) => i !== index));
+  }
+
+  async function toggleChecklistItem(
+    taskId: number,
+    itemId: number,
+    done: boolean,
+  ) {
+    setProj(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        tasks: prev.tasks.map(t => {
+          if (t.id !== taskId) return t;
+          return {
+            ...t,
+            checklistItems: t.checklistItems.map(i =>
+              i.id === itemId ? {...i, done} : i,
+            ),
+          };
+        }),
+      };
+    });
+
+    try {
+      const res = await fetchWithAuth(
+        `/api/projects/tasks/${taskId}/checklist/${itemId}`,
+        {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({done}),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error('Failed to update checklist item');
+      }
+    } catch {
+      alert('Failed to update item');
+      await refresh();
+    }
+  }
+
   async function createTask(e: FormEvent) {
     e.preventDefault();
     setCreatingTask(true);
     try {
-      const cleanItems = tChecklistEnabled
-        ? tChecklistItems.map(s => s.trim()).filter(Boolean)
-        : [];
+      // If there are items, we enable checklist
+      const checklistEnabled = tChecklistItems.length > 0;
+      const cleanItems = tChecklistItems;
 
       const res = await fetchWithAuth(`/api/projects/${projId}/tasks`, {
         method: 'POST',
@@ -320,7 +373,7 @@ export default function ProjectDetailPage() {
           dueDate: tDue || null,
           assigneeId: tAssign || null,
           status: 'NOT_STARTED',
-          checklistEnabled: tChecklistEnabled,
+          checklistEnabled: checklistEnabled,
           checklistItems: cleanItems,
         }),
       });
@@ -329,8 +382,8 @@ export default function ProjectDetailPage() {
       setTDesc('');
       setTDue('');
       setTAssign('');
-      setTChecklistEnabled(false);
-      setTChecklistItems(['']);
+      setTChecklistItems([]);
+      setNewItemText('');
       setShowTaskModal(false);
       await refresh();
     } catch (e: any) {
@@ -493,6 +546,15 @@ export default function ProjectDetailPage() {
             ) : (
               proj.tasks.map(t => {
                 const StatusIcon = statusConfig[t.status].icon;
+                const totalItems = t.checklistItems.length;
+                const completedItems = t.checklistItems.filter(
+                  i => i.done,
+                ).length;
+                const taskProgress =
+                  totalItems > 0
+                    ? Math.round((completedItems / totalItems) * 100)
+                    : 0;
+
                 return (
                   <div
                     key={t.id}
@@ -520,6 +582,79 @@ export default function ProjectDetailPage() {
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                       {t.title}
                     </h3>
+
+                    {t.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
+                        {t.description}
+                      </p>
+                    )}
+
+                    {(t.checklistEnabled || totalItems > 0) && (
+                      <div className="mb-4">
+                        {totalItems > 0 && (
+                          <div className="mb-3">
+                            <div className="flex justify-between text-xs mb-1.5 font-medium">
+                              <span className="text-gray-500 dark:text-gray-400">
+                                Checklist
+                              </span>
+                              <span className="text-blue-600 dark:text-blue-400">
+                                {taskProgress}%
+                              </span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-600 transition-all duration-500"
+                                style={{width: `${taskProgress}%`}}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {totalItems > 0 && (
+                          <div className="space-y-2">
+                            {t.checklistItems.map(item => {
+                              const canToggle =
+                                user?.role === 'super_admin' ||
+                                Number(user?.id) === t.assignedTo?.id;
+
+                              return (
+                                <label
+                                  key={item.id}
+                                  className={`flex items-start gap-2 text-sm ${
+                                    canToggle
+                                      ? 'cursor-pointer'
+                                      : 'cursor-default opacity-80'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={item.done}
+                                    disabled={!canToggle}
+                                    onChange={e =>
+                                      toggleChecklistItem(
+                                        t.id,
+                                        item.id,
+                                        e.target.checked,
+                                      )
+                                    }
+                                    className="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                                  />
+                                  <span
+                                    className={`flex-1 break-words ${
+                                      item.done
+                                        ? 'text-gray-400 line-through'
+                                        : 'text-gray-700 dark:text-gray-300'
+                                    }`}
+                                  >
+                                    {item.title}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-4 text-xs text-gray-500 mt-auto pt-4 border-t border-gray-50 dark:border-gray-800">
                       <div className="flex items-center gap-1.5">
@@ -614,78 +749,138 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {/* Modals omitted for brevity - logic remains similar but styled with Tailwind classes if implemented */}
-      {/* Re-implementing modals with standard styling would take more space, assuming they are similar to previous but styled */}
-      {showTaskModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Create New Task
-            </h3>
-            <form onSubmit={createTask} className="space-y-4">
+      {/* Drawer for Task Creation */}
+      <Drawer
+        open={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        title="Create New Task"
+      >
+        <form onSubmit={createTask} className="flex flex-col gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                value={tTitle}
+                onChange={e => setTTitle(e.target.value)}
+                className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                required
+                placeholder="Task title"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Description
+              </label>
+              <textarea
+                value={tDesc}
+                onChange={e => setTDesc(e.target.value)}
+                className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-h-[100px] resize-y"
+                placeholder="Detailed description..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Title
+                  Assign To
+                </label>
+                <select
+                  value={tAssign}
+                  onChange={e =>
+                    setTAssign(e.target.value ? Number(e.target.value) : '')
+                  }
+                  className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none"
+                >
+                  <option value="">Unassigned</option>
+                  {proj.members.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Due Date
                 </label>
                 <input
-                  value={tTitle}
-                  onChange={e => setTTitle(e.target.value)}
+                  type="date"
+                  value={tDue}
+                  onChange={e => setTDue(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Assign To
-                  </label>
-                  <select
-                    value={tAssign}
-                    onChange={e =>
-                      setTAssign(e.target.value ? Number(e.target.value) : '')
+            </div>
+
+            {/* Checklist Builder */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <ListTodo size={16} /> Checklist
+              </label>
+
+              <div className="flex gap-2 mb-3">
+                <input
+                  value={newItemText}
+                  onChange={e => setNewItemText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddChecklistItem();
                     }
-                    className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  >
-                    <option value="">Unassigned</option>
-                    {proj.members.map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Due Date
-                  </label>
-                  <input
-                    type="date"
-                    value={tDue}
-                    onChange={e => setTDue(e.target.value)}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
+                  }}
+                  placeholder="Add item..."
+                  className="flex-1 p-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
                 <button
                   type="button"
-                  onClick={() => setShowTaskModal(false)}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg text-sm font-medium transition-colors"
+                  onClick={handleAddChecklistItem}
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creatingTask}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  Create
+                  Add
                 </button>
               </div>
-            </form>
+
+              <div className="space-y-2">
+                {tChecklistItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg group"
+                  >
+                    <span className="text-sm text-gray-700 dark:text-gray-300 break-all">
+                      {item}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveChecklistItem(idx)}
+                      className="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+                {tChecklistItems.length === 0 && (
+                  <p className="text-sm text-gray-400 italic text-center py-2">
+                    No items added.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="pt-4 mt-auto">
+            <button
+              type="submit"
+              disabled={creatingTask}
+              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-lg shadow-blue-600/20"
+            >
+              {creatingTask ? 'Creating...' : 'Create Task'}
+            </button>
+          </div>
+        </form>
+      </Drawer>
 
       {showMemberModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
