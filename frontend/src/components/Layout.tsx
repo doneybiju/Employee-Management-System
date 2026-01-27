@@ -9,7 +9,7 @@ interface LayoutProps {
 }
 
 export default function Layout({children, hideNav = false}: LayoutProps) {
-  const {isAuthenticated, ready} = useAuth();
+  const {isAuthenticated, ready, mustChangePassword} = useAuth();
 
   if (hideNav) {
     return (
@@ -29,7 +29,11 @@ export default function Layout({children, hideNav = false}: LayoutProps) {
         background: var(--background) -> bg-gray-50 / dark
         margin-left: 0 (default)
       */}
-      <main className="min-h-screen p-8 bg-gray-50 dark:bg-[#0a0a0a]">
+      <main
+        className={`min-h-screen p-8 bg-gray-50 dark:bg-[#0a0a0a] transition-all duration-300 ${
+          !mustChangePassword ? 'md:ml-64' : ''
+        }`}
+      >
         {children}
       </main>
       {ready && isAuthenticated ? <DocsReminderToast /> : null}

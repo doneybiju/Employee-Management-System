@@ -25,14 +25,14 @@ type EmpType = 'intern' | 'employee' | 'team_lead';
 
 type Row = {
   userId: number | null;
-  internId: string | null;
+  employeeId: string | null; // FIXED: Renamed from internId to employeeId to match backend
   role: 'intern' | 'hr' | 'super_admin';
   name: string;
   department: string | null;
   position: string | null;
   companyEmail: string | null;
   phone: string | null;
-  employeeId: string | null;
+  empId: string | null;
   joiningDate: string | null;
   leavingDate: string | null;
   personalEmail: string;
@@ -202,7 +202,8 @@ export default function AdminUsers() {
 
   const saveEdit = async (opts?: {thenDelete?: boolean}) => {
     const target = selectedUser;
-    if (!target?.internId) return;
+    // FIXED: Check for employeeId instead of internId
+    if (!target?.employeeId) return;
 
     if (opts?.thenDelete && !editEnd) {
       alert('Please set the End date before deleting.');
@@ -210,25 +211,29 @@ export default function AdminUsers() {
     }
 
     try {
-      await fetchWithAuth(`/api/users/admin/users/intern/${target.internId}`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          startDate: editStart || null,
-          endDate: editEnd || null,
-          supervisor: editSupervisor || null,
-          departmentId: editDeptId,
-          positionId: editPosId,
-          phone: editPhone || null,
-          personalEmail: editPersonalEmail || null,
-          nationality: editNationality || null,
-          gender: editGender || null,
-          birthdate: editBirthdate || null,
-          name: editName || null,
-          userId: target.userId,
-          role: isSA ? editRole : undefined,
-        }),
-      });
+      // FIXED: Use employeeId in URL
+      await fetchWithAuth(
+        `/api/users/admin/users/intern/${target.employeeId}`,
+        {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            startDate: editStart || null,
+            endDate: editEnd || null,
+            supervisor: editSupervisor || null,
+            departmentId: editDeptId,
+            positionId: editPosId,
+            phone: editPhone || null,
+            personalEmail: editPersonalEmail || null,
+            nationality: editNationality || null,
+            gender: editGender || null,
+            birthdate: editBirthdate || null,
+            name: editName || null,
+            userId: target.userId,
+            role: isSA ? editRole : undefined,
+          }),
+        },
+      );
 
       if (target?.userId && target.companyEmail) {
         await fetchWithAuth('/api/admin/users', {
@@ -262,9 +267,10 @@ export default function AdminUsers() {
       let resp: Response | null = null;
       if (r.userId) {
         resp = await fetchWithAuth(`/api/admin/users/${r.userId}/detail`);
-      } else if (r.internId) {
+      } else if (r.employeeId) {
+        // FIXED: Use employeeId in URL
         resp = await fetchWithAuth(
-          `/api/admin/users/detail-by-intern/${r.internId}`,
+          `/api/admin/users/detail-by-intern/${r.employeeId}`,
         );
       }
       if (resp && resp.ok) setViewDetail(await resp.json());
@@ -281,7 +287,8 @@ export default function AdminUsers() {
     try {
       const params = new URLSearchParams();
       if (r.userId) params.append('userId', String(r.userId));
-      if (r.internId) params.append('internId', r.internId);
+      // FIXED: Use employeeId for param value
+      if (r.employeeId) params.append('internId', r.employeeId);
       params.append('limit', '50');
 
       const response = await fetchWithAuth(`/api/logs/user-updates?${params}`);
@@ -299,9 +306,10 @@ export default function AdminUsers() {
     const res = await fetchWithAuth('/api/admin/users/deactivate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
+      // FIXED: Send employeeId in body as expected by backend
       body: JSON.stringify({
         userId: r.userId,
-        internId: r.internId,
+        employeeId: r.employeeId,
         companyEmail: r.companyEmail,
       }),
     });
@@ -322,7 +330,8 @@ export default function AdminUsers() {
 
   const handleDelete = async (r: Row) => {
     if (tab === 'active') {
-      if (r.internId && !r.leavingDate) {
+      // FIXED: Use employeeId
+      if (r.employeeId && !r.leavingDate) {
         alert(
           'End date is required before deleting. Opening edit form to set end date.',
         );
@@ -344,7 +353,8 @@ export default function AdminUsers() {
       if (!confirm('Permanently delete this inactive intern and related data?'))
         return;
       try {
-        await fetchWithAuth(`/api/admin/users/intern/${r.internId}`, {
+        // FIXED: Use employeeId in URL
+        await fetchWithAuth(`/api/admin/users/intern/${r.employeeId}`, {
           method: 'DELETE',
         });
         alert('Inactive intern deleted.');
@@ -375,7 +385,7 @@ export default function AdminUsers() {
         r.name,
         r.companyEmail,
         r.personalEmail,
-        r.employeeId,
+        r.empId,
         r.department,
         r.position,
         r.nationality,
@@ -515,8 +525,9 @@ export default function AdminUsers() {
                 </tr>
               ) : (
                 paginatedRows.map(r => (
+                  // FIXED: Use employeeId in key
                   <tr
-                    key={r.internId || r.userId}
+                    key={r.employeeId || r.userId}
                     className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                   >
                     <td className="p-4">
@@ -673,7 +684,8 @@ export default function AdminUsers() {
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                />
+                  className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -684,7 +696,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                     value={editPersonalEmail}
                     onChange={e => setEditPersonalEmail(e.target.value)}
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -694,7 +707,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                     value={editPhone}
                     onChange={e => setEditPhone(e.target.value)}
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -716,7 +730,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                     value={editGender}
                     onChange={e => setEditGender(e.target.value)}
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  >
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  >
                     <option value="">Select...</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -742,7 +757,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                       setEditPosId(null);
                     }}
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  >
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  >
                     <option value="">Select...</option>
                     {depts.map(d => (
                       <option key={d.id} value={d.id}>
@@ -762,7 +778,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                       setEditPosId(e.target.value ? +e.target.value : null)
                     }
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  >
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  >
                     <option value="">Select...</option>
                     {depts
                       .find(d => d.id === editDeptId)
@@ -782,7 +799,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                   value={editSupervisor}
                   onChange={e => setEditSupervisor(e.target.value)}
                   // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                />
+                  className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -794,7 +812,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                     value={editStart}
                     onChange={e => setEditStart(e.target.value)}
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -805,7 +824,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                     value={editEnd}
                     onChange={e => setEditEnd(e.target.value)}
                     // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                  />
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  />
                 </div>
               </div>
               {isSA && (
@@ -818,7 +838,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                       value={editRole}
                       onChange={e => setEditRole(e.target.value as any)}
                       // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                    >
+                      className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    >
                       <option value="intern">User</option>
                       <option value="hr">HR</option>
                       <option value="super_admin">Super Admin</option>
@@ -832,7 +853,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                       value={editEmpType}
                       onChange={e => setEditEmpType(e.target.value as EmpType)}
                       // NEW className for ALL Inputs/Selects in Edit Drawer
-className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"                    >
+                      className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    >
                       <option value="intern">Intern</option>
                       <option value="employee">Employee</option>
                       <option value="team_lead">Team Lead</option>
@@ -892,7 +914,9 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Position</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{selectedUser.position || '—'}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {selectedUser.position || '—'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Supervisor</p>
@@ -903,8 +927,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                 <div>
                   <p className="text-gray-500 text-xs">Status</p>
                   <p className="font-medium capitalize text-gray-900 dark:text-white">
-  {selectedUser.status || 'Active'}
-</p>
+                    {selectedUser.status || 'Active'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">Start Date</p>
@@ -941,8 +965,8 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                 <div>
                   <p className="text-gray-500 text-xs">Gender</p>
                   <p className="font-medium capitalize text-gray-900 dark:text-white">
-  {viewDetail?.gender || selectedUser.gender || '—'}
-</p>
+                    {viewDetail?.gender || selectedUser.gender || '—'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs">DOB</p>
@@ -1005,18 +1029,18 @@ className="w-full p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg b
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-  <span className="font-semibold text-gray-900 dark:text-gray-200">
-    {log.fieldName}
-  </span>{' '}
-  changed from{' '}
-  <span className="text-red-500 dark:text-red-400 line-through">
-    {log.oldValue || 'empty'}
-  </span>{' '}
-  to{' '}
-  <span className="text-green-600 dark:text-green-400 font-medium">
-    {log.newValue || 'empty'}
-  </span>
-</div>
+                      <span className="font-semibold text-gray-900 dark:text-gray-200">
+                        {log.fieldName}
+                      </span>{' '}
+                      changed from{' '}
+                      <span className="text-red-500 dark:text-red-400 line-through">
+                        {log.oldValue || 'empty'}
+                      </span>{' '}
+                      to{' '}
+                      <span className="text-green-600 dark:text-green-400 font-medium">
+                        {log.newValue || 'empty'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
