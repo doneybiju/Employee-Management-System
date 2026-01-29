@@ -33,7 +33,7 @@ jobs:
       # --- BACKEND CHECKS ---
       - name: Install Backend Dependencies
         working-directory: ./backend
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Generate Prisma Client
         working-directory: ./backend
@@ -47,7 +47,7 @@ jobs:
 
       - name: Lint Check
         working-directory: ./backend
-        run: npm run lint
+        run: yarn lint
 
       # Uncomment if you have tests
       # - name: Run Backend Tests
