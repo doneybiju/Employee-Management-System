@@ -1653,11 +1653,7 @@ async function sendSetupLinksForUsers(
   users: Array<{ userId: number; email: string; name: string }>,
   req: Request
 ): Promise<SetupEmailResult[]> {
-  const results: SetupEmailResult[] = [];
-  for (const u of users) {
-    results.push(await sendSetupLinkForUser(u.userId, u.email, u.name, req));
-  }
-  return results;
+  return Promise.all(users.map((u) => sendSetupLinkForUser(u.userId, u.email, u.name, req)));
 }
 
 
